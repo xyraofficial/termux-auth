@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -158,3 +159,17 @@ cython_debug/
 #  and can be added to the global gitignore or merged into this file.  For a more nuclear
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
+=======
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.cache/
+.local/
+.config/
+.upm/
+.pythonlibs/
+venv/
+.venv/
+>>>>>>> a9104005c9a8a0ee858af2e13af11fa0f10bcf86

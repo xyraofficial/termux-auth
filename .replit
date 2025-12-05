@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 entrypoint = "main.py"
 modules = ["python-3.11"]
 
@@ -17,6 +18,14 @@ deploymentTarget = "cloudrun"
 
 [agent]
 expertMode = true
+=======
+modules = ["python-3.11"]
+[agent]
+expertMode = true
+
+[nix]
+channel = "stable-25_05"
+>>>>>>> a9104005c9a8a0ee858af2e13af11fa0f10bcf86
 
 [workflows]
 runButton = "Project"
@@ -28,6 +37,7 @@ author = "agent"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
+<<<<<<< HEAD
 args = "Termux Auth"
 
 [[workflows.workflow]]
@@ -44,3 +54,29 @@ args = "python termux_auth_protected.py"
 [[ports]]
 localPort = 5000
 externalPort = 80
+=======
+args = "Run Python"
+
+[[workflows.workflow]]
+name = "Run Python"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python3 main.py"
+
+[workflows.workflow.metadata]
+outputType = "console"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[[ports]]
+localPort = 44699
+externalPort = 3000
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["python3", "server.py"]
+>>>>>>> a9104005c9a8a0ee858af2e13af11fa0f10bcf86
