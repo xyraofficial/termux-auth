@@ -11,10 +11,15 @@ import sys
 import base64
 import hashlib
 import platform
+import subprocess
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from tqdm import tqdm
+from simple_term_menu import TerminalMenu
+from rich.table import Table
+from rich.console import Console
+from rich.panel import Panel
 
 cdef str CONFIG_FILE = "config.enc"
 cdef str CONFIG_FILE_PLAIN = "config.json"
@@ -94,6 +99,8 @@ cdef str DRD = '\033[31m'
 cdef str DGR = '\033[32m'
 cdef str DYL = '\033[33m'
 
+console = Console()
+
 cpdef str get_greeting():
     cdef int hour = datetime.now().hour
     if 5 <= hour < 11:
@@ -104,6 +111,37 @@ cpdef str get_greeting():
         return "Selamat Sore"
     else:
         return "Selamat Malam"
+
+cpdef str getprop(str name):
+    try:
+        return subprocess.check_output(["getprop", name]).decode().strip()
+    except:
+        return "Unknown"
+
+cpdef dict get_device_info():
+    cdef str brand = getprop("ro.product.brand")
+    cdef str model = getprop("ro.product.model")
+    cdef str android = getprop("ro.build.version.release")
+    cdef str arch = platform.machine()
+    cdef str system = platform.system()
+    
+    if brand == "Unknown":
+        return {
+            "System": system,
+            "Arch": arch,
+            "Type": "PC/Server"
+        }
+    return {
+        "Brand": brand,
+        "Model": model,
+        "Android": android
+    }
+
+cpdef str get_ip():
+    try:
+        return requests.get("https://api.ipify.org", timeout=5).text
+    except:
+        return "N/A"
 
 cpdef str get_day_name():
     cdef list days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
@@ -122,13 +160,6 @@ cpdef str get_time_str():
     cdef object now = datetime.now()
     return f"{now.hour:02d}:{now.minute:02d}:{now.second:02d} WIB"
 
-cpdef str get_device_info():
-    cdef str arch = platform.machine()
-    cdef str system = platform.system()
-    if os.path.exists("/data/data/com.termux"):
-        return f"Android {arch}"
-    return f"{system} {arch}"
-
 cpdef void loading_tqdm(str desc, int steps=30):
     for i in tqdm(range(steps), desc=f"  {desc}", colour="green", 
                   bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}", ncols=40):
@@ -138,100 +169,86 @@ cpdef void loading_tqdm(str desc, int steps=30):
 cpdef void clear():
     os.system('clear' if os.name == 'posix' else 'cls')
 
-cpdef void show_banner():
-    cdef str greeting = get_greeting()
-    cdef int pad = (40 - len(greeting) - 2) // 2
-    print(f"\n{' ' * pad}{DRD}•{R} {WH}{greeting}{R} {DRD}•{R}")
-    print()
-    print(f" {DRD}┌──────────────────────────────────────┐{R}")
-    print(f" {DRD}│{R} {RD}●{R} {YL}●{R} {GR}●{R}                                 {DRD}│{R}")
-    print(f" {DRD}│{R}                                      {DRD}│{R}")
-    print(f" {DRD}│{R}  {DRD}▀▀▀▀▀▀▀  █   █  {RD}▄▀▄  █  █ ▀▀█▀▀ █  █{R}  {DRD}│{R}")
-    print(f" {DRD}│{R}     █     ▀▄▀   {RD}█▀█  █  █   █   █▀▀█{R}  {DRD}│{R}")
-    print(f" {DRD}│{R}     █     █ █   {RD}█ █  ▀▄▄▀   █   █  █{R}  {DRD}│{R}")
-    print(f" {DRD}│{R}                              {D}v1.0{R}    {DRD}│{R}")
-    print(f" {DRD}│{R} {DGR}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━{R} {DRD}│{R}")
-    print(f" {DRD}│{R}  {GR}♦{R} Creator  : {WH}XyraOfficial{R}          {DRD}│{R}")
-    print(f" {DRD}│{R}  {GR}▶{R} Youtube  : {WH}@Kz.tutorial{R}          {DRD}│{R}")
-    print(f" {DRD}│{R}                                      {DRD}│{R}")
-    print(f" {DRD}└──────────────────────────────────────┘{R}")
-
-cpdef void show_info_box():
-    cdef str device = get_device_info()
-    cdef str date_str = get_date_str()
-    cdef str time_str = get_time_str()
-    print()
-    print(f" {DYL}┌─────────── {YL}Ingfo{R} {DYL}───────────────────┐{R}")
-    print(f" {DYL}│{R} {GR}●{R} Device   : {WH}{device:<24}{R} {DYL}│{R}")
-    print(f" {DYL}│{R} {GR}■{R} Tanggal  : {CY}{date_str:<24}{R} {DYL}│{R}")
-    print(f" {DYL}│{R} {GR}■{R} Waktu    : {CY}{time_str:<24}{R} {DYL}│{R}")
-    print(f" {DYL}└──────────────────────────────────────┘{R}")
-
-cpdef void show_menu():
-    print()
-    print(f" {D}[{GR}•{R}{D}]{R} Control: {GR}angka{R}, {YL}enter{R}")
-    print()
-    print(f"   {GR}•{R} {WH}1.{R} Signup      {D}─ Daftar akun baru{R}")
-    print(f"   {GR}•{R} {WH}2.{R} Login       {D}─ Masuk ke akun{R}")
-    print(f"   {GR}•{R} {WH}3.{R} Resend OTP  {D}─ Kirim ulang kode{R}")
-    print(f"   {GR}•{R} {WH}4.{R} Reset Pass  {D}─ Lupa password{R}")
-    print(f"   {MG}•{R} {WH}5.{R} About       {D}─ Info developer{R}")
-    print(f"   {RD}•{R} {WH}6.{R} Keluar      {D}─ Exit program{R}")
-    print()
-
-cpdef void show_user_menu():
-    print()
-    print(f" {D}[{GR}•{R}{D}]{R} Menu User:")
-    print()
-    print(f"   {GR}•{R} {WH}1.{R} Profile  {D}─ Lihat info akun{R}")
-    print(f"   {RD}•{R} {WH}2.{R} Logout   {D}─ Keluar akun{R}")
-    print()
+cpdef void print_info_table(dict dev_info, str user_ip):
+    table = Table(
+        title=f"[bold magenta]★[/bold magenta] [bold white]TERMUX AUTH SYSTEM[/bold white] [bold magenta]★[/bold magenta]",
+        show_header=False,
+        title_style="bold cyan",
+        box=None
+    )
+    
+    if "Brand" in dev_info:
+        dev_content = (
+            f"[bold cyan]Brand[/bold cyan]   : {dev_info['Brand']}\n"
+            f"[bold cyan]Model[/bold cyan]   : {dev_info['Model']}\n"
+            f"[bold cyan]Android[/bold cyan] : {dev_info['Android']}"
+        )
+    else:
+        dev_content = (
+            f"[bold cyan]System[/bold cyan] : {dev_info['System']}\n"
+            f"[bold cyan]Arch[/bold cyan]   : {dev_info['Arch']}\n"
+            f"[bold cyan]Type[/bold cyan]   : {dev_info['Type']}"
+        )
+    
+    left_panel = Panel(
+        dev_content,
+        title="[bold cyan]DEVICE INFO[/bold cyan]",
+        border_style="cyan"
+    )
+    
+    user_content = (
+        f"[bold green]IP[/bold green]      : {user_ip}\n"
+        f"[bold green]Tanggal[/bold green] : {get_date_str()}\n"
+        f"[bold green]Waktu[/bold green]   : {get_time_str()}"
+    )
+    
+    right_panel = Panel(
+        user_content,
+        title="[bold green]USER INFO[/bold green]",
+        border_style="green"
+    )
+    
+    table.add_row(left_panel, right_panel)
+    console.print(table)
 
 cpdef void show_developer_info():
+    clear()
     print()
-    print(f" {CY}┌──────────────────────────────────────┐{R}")
-    print(f" {CY}│{R}       {MG}★{R} {B}{WH}DEVELOPER INFO{R} {MG}★{R}            {CY}│{R}")
-    print(f" {CY}├──────────────────────────────────────┤{R}")
-    print(f" {CY}│{R}                                      {CY}│{R}")
-    print(f" {CY}│{R}  {YL}[♦]{R} Developer : {WH}XyraOfficial{R}         {CY}│{R}")
-    print(f" {CY}│{R}                                      {CY}│{R}")
-    print(f" {CY}│{R}  {GR}[■]{R} WhatsApp  :                      {CY}│{R}")
-    print(f" {CY}│{R}      {CY}wa.me/62895325844493{R}            {CY}│{R}")
-    print(f" {CY}│{R}                                      {CY}│{R}")
-    print(f" {CY}│{R}  {RD}[▶]{R} YouTube   :                      {CY}│{R}")
-    print(f" {CY}│{R}      {CY}youtube.com/@Kz.tutorial{R}        {CY}│{R}")
-    print(f" {CY}│{R}                                      {CY}│{R}")
-    print(f" {CY}│{R}  {BL}[✉]{R} Email     :                      {CY}│{R}")
-    print(f" {CY}│{R}      {CY}xyraofficialsup@gmail.com{R}       {CY}│{R}")
-    print(f" {CY}│{R}                                      {CY}│{R}")
-    print(f" {CY}└──────────────────────────────────────┘{R}")
+    dev_content = (
+        f"[bold yellow]Developer[/bold yellow]  : [white]XyraOfficial[/white]\n\n"
+        f"[bold green]WhatsApp[/bold green]   :\n"
+        f"[cyan]wa.me/62895325844493[/cyan]\n\n"
+        f"[bold red]YouTube[/bold red]    :\n"
+        f"[cyan]youtube.com/@Kz.tutorial[/cyan]\n\n"
+        f"[bold blue]Email[/bold blue]      :\n"
+        f"[cyan]xyraofficialsup@gmail.com[/cyan]"
+    )
+    panel = Panel(
+        dev_content,
+        title="[bold magenta]★ DEVELOPER INFO ★[/bold magenta]",
+        border_style="magenta",
+        padding=(1, 2)
+    )
+    console.print(panel)
 
 cpdef void section(str title):
     print()
-    print(f" {DGR}┌─ {GR}{title}{R} {DGR}{'─' * (34 - len(title))}┐{R}")
+    console.print(f"[bold green]┌─ {title} {'─' * (30 - len(title))}┐[/bold green]")
     print()
 
 cpdef void success(str msg):
-    print(f" {GR}[✓]{R} {msg}")
+    console.print(f" [bold green][✓][/bold green] {msg}")
 
 cpdef void error(str msg):
-    print(f" {RD}[✗]{R} {msg}")
+    console.print(f" [bold red][✗][/bold red] {msg}")
 
 cpdef void info(str msg):
-    print(f" {YL}[!]{R} {msg}")
+    console.print(f" [bold yellow][!][/bold yellow] {msg}")
 
-cpdef void box(list lines):
-    cdef int w = 36
-    cdef str l
-    cdef int padding
-    print()
-    print(f" {D}╭{'─' * w}╮{R}")
-    for l in lines:
-        padding = w - len(l) - 2
-        if padding < 0:
-            padding = 0
-        print(f" {D}│{R}  {l}{' ' * padding}{D}│{R}")
-    print(f" {D}╰{'─' * w}╯{R}")
+cpdef void box_info(list lines):
+    content = "\n".join(lines)
+    panel = Panel(content, border_style="dim")
+    console.print(panel)
 
 cpdef dict load_config():
     cdef bytes enc_data
@@ -448,9 +465,10 @@ cpdef void do_signup(Auth auth, dict cfg):
         error(res)
 
 cpdef void do_login(Auth auth, dict cfg):
-    cdef str email, pw, otp, msg, c
+    cdef str email, pw, otp, msg
     cdef bint ok, sent
     cdef object res
+    cdef int sel
     
     section("LOGIN")
     email = get_email()
@@ -460,22 +478,34 @@ cpdef void do_login(Auth auth, dict cfg):
     ok, res = auth.login(email, pw)
     if ok:
         success("Login berhasil!")
-        box([f"Email : {res['email']}", f"UID   : {res['uid'][:20]}..."])
+        box_info([f"Email : {res['email']}", f"UID   : {res['uid'][:20]}..."])
+        
         while True:
-            show_user_menu()
-            c = input(f" {GR}[?]{R} Pilih : {CY}").strip()
-            print(R, end="")
-            if c == "1":
+            print()
+            user_options = [
+                f"{B}Profile - Lihat info akun{R}",
+                f"{B}Logout - Keluar akun{R}",
+            ]
+            user_menu = TerminalMenu(
+                menu_entries=user_options,
+                title=f"\n{GR}{B}╭─────────────────────────────╮\n│       USER MENU             │\n╰─────────────────────────────╯{R}",
+                menu_cursor="▶ ",
+                menu_cursor_style=("fg_red",),
+                menu_highlight_style=("fg_yellow", "bold"),
+            )
+            sel = user_menu.show()
+            
+            if sel == 0:
                 section("PROFILE")
-                box([f"Email : {res['email']}", f"UID   : {res['uid']}"])
-            elif c == "2":
+                box_info([f"Email : {res['email']}", f"UID   : {res['uid']}"])
+            elif sel == 1:
                 loading_tqdm("Logout", 20)
                 success("Logout berhasil!")
                 print()
                 input(f" {D}Tekan Enter...{R}")
                 break
             else:
-                error("Pilihan salah")
+                break
     elif res == "UNVERIFIED":
         info("Email belum diverifikasi")
         loading_tqdm("Mengirim OTP", 30)
@@ -536,19 +566,57 @@ cpdef void do_reset(dict cfg):
 
 cpdef void intro_loading():
     clear()
-    print(f"\n\n")
-    print(f" {DRD}┌──────────────────────────────────────┐{R}")
-    print(f" {DRD}│{R}       {MG}★{R} {B}{WH}TERMUX AUTH SYSTEM{R} {MG}★{R}        {DRD}│{R}")
-    print(f" {DRD}│{R}          {D}by XyraOfficial{R}            {DRD}│{R}")
-    print(f" {DRD}└──────────────────────────────────────┘{R}")
+    print()
+    intro_panel = Panel(
+        "[bold magenta]★[/bold magenta] [bold white]TERMUX AUTH SYSTEM[/bold white] [bold magenta]★[/bold magenta]\n[dim]by XyraOfficial[/dim]",
+        border_style="red",
+        padding=(1, 4)
+    )
+    console.print(intro_panel)
     print()
     loading_tqdm("Memuat sistem", 40)
     time.sleep(0.3)
 
+cpdef int show_main_menu(dict dev_info, str user_ip):
+    clear()
+    print()
+    print_info_table(dev_info, user_ip)
+    
+    greeting = get_greeting()
+    
+    title_box = (
+        f"\n{GR}{B}"
+        f"╭───────────────────────────────╮\n"
+        f"│  {greeting}, Pengguna!        │\n"
+        f"│       MENU UTAMA              │\n"
+        f"╰───────────────────────────────╯"
+        f"{R}"
+    )
+    
+    options = [
+        f"{B}Signup   - Daftar akun baru{R}",
+        f"{B}Login    - Masuk ke akun{R}",
+        f"{B}Resend   - Kirim ulang OTP{R}",
+        f"{B}Reset    - Reset password{R}",
+        f"{B}About    - Info developer{R}",
+        f"{B}Keluar   - Exit program{R}",
+    ]
+    
+    terminal_menu = TerminalMenu(
+        menu_entries=options,
+        title=title_box,
+        menu_cursor="▶ ",
+        menu_cursor_style=("fg_red",),
+        menu_highlight_style=("fg_yellow", "bold"),
+    )
+    
+    return terminal_menu.show()
+
 cpdef void run_main():
-    cdef dict cfg
-    cdef str url, key, c
+    cdef dict cfg, dev_info
+    cdef str url, key, user_ip
     cdef Auth auth
+    cdef int sel
     
     intro_loading()
     
@@ -570,34 +638,35 @@ cpdef void run_main():
     
     auth = Auth(url, key)
     
+    dev_info = get_device_info()
+    user_ip = get_ip()
+    
     while True:
+        sel = show_main_menu(dev_info, user_ip)
+        
         clear()
-        show_banner()
-        show_info_box()
-        show_menu()
+        print()
+        print_info_table(dev_info, user_ip)
         
-        c = input(f" {GR}[?]{R} Pilih : {CY}").strip()
-        print(R, end="")
-        
-        if c == "1":
+        if sel == 0:
             do_signup(auth, cfg)
-        elif c == "2":
+        elif sel == 1:
             do_login(auth, cfg)
-        elif c == "3":
+        elif sel == 2:
             do_resend(cfg)
-        elif c == "4":
+        elif sel == 3:
             do_reset(cfg)
-        elif c == "5":
-            clear()
+        elif sel == 4:
             show_developer_info()
-        elif c == "6":
+        elif sel == 5 or sel is None:
             clear()
             print()
-            print(f" {DGR}┌──────────────────────────────────────┐{R}")
-            print(f" {DGR}│{R}  {GR}✓{R} {WH}Terima kasih!{R}                      {DGR}│{R}")
-            print(f" {DGR}│{R}    {D}Sampai jumpa lagi{R}                  {DGR}│{R}")
-            print(f" {DGR}│{R}    {MG}~ XyraOfficial ~{R}                   {DGR}│{R}")
-            print(f" {DGR}└──────────────────────────────────────┘{R}")
+            exit_panel = Panel(
+                "[bold green]✓[/bold green] [white]Terima kasih![/white]\n[dim]Sampai jumpa lagi[/dim]\n[bold magenta]~ XyraOfficial ~[/bold magenta]",
+                border_style="green",
+                padding=(1, 4)
+            )
+            console.print(exit_panel)
             print()
             break
         else:
