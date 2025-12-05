@@ -666,7 +666,10 @@ cpdef bint admin_login():
 
 cpdef void admin_list_users(Auth auth):
     cdef bint ok
-    cdef object users
+    cdef object users, selected_user
+    cdef int sel
+    cdef list menu_options
+    cdef str email, uid, verified_status
     
     section("DAFTAR USER")
     loading_tqdm("Mengambil data", 25)
@@ -678,42 +681,125 @@ cpdef void admin_list_users(Auth auth):
             return
         
         success(f"Total: {len(users)} user")
-        print()
         
-        table_data = []
-        for i, u in enumerate(users):
-            email = u.get("email", "N/A")
-            uid = u.get("id", "N/A")[:8] + "..."
-            created = u.get("created_at", "N/A")[:10]
-            confirmed = "Ya" if u.get("email_confirmed_at") else "Tidak"
-            table_data.append([i+1, email, uid, created, confirmed])
-        
-        headers = ["No", "Email", "UID", "Dibuat", "Verified"]
-        print(tabulate(table_data, headers=headers, tablefmt="rounded_grid"))
+        while True:
+            print()
+            menu_options = []
+            for i, u in enumerate(users):
+                email = u.get("email", "N/A")
+                verified_status = "✓" if u.get("email_confirmed_at") else "✗"
+                menu_options.append(f"{B}{i+1}. {email} [{verified_status}]{R}")
+            
+            menu_options.append(f"{B}← Kembali{R}")
+            
+            title_box = (
+                f"\n{CY}{B}"
+                f"╭───────────────────────────────╮\n"
+                f"│      PILIH USER               │\n"
+                f"│   Tekan Enter untuk detail    │\n"
+                f"╰───────────────────────────────╯"
+                f"{R}"
+            )
+            
+            user_menu = TerminalMenu(
+                menu_entries=menu_options,
+                title=title_box,
+                menu_cursor="▶ ",
+                menu_cursor_style=("fg_red",),
+                menu_highlight_style=("fg_yellow", "bold"),
+            )
+            
+            sel = user_menu.show()
+            
+            if sel is None or sel == len(users):
+                break
+            
+            selected_user = users[sel]
+            clear()
+            print()
+            section("DETAIL USER")
+            
+            box_info([
+                f"UID      : {selected_user.get('id', 'N/A')}",
+                f"Email    : {selected_user.get('email', 'N/A')}",
+                f"Dibuat   : {selected_user.get('created_at', 'N/A')[:19]}",
+                f"Verified : {'Ya' if selected_user.get('email_confirmed_at') else 'Tidak'}",
+                f"Provider : {selected_user.get('app_metadata', {}).get('provider', 'email')}",
+                f"Last Sign: {selected_user.get('last_sign_in_at', 'Belum pernah')[:19] if selected_user.get('last_sign_in_at') else 'Belum pernah'}",
+            ])
+            
+            print()
+            input(f" {D}Tekan Enter untuk kembali...{R}")
+            clear()
+            print()
+            section("DAFTAR USER")
+            success(f"Total: {len(users)} user")
     else:
         error(f"Gagal mengambil data: {users}")
 
 cpdef void admin_delete_user(Auth auth):
-    cdef str uid, confirm
+    cdef str uid, confirm, email, verified_status
     cdef bint ok
-    cdef object msg
+    cdef object msg, users, selected_user
+    cdef int sel
+    cdef list menu_options
     
     section("HAPUS USER")
+    loading_tqdm("Mengambil data", 25)
     
-    admin_list_users(auth)
-    print()
-    
-    uid = input(f" {YL}[?]{R} UID User : {CY}").strip()
-    print(R, end="")
-    
-    if not uid:
-        error("UID tidak boleh kosong!")
+    ok, users = auth.list_users()
+    if not ok:
+        error(f"Gagal mengambil data: {users}")
         return
     
-    confirm = input(f" {RD}[!]{R} Yakin hapus? (y/n) : {CY}").strip().lower()
+    if len(users) == 0:
+        info("Belum ada user terdaftar")
+        return
+    
+    info(f"Total: {len(users)} user")
+    print()
+    
+    menu_options = []
+    for i, u in enumerate(users):
+        email = u.get("email", "N/A")
+        verified_status = "✓" if u.get("email_confirmed_at") else "✗"
+        menu_options.append(f"{B}{i+1}. {email} [{verified_status}]{R}")
+    
+    menu_options.append(f"{B}← Batal{R}")
+    
+    title_box = (
+        f"\n{RD}{B}"
+        f"╭───────────────────────────────╮\n"
+        f"│      PILIH USER UNTUK         │\n"
+        f"│         DIHAPUS                │\n"
+        f"╰───────────────────────────────╯"
+        f"{R}"
+    )
+    
+    user_menu = TerminalMenu(
+        menu_entries=menu_options,
+        title=title_box,
+        menu_cursor="▶ ",
+        menu_cursor_style=("fg_red",),
+        menu_highlight_style=("fg_red", "bold"),
+    )
+    
+    sel = user_menu.show()
+    
+    if sel is None or sel == len(users):
+        info("Dibatalkan")
+        return
+    
+    selected_user = users[sel]
+    uid = selected_user.get("id", "")
+    email = selected_user.get("email", "N/A")
+    
+    print()
+    console.print(f" [bold red]⚠ PERINGATAN:[/bold red] User [bold]{email}[/bold] akan dihapus!")
+    confirm = input(f" {RD}[!]{R} Ketik 'HAPUS' untuk konfirmasi: {CY}").strip()
     print(R, end="")
     
-    if confirm != 'y':
+    if confirm != 'HAPUS':
         info("Dibatalkan")
         return
     
@@ -721,7 +807,7 @@ cpdef void admin_delete_user(Auth auth):
     loading_tqdm("Menghapus user", 25)
     ok, msg = auth.delete_user(uid)
     if ok:
-        success(msg)
+        success(f"User {email} berhasil dihapus!")
     else:
         error(msg)
 
@@ -754,6 +840,9 @@ cpdef void admin_user_detail(Auth auth):
 
 cpdef void admin_panel(Auth auth, dict cfg):
     cdef int sel
+    cdef bint ok
+    cdef object users
+    cdef int verified
     
     while True:
         clear()
@@ -769,8 +858,7 @@ cpdef void admin_panel(Auth auth, dict cfg):
         )
         
         options = [
-            f"{B}List User    - Lihat semua user{R}",
-            f"{B}Detail User  - Info lengkap user{R}",
+            f"{B}List User    - Lihat & pilih user{R}",
             f"{B}Hapus User   - Delete user{R}",
             f"{B}Database     - Lihat statistik{R}",
             f"{B}Logout       - Keluar admin{R}",
@@ -789,10 +877,8 @@ cpdef void admin_panel(Auth auth, dict cfg):
         if sel == 0:
             admin_list_users(auth)
         elif sel == 1:
-            admin_user_detail(auth)
-        elif sel == 2:
             admin_delete_user(auth)
-        elif sel == 3:
+        elif sel == 2:
             section("DATABASE STATS")
             ok, users = auth.list_users()
             if ok:
@@ -807,13 +893,12 @@ cpdef void admin_panel(Auth auth, dict cfg):
                 ])
             else:
                 error("Gagal mengambil statistik")
-        elif sel == 4 or sel is None:
+            print()
+            input(f" {D}Tekan Enter...{R}")
+        elif sel == 3 or sel is None:
             loading_tqdm("Logout admin", 20)
             success("Logout admin berhasil!")
             break
-        
-        print()
-        input(f" {D}Tekan Enter...{R}")
 
 cpdef void do_login_menu(Auth auth, dict cfg):
     cdef int sel
