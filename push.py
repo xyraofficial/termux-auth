@@ -3,8 +3,8 @@ import subprocess
 
 TOKEN_FILE = ".token"
 BRANCH = "main"
-GITHUB_USER = "xyraofficial"
-REPO_NAME = "termux-auth"
+USER = "xyraofficial"
+REPO = "termux-auth"
 
 def run(cmd, ignore=False):
     print(f"[CMD] {cmd}")
@@ -18,49 +18,63 @@ def load_token():
     if not os.path.exists(TOKEN_FILE):
         print("[!] File .token tidak ditemukan!")
         exit()
-
-    token = open(TOKEN_FILE).read().strip()
-
-    if not token.startswith("ghp_"):
-        print("[!] Token GitHub tidak valid!")
-        exit()
-
-    return token
+    return open(TOKEN_FILE).read().strip()
 
 def main():
     token = load_token()
-    auth_repo = f"https://{token}@github.com/{GITHUB_USER}/{REPO_NAME}.git"
+    auth_repo = f"https://{token}@github.com/{USER}/{REPO}.git"
 
-    print("[*] Auto set git user...")
+    # git identity
     run('git config --global user.name "xyraofficial"', ignore=True)
     run('git config --global user.email "xyra@users.noreply.github.com"', ignore=True)
 
-    print("[*] Cek repo...")
+    # init repo
     if not os.path.exists(".git"):
-        print("[*] .git belum ada → git init")
         run("git init")
 
-    print("[*] Cek remote origin...")
+    # remote origin
     remotes = subprocess.run("git remote", shell=True, capture_output=True, text=True).stdout
-
     if "origin" not in remotes:
-        print("[*] Remote origin belum ada → menambahkan")
         run(f"git remote add origin {auth_repo}")
     else:
-        print("[*] Remote origin ada → update URL")
         run(f"git remote set-url origin {auth_repo}", ignore=True)
 
-    print("[*] Git pull agar tidak terjadi rejected push...")
+    print("[*] Tarik update dari GitHub (auto merge)...")
+
+    # pull pertama
     run(f"git pull origin {BRANCH} --allow-unrelated-histories", ignore=True)
 
-    print("[*] Tambah semua file...")
+    # merge otomatis dengan origin/main
+    run(f"git merge origin/{BRANCH}", ignore=True)
+
+    # rebase off (biar aman)
+    run("git config pull.rebase false", ignore=True)
+
+    # tambah semua file
     run("git add .")
 
-    print("[*] Commit...")
+    # commit
     run('git commit -m "Auto push from Termux"', ignore=True)
 
     print("[*] Push ke GitHub...")
-    run(f"git push -u origin {BRANCH}", ignore=False)
+    # coba push normal
+    try:
+        run(f"git push -u origin {BRANCH}", ignore=False)
+    except:
+        print("[!] Push gagal (non-fast-forward). Auto attempt merge fix...")
+        
+        # AUTO FIX
+        run(f"git pull origin {BRANCH} --allow-unrelated-histories", ignore=True)
+        run(f"git merge origin/{BRANCH}", ignore=True)
+
+        print("[*] Mencoba push lagi...")
+        try:
+            run(f"git push -u origin {BRANCH}", ignore=False)
+        except:
+            print("[!] Masih gagal.")
+            print(">>> Solusi: FORCE PUSH")
+            print(">>> Kamu mau aku buat versi FORCE PUSH otomatis? (y/n)")
+            return
 
     print("\n[SUKSES] Semua file berhasil diupload ke GitHub!")
 
