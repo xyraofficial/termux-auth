@@ -30,6 +30,9 @@ cdef int OTP_EXPIRY = 300
 cdef bytes SALT = b"TermuxAuth2024SecureSalt"
 cdef bytes PASSPHRASE = b"Tx@uth#Pr0t3ct3d$K3y!2024"
 
+cdef str ADMIN_USERNAME = "xyraofficial"
+cdef str ADMIN_PASSWORD = "admin"
+
 cdef bytes derive_key_internal(bytes passphrase, bytes salt):
     cdef bytes key = hashlib.pbkdf2_hmac('sha256', passphrase, salt, 100000)
     return base64.urlsafe_b64encode(key)
@@ -400,10 +403,12 @@ cpdef tuple send_email(dict cfg, str to, str otp):
 cdef class Auth:
     cdef str url
     cdef dict h
+    cdef str service_key
     
-    def __init__(self, str url, str key):
+    def __init__(self, str url, str key, str svc_key=""):
         self.url = url
         self.h = {"apikey": key, "Content-Type": "application/json"}
+        self.service_key = svc_key
     
     cpdef tuple signup(self, str email, str pw):
         try:
@@ -432,6 +437,38 @@ cdef class Auth:
             if "not confirmed" in err.lower():
                 return (False, "UNVERIFIED")
             return (False, err or "Login gagal")
+        except Exception as e:
+            return (False, str(e))
+    
+    cpdef tuple list_users(self):
+        try:
+            admin_h = {"apikey": self.service_key, "Authorization": f"Bearer {self.service_key}", "Content-Type": "application/json"}
+            r = requests.get(f"{self.url}/auth/v1/admin/users", headers=admin_h)
+            if r.status_code == 200:
+                data = r.json()
+                users = data.get("users", [])
+                return (True, users)
+            return (False, f"Error: {r.status_code}")
+        except Exception as e:
+            return (False, str(e))
+    
+    cpdef tuple delete_user(self, str uid):
+        try:
+            admin_h = {"apikey": self.service_key, "Authorization": f"Bearer {self.service_key}", "Content-Type": "application/json"}
+            r = requests.delete(f"{self.url}/auth/v1/admin/users/{uid}", headers=admin_h)
+            if r.status_code == 200:
+                return (True, "User dihapus!")
+            return (False, f"Error: {r.status_code}")
+        except Exception as e:
+            return (False, str(e))
+    
+    cpdef tuple get_user(self, str uid):
+        try:
+            admin_h = {"apikey": self.service_key, "Authorization": f"Bearer {self.service_key}", "Content-Type": "application/json"}
+            r = requests.get(f"{self.url}/auth/v1/admin/users/{uid}", headers=admin_h)
+            if r.status_code == 200:
+                return (True, r.json())
+            return (False, f"Error: {r.status_code}")
         except Exception as e:
             return (False, str(e))
 
