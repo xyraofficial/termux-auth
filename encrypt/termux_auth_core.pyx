@@ -212,26 +212,64 @@ cpdef void print_info_table(dict dev_info, str user_ip):
     table.add_row(left_panel, right_panel)
     console.print(table)
 
+cpdef void open_url(str url):
+    try:
+        if os.path.exists("/data/data/com.termux"):
+            subprocess.run(["termux-open-url", url], check=False)
+        else:
+            subprocess.run(["xdg-open", url], check=False)
+    except:
+        info(f"Buka manual: {url}")
+
 cpdef void show_developer_info():
-    clear()
-    print()
+    cdef int sel
+    cdef list dev_links = [
+        ("WhatsApp", "https://wa.me/62895325844493"),
+        ("YouTube", "https://youtube.com/@Kz.tutorial"),
+        ("Email", "mailto:xyraofficialsup@gmail.com"),
+        ("GitHub", "https://github.com/XyraOfficial"),
+    ]
     
-    dev_panel = Panel(
-        f"[bold green]Developer[/bold green]  [dim]:[/dim]  [bold white]XyraOfficial[/bold white]\n"
-        f"[bold green]WhatsApp[/bold green]   [dim]:[/dim]  [bold white]wa.me/62895325844493[/bold white]\n"
-        f"[bold green]YouTube[/bold green]    [dim]:[/dim]  [bold white]youtube.com/@Kz.tutorial[/bold white]\n"
-        f"[bold green]Email[/bold green]      [dim]:[/dim]  [bold white]xyraofficialsup@gmail.com[/bold white]\n"
-        f"[bold green]GitHub[/bold green]     [dim]:[/dim]  [bold white]github.com/XyraOfficial[/bold white]",
-        title="DEVELOPER INFO",
-        border_style="cyan",
-        padding=(0, 1)
-    )
-    console.print(dev_panel)
-    
-    print()
-    console.print(f"  [dim]{'─' * 48}[/dim]")
-    console.print(f"  [cyan]Terima kasih telah menggunakan Termux Auth![/cyan]")
-    console.print(f"  [dim]{'─' * 48}[/dim]")
+    while True:
+        clear()
+        print()
+        
+        title_box = (
+            f"\n{GR}{B}"
+            f"╭───────────────────────────────╮\n"
+            f"│       DEVELOPER INFO          │\n"
+            f"│      by XyraOfficial          │\n"
+            f"╰───────────────────────────────╯"
+            f"{R}"
+        )
+        
+        options = [
+            f"{B}WhatsApp  - Hubungi via WA{R}",
+            f"{B}YouTube   - Channel Tutorial{R}",
+            f"{B}Email     - Kirim Email{R}",
+            f"{B}GitHub    - Source Code{R}",
+            f"{B}Kembali   - Menu Utama{R}",
+        ]
+        
+        dev_menu = TerminalMenu(
+            menu_entries=options,
+            title=title_box,
+            menu_cursor="▶ ",
+            menu_cursor_style=("fg_red",),
+            menu_highlight_style=("fg_yellow", "bold"),
+        )
+        
+        sel = dev_menu.show()
+        
+        if sel is None or sel == 4:
+            break
+        elif sel >= 0 and sel < 4:
+            name, url = dev_links[sel]
+            loading_tqdm(f"Membuka {name}", 20)
+            open_url(url)
+            success(f"{name} dibuka!")
+            print()
+            input(f" {D}Tekan Enter...{R}")
 
 cpdef void section(str title):
     print()
