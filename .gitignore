@@ -173,3 +173,4 @@ __pycache__/
 venv/
 .venv/
 >>>>>>> a9104005c9a8a0ee858af2e13af11fa0f10bcf86
+.token
