@@ -68,6 +68,15 @@ run/                        # PUBLIC - For distribution
   - Email delivery via SMTP
 - **Validation**: Email format validation using regex patterns
 
+### Admin System
+- **Admin Login**: Hardcoded credentials (username: xyraofficial, password: admin)
+- **Admin Panel Features**:
+  - List Users - View all registered users in table format
+  - Detail User - View detailed info for specific user by UID
+  - Delete User - Remove user from database with confirmation
+  - Database Stats - View user statistics (total, verified, unverified)
+- **Admin API**: Uses Supabase service_key for admin operations (list_users, delete_user, get_user)
+
 ## External Dependencies
 
 ### Backend Services
