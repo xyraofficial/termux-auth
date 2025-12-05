@@ -20,6 +20,7 @@ from simple_term_menu import TerminalMenu
 from rich.table import Table
 from rich.console import Console
 from rich.panel import Panel
+from tabulate import tabulate
 
 cdef str CONFIG_FILE = "config.enc"
 cdef str CONFIG_FILE_PLAIN = "config.json"
@@ -214,22 +215,35 @@ cpdef void print_info_table(dict dev_info, str user_ip):
 cpdef void show_developer_info():
     clear()
     print()
-    dev_content = (
-        f"[bold yellow]Developer[/bold yellow]  : [white]XyraOfficial[/white]\n\n"
-        f"[bold green]WhatsApp[/bold green]   :\n"
-        f"[cyan]wa.me/62895325844493[/cyan]\n\n"
-        f"[bold red]YouTube[/bold red]    :\n"
-        f"[cyan]youtube.com/@Kz.tutorial[/cyan]\n\n"
-        f"[bold blue]Email[/bold blue]      :\n"
-        f"[cyan]xyraofficialsup@gmail.com[/cyan]"
+    
+    dev_data = [
+        [f"{MG}Developer{R}", f"{CY}XyraOfficial{R}"],
+        [f"{GR}WhatsApp{R}", f"{WH}wa.me/62895325844493{R}"],
+        [f"{RD}YouTube{R}", f"{WH}youtube.com/@Kz.tutorial{R}"],
+        [f"{BL}Email{R}", f"{WH}xyraofficialsup@gmail.com{R}"],
+        [f"{YL}GitHub{R}", f"{WH}github.com/XyraOfficial{R}"],
+    ]
+    
+    print(f"  {MG}{B}╔{'═' * 50}╗{R}")
+    print(f"  {MG}{B}║{R}{'★ DEVELOPER INFO ★':^50}{MG}{B}║{R}")
+    print(f"  {MG}{B}╚{'═' * 50}╝{R}")
+    print()
+    
+    table_output = tabulate(
+        dev_data,
+        headers=[f"{B}Kategori{R}", f"{B}Detail{R}"],
+        tablefmt="double_grid",
+        stralign="left",
+        numalign="left"
     )
-    panel = Panel(
-        dev_content,
-        title="[bold magenta]★ DEVELOPER INFO ★[/bold magenta]",
-        border_style="magenta",
-        padding=(1, 2)
-    )
-    console.print(panel)
+    
+    for line in table_output.split('\n'):
+        print(f"  {line}")
+    
+    print()
+    print(f"  {D}{'─' * 50}{R}")
+    print(f"  {CY}Terima kasih telah menggunakan Termux Auth!{R}")
+    print(f"  {D}{'─' * 50}{R}")
 
 cpdef void section(str title):
     print()
@@ -501,8 +515,6 @@ cpdef void do_login(Auth auth, dict cfg):
             elif sel == 1:
                 loading_tqdm("Logout", 20)
                 success("Logout berhasil!")
-                print()
-                input(f" {D}Tekan Enter...{R}")
                 break
             else:
                 break

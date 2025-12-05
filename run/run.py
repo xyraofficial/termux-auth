@@ -5,7 +5,7 @@ import glob
 import platform
 import subprocess
 
-REQUIRED_PACKAGES = ["requests", "cryptography", "tqdm"]
+REQUIRED_PACKAGES = ["requests", "cryptography", "tqdm", "tabulate", "rich", "simple-term-menu"]
 
 def is_termux():
     return os.path.exists("/data/data/com.termux") or "com.termux" in os.environ.get("PREFIX", "")
