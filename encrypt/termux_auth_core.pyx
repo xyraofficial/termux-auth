@@ -217,11 +217,11 @@ cpdef void show_developer_info():
     print()
     
     dev_panel = Panel(
-        f"[bold white]Developer[/bold white]  [dim]:[/dim]  [bold green]XyraOfficial[/bold green]\n"
-        f"[bold white]WhatsApp[/bold white]   [dim]:[/dim]  [green]wa.me/62895325844493[/green]\n"
-        f"[bold white]YouTube[/bold white]    [dim]:[/dim]  [green]youtube.com/@Kz.tutorial[/green]\n"
-        f"[bold white]Email[/bold white]      [dim]:[/dim]  [green]xyraofficialsup@gmail.com[/green]\n"
-        f"[bold white]GitHub[/bold white]     [dim]:[/dim]  [green]github.com/XyraOfficial[/green]",
+        f"[bold green]Developer[/bold green]  [dim]:[/dim]  [bold white]XyraOfficial[/bold white]\n"
+        f"[bold green]WhatsApp[/bold green]   [dim]:[/dim]  [bold white]wa.me/62895325844493[/bold white]\n"
+        f"[bold green]YouTube[/bold green]    [dim]:[/dim]  [bold white]youtube.com/@Kz.tutorial[/bold white]\n"
+        f"[bold green]Email[/bold green]      [dim]:[/dim]  [bold white]xyraofficialsup@gmail.com[/bold white]\n"
+        f"[bold green]GitHub[/bold green]     [dim]:[/dim]  [bold white]github.com/XyraOfficial[/bold white]",
         title="DEVELOPER INFO",
         border_style="cyan",
         padding=(0, 1)
