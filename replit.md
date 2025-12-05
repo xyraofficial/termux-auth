@@ -88,6 +88,10 @@ run/                        # PUBLIC - For distribution
 - **cryptography**: AES-Fernet encryption for config protection
 - **smtplib**: Standard library for SMTP email sending
 - **email.mime**: Email composition utilities
+- **tabulate**: Table formatting for developer info display
+- **rich**: Rich text and beautiful formatting in terminal
+- **simple-term-menu**: Interactive terminal menu selection
+- **tqdm**: Progress bar animations
 
 ### Platform
 - **Termux**: Android terminal emulator and Linux environment
