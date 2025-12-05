@@ -216,34 +216,22 @@ cpdef void show_developer_info():
     clear()
     print()
     
-    dev_data = [
-        [f"{MG}Developer{R}", f"{CY}XyraOfficial{R}"],
-        [f"{GR}WhatsApp{R}", f"{WH}wa.me/62895325844493{R}"],
-        [f"{RD}YouTube{R}", f"{WH}youtube.com/@Kz.tutorial{R}"],
-        [f"{BL}Email{R}", f"{WH}xyraofficialsup@gmail.com{R}"],
-        [f"{YL}GitHub{R}", f"{WH}github.com/XyraOfficial{R}"],
-    ]
-    
-    print(f"  {MG}{B}╔{'═' * 50}╗{R}")
-    print(f"  {MG}{B}║{R}{'★ DEVELOPER INFO ★':^50}{MG}{B}║{R}")
-    print(f"  {MG}{B}╚{'═' * 50}╝{R}")
-    print()
-    
-    table_output = tabulate(
-        dev_data,
-        headers=[f"{B}Kategori{R}", f"{B}Detail{R}"],
-        tablefmt="double_grid",
-        stralign="left",
-        numalign="left"
+    dev_panel = Panel(
+        f"[bold white]Developer[/bold white]  [dim]:[/dim]  [cyan]XyraOfficial[/cyan]\n"
+        f"[bold white]WhatsApp[/bold white]   [dim]:[/dim]  [white]wa.me/62895325844493[/white]\n"
+        f"[bold white]YouTube[/bold white]    [dim]:[/dim]  [white]youtube.com/@Kz.tutorial[/white]\n"
+        f"[bold white]Email[/bold white]      [dim]:[/dim]  [white]xyraofficialsup@gmail.com[/white]\n"
+        f"[bold white]GitHub[/bold white]     [dim]:[/dim]  [white]github.com/XyraOfficial[/white]",
+        title="[bold cyan]DEVELOPER INFO[/bold cyan]",
+        border_style="cyan",
+        padding=(1, 2)
     )
-    
-    for line in table_output.split('\n'):
-        print(f"  {line}")
+    console.print(dev_panel)
     
     print()
-    print(f"  {D}{'─' * 50}{R}")
-    print(f"  {CY}Terima kasih telah menggunakan Termux Auth!{R}")
-    print(f"  {D}{'─' * 50}{R}")
+    console.print(f"  [dim]{'─' * 48}[/dim]")
+    console.print(f"  [cyan]Terima kasih telah menggunakan Termux Auth![/cyan]")
+    console.print(f"  [dim]{'─' * 48}[/dim]")
 
 cpdef void section(str title):
     print()
