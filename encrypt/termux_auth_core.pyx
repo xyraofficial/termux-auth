@@ -639,6 +639,208 @@ cpdef void do_reset(dict cfg):
     else:
         error(msg)
 
+cpdef bint admin_login():
+    cdef str username, password
+    cdef int tries = 3
+    
+    section("ADMIN LOGIN")
+    
+    while tries > 0:
+        username = input(f" {GR}[?]{R} Username : {CY}").strip()
+        print(R, end="")
+        password = getpass.getpass(f" {GR}[?]{R} Password : {CY}")
+        print(R, end="")
+        
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            print()
+            loading_tqdm("Verifikasi admin", 25)
+            success("Login admin berhasil!")
+            return True
+        
+        tries -= 1
+        error(f"Kredensial salah! Sisa {tries} percobaan")
+        print()
+    
+    error("Terlalu banyak percobaan gagal!")
+    return False
+
+cpdef void admin_list_users(Auth auth):
+    cdef bint ok
+    cdef object users
+    
+    section("DAFTAR USER")
+    loading_tqdm("Mengambil data", 25)
+    
+    ok, users = auth.list_users()
+    if ok:
+        if len(users) == 0:
+            info("Belum ada user terdaftar")
+            return
+        
+        success(f"Total: {len(users)} user")
+        print()
+        
+        table_data = []
+        for i, u in enumerate(users):
+            email = u.get("email", "N/A")
+            uid = u.get("id", "N/A")[:8] + "..."
+            created = u.get("created_at", "N/A")[:10]
+            confirmed = "Ya" if u.get("email_confirmed_at") else "Tidak"
+            table_data.append([i+1, email, uid, created, confirmed])
+        
+        headers = ["No", "Email", "UID", "Dibuat", "Verified"]
+        print(tabulate(table_data, headers=headers, tablefmt="rounded_grid"))
+    else:
+        error(f"Gagal mengambil data: {users}")
+
+cpdef void admin_delete_user(Auth auth):
+    cdef str uid, confirm
+    cdef bint ok
+    cdef object msg
+    
+    section("HAPUS USER")
+    
+    admin_list_users(auth)
+    print()
+    
+    uid = input(f" {YL}[?]{R} UID User : {CY}").strip()
+    print(R, end="")
+    
+    if not uid:
+        error("UID tidak boleh kosong!")
+        return
+    
+    confirm = input(f" {RD}[!]{R} Yakin hapus? (y/n) : {CY}").strip().lower()
+    print(R, end="")
+    
+    if confirm != 'y':
+        info("Dibatalkan")
+        return
+    
+    print()
+    loading_tqdm("Menghapus user", 25)
+    ok, msg = auth.delete_user(uid)
+    if ok:
+        success(msg)
+    else:
+        error(msg)
+
+cpdef void admin_user_detail(Auth auth):
+    cdef str uid
+    cdef bint ok
+    cdef object user
+    
+    section("DETAIL USER")
+    uid = input(f" {GR}[?]{R} UID User : {CY}").strip()
+    print(R, end="")
+    
+    if not uid:
+        error("UID tidak boleh kosong!")
+        return
+    
+    print()
+    loading_tqdm("Mengambil data", 25)
+    ok, user = auth.get_user(uid)
+    if ok:
+        box_info([
+            f"UID      : {user.get('id', 'N/A')}",
+            f"Email    : {user.get('email', 'N/A')}",
+            f"Dibuat   : {user.get('created_at', 'N/A')[:19]}",
+            f"Verified : {'Ya' if user.get('email_confirmed_at') else 'Tidak'}",
+            f"Provider : {user.get('app_metadata', {}).get('provider', 'email')}",
+        ])
+    else:
+        error(f"Gagal: {user}")
+
+cpdef void admin_panel(Auth auth, dict cfg):
+    cdef int sel
+    
+    while True:
+        clear()
+        print()
+        
+        title_box = (
+            f"\n{RD}{B}"
+            f"╭───────────────────────────────╮\n"
+            f"│       ADMIN PANEL             │\n"
+            f"│    Kelola User Database       │\n"
+            f"╰───────────────────────────────╯"
+            f"{R}"
+        )
+        
+        options = [
+            f"{B}List User    - Lihat semua user{R}",
+            f"{B}Detail User  - Info lengkap user{R}",
+            f"{B}Hapus User   - Delete user{R}",
+            f"{B}Database     - Lihat statistik{R}",
+            f"{B}Logout       - Keluar admin{R}",
+        ]
+        
+        admin_menu = TerminalMenu(
+            menu_entries=options,
+            title=title_box,
+            menu_cursor="▶ ",
+            menu_cursor_style=("fg_red",),
+            menu_highlight_style=("fg_yellow", "bold"),
+        )
+        
+        sel = admin_menu.show()
+        
+        if sel == 0:
+            admin_list_users(auth)
+        elif sel == 1:
+            admin_user_detail(auth)
+        elif sel == 2:
+            admin_delete_user(auth)
+        elif sel == 3:
+            section("DATABASE STATS")
+            ok, users = auth.list_users()
+            if ok:
+                verified = sum(1 for u in users if u.get("email_confirmed_at"))
+                box_info([
+                    f"Total User     : {len(users)}",
+                    f"Terverifikasi  : {verified}",
+                    f"Belum Verified : {len(users) - verified}",
+                ])
+            else:
+                error("Gagal mengambil statistik")
+        elif sel == 4 or sel is None:
+            loading_tqdm("Logout admin", 20)
+            success("Logout admin berhasil!")
+            break
+        
+        print()
+        input(f" {D}Tekan Enter...{R}")
+
+cpdef void do_login_menu(Auth auth, dict cfg):
+    cdef int sel
+    
+    section("LOGIN")
+    
+    login_options = [
+        f"{B}Login User   - Masuk sebagai user{R}",
+        f"{B}Login Admin  - Masuk sebagai admin{R}",
+        f"{B}Kembali      - Menu utama{R}",
+    ]
+    
+    login_menu = TerminalMenu(
+        menu_entries=login_options,
+        title=f"\n{GR}{B}╭─────────────────────────────╮\n│     PILIH TIPE LOGIN        │\n╰─────────────────────────────╯{R}",
+        menu_cursor="▶ ",
+        menu_cursor_style=("fg_red",),
+        menu_highlight_style=("fg_yellow", "bold"),
+    )
+    
+    sel = login_menu.show()
+    
+    if sel == 0:
+        do_login(auth, cfg)
+    elif sel == 1:
+        if admin_login():
+            admin_panel(auth, cfg)
+    elif sel == 2 or sel is None:
+        return
+
 cpdef void intro_loading():
     clear()
     print()
@@ -689,7 +891,7 @@ cpdef int show_main_menu(dict dev_info, str user_ip):
 
 cpdef void run_main():
     cdef dict cfg, dev_info
-    cdef str url, key, user_ip
+    cdef str url, key, svc_key, user_ip
     cdef Auth auth
     cdef int sel
     
@@ -702,6 +904,7 @@ cpdef void run_main():
     
     url = cfg.get("supabase_url", "")
     key = cfg.get("supabase_key", "")
+    svc_key = cfg.get("supabase_service_key", key)
     if not url or not key:
         error("Konfigurasi Supabase tidak lengkap")
         input(f"\n {D}Tekan Enter...{R}")
@@ -711,7 +914,7 @@ cpdef void run_main():
         input(f"\n {D}Tekan Enter...{R}")
         return
     
-    auth = Auth(url, key)
+    auth = Auth(url, key, svc_key)
     
     dev_info = get_device_info()
     user_ip = get_ip()
@@ -726,7 +929,7 @@ cpdef void run_main():
         if sel == 0:
             do_signup(auth, cfg)
         elif sel == 1:
-            do_login(auth, cfg)
+            do_login_menu(auth, cfg)
         elif sel == 2:
             do_resend(cfg)
         elif sel == 3:
