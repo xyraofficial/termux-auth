@@ -412,15 +412,20 @@ cdef class Auth:
     
     cpdef tuple signup(self, str email, str pw):
         try:
-            r = requests.post(f"{self.url}/auth/v1/signup", 
-                json={"email": email, "password": pw}, headers=self.h)
+            admin_h = {"apikey": self.service_key, "Authorization": f"Bearer {self.service_key}", "Content-Type": "application/json"}
+            r = requests.post(f"{self.url}/auth/v1/admin/users", 
+                json={
+                    "email": email, 
+                    "password": pw,
+                    "email_confirm": False
+                }, headers=admin_h)
             d = r.json()
             if r.status_code == 200:
-                uid = d.get("id") or d.get("user", {}).get("id")
+                uid = d.get("id", "")
                 return (True, {"uid": uid, "email": email})
-            elif r.status_code == 422:
+            elif r.status_code == 422 or "already been registered" in str(d):
                 return (False, "Email sudah terdaftar")
-            return (False, d.get("error_description", "Gagal"))
+            return (False, d.get("msg", d.get("error_description", "Gagal")))
         except Exception as e:
             return (False, str(e))
     
@@ -471,6 +476,32 @@ cdef class Auth:
             return (False, f"Error: {r.status_code}")
         except Exception as e:
             return (False, str(e))
+    
+    cpdef tuple confirm_email(self, str uid):
+        try:
+            admin_h = {"apikey": self.service_key, "Authorization": f"Bearer {self.service_key}", "Content-Type": "application/json"}
+            r = requests.put(f"{self.url}/auth/v1/admin/users/{uid}", 
+                json={"email_confirm": True}, headers=admin_h)
+            if r.status_code == 200:
+                return (True, "Email terverifikasi!")
+            return (False, f"Error: {r.status_code}")
+        except Exception as e:
+            return (False, str(e))
+    
+    cpdef tuple get_user_by_email(self, str email):
+        try:
+            admin_h = {"apikey": self.service_key, "Authorization": f"Bearer {self.service_key}", "Content-Type": "application/json"}
+            r = requests.get(f"{self.url}/auth/v1/admin/users", headers=admin_h)
+            if r.status_code == 200:
+                data = r.json()
+                users = data.get("users", [])
+                for u in users:
+                    if u.get("email", "").lower() == email.lower():
+                        return (True, u)
+                return (False, "User tidak ditemukan")
+            return (False, f"Error: {r.status_code}")
+        except Exception as e:
+            return (False, str(e))
 
 cpdef str get_email():
     cdef str e
@@ -513,8 +544,8 @@ cpdef bint otp_input(str email, dict cfg, int tries=3):
     return False
 
 cpdef void do_signup(Auth auth, dict cfg):
-    cdef str email, pw, otp, msg
-    cdef bint ok, sent
+    cdef str email, pw, otp, msg, uid
+    cdef bint ok, sent, confirmed
     cdef object res
     
     section("SIGNUP")
@@ -524,6 +555,7 @@ cpdef void do_signup(Auth auth, dict cfg):
     loading_tqdm("Membuat akun", 25)
     ok, res = auth.signup(email, pw)
     if ok:
+        uid = res.get("uid", "")
         success("Akun dibuat!")
         loading_tqdm("Mengirim OTP", 30)
         otp = gen_otp()
@@ -534,17 +566,22 @@ cpdef void do_signup(Auth auth, dict cfg):
             print()
             if otp_input(email, cfg):
                 print()
-                success("Email terverifikasi!")
-                info("Silakan login")
+                loading_tqdm("Verifikasi email", 20)
+                confirmed, msg = auth.confirm_email(uid)
+                if confirmed:
+                    success("Email terverifikasi!")
+                    info("Silakan login")
+                else:
+                    error(f"Gagal verifikasi: {msg}")
         else:
             error(msg)
     else:
         error(res)
 
 cpdef void do_login(Auth auth, dict cfg):
-    cdef str email, pw, otp, msg
-    cdef bint ok, sent
-    cdef object res
+    cdef str email, pw, otp, msg, uid
+    cdef bint ok, sent, found, confirmed
+    cdef object res, user_data
     cdef int sel
     
     section("LOGIN")
@@ -583,6 +620,12 @@ cpdef void do_login(Auth auth, dict cfg):
                 break
     elif res == "UNVERIFIED":
         info("Email belum diverifikasi")
+        loading_tqdm("Mencari data user", 20)
+        found, user_data = auth.get_user_by_email(email)
+        if not found:
+            error("User tidak ditemukan di database")
+            return
+        uid = user_data.get("id", "")
         loading_tqdm("Mengirim OTP", 30)
         otp = gen_otp()
         save_otp(email, otp)
@@ -592,7 +635,13 @@ cpdef void do_login(Auth auth, dict cfg):
             print()
             if otp_input(email, cfg):
                 print()
-                success("Terverifikasi! Silakan login lagi")
+                loading_tqdm("Verifikasi email", 20)
+                confirmed, msg = auth.confirm_email(uid)
+                if confirmed:
+                    success("Email terverifikasi!")
+                    info("Silakan login lagi")
+                else:
+                    error(f"Gagal verifikasi: {msg}")
         else:
             error(msg)
     else:
@@ -771,7 +820,7 @@ cpdef void admin_delete_user(Auth auth):
         f"\n{RD}{B}"
         f"╭───────────────────────────────╮\n"
         f"│      PILIH USER UNTUK         │\n"
-        f"│         DIHAPUS                │\n"
+        f"│         DIHAPUS               │\n"
         f"╰───────────────────────────────╯"
         f"{R}"
     )
