@@ -222,9 +222,9 @@ cpdef void show_developer_info():
         f"[bold white]YouTube[/bold white]    [dim]:[/dim]  [green]youtube.com/@Kz.tutorial[/green]\n"
         f"[bold white]Email[/bold white]      [dim]:[/dim]  [green]xyraofficialsup@gmail.com[/green]\n"
         f"[bold white]GitHub[/bold white]     [dim]:[/dim]  [green]github.com/XyraOfficial[/green]",
-        title="[bold cyan]DEVELOPER INFO[/bold cyan]",
+        title="DEVELOPER INFO",
         border_style="cyan",
-        padding=(1, 2)
+        padding=(0, 1)
     )
     console.print(dev_panel)
     
