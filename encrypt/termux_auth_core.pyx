@@ -587,7 +587,7 @@ cpdef int show_main_menu(dict dev_info, str user_ip):
     title_box = (
         f"\n{GR}{B}"
         f"╭───────────────────────────────╮\n"
-        f"│  {greeting}, Pengguna!        │\n"
+        f"│  {greeting}, Pengguna!     │\n"
         f"│       MENU UTAMA              │\n"
         f"╰───────────────────────────────╯"
         f"{R}"
