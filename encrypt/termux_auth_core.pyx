@@ -796,7 +796,10 @@ cpdef void admin_panel(Auth auth, dict cfg):
             section("DATABASE STATS")
             ok, users = auth.list_users()
             if ok:
-                verified = sum(1 for u in users if u.get("email_confirmed_at"))
+                verified = 0
+                for u in users:
+                    if u.get("email_confirmed_at"):
+                        verified = verified + 1
                 box_info([
                     f"Total User     : {len(users)}",
                     f"Terverifikasi  : {verified}",
