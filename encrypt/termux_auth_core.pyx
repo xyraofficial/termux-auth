@@ -1443,6 +1443,277 @@ cpdef void admin_user_detail(Auth auth):
     else:
         error(f"Gagal: {user}")
 
+cpdef void admin_add_limit(Auth auth):
+    cdef str uid_or_email, amount_str
+    cdef int amount
+    cdef bint ok
+    cdef object users, user
+    cdef str user_id = ""
+    
+    section("ADD LIMIT")
+    uid_or_email = input(f" {GR}[?]{R} UID atau Email User : {CY}").strip()
+    print(R, end="")
+    
+    if not uid_or_email:
+        error("Input tidak boleh kosong!")
+        return
+    
+    if "@" in uid_or_email:
+        loading_tqdm("Mencari user", 20)
+        ok, users = auth.list_users()
+        if ok and users:
+            for u in users:
+                if u and u.get("email", "").lower() == uid_or_email.lower():
+                    user_id = u.get("id", "")
+                    break
+            if not user_id:
+                error(f"User dengan email {uid_or_email} tidak ditemukan!")
+                return
+        else:
+            error("Gagal mengambil data user!")
+            return
+    else:
+        user_id = uid_or_email
+    
+    amount_str = input(f" {GR}[?]{R} Jumlah credit yang ditambahkan : {CY}").strip()
+    print(R, end="")
+    
+    try:
+        amount = int(amount_str)
+        if amount < 1:
+            error("Jumlah harus lebih dari 0!")
+            return
+    except:
+        error("Input harus berupa angka!")
+        return
+    
+    add_credit(user_id, amount)
+    cdef int new_credit = get_user_credit(user_id)
+    success(f"Berhasil menambahkan {amount} credit!")
+    info(f"Credit user sekarang: {new_credit}")
+
+cpdef void admin_remove_limit(Auth auth):
+    cdef str uid_or_email, amount_str
+    cdef int amount, current_credit
+    cdef bint ok
+    cdef object users
+    cdef str user_id = ""
+    
+    section("REMOVE LIMIT")
+    uid_or_email = input(f" {GR}[?]{R} UID atau Email User : {CY}").strip()
+    print(R, end="")
+    
+    if not uid_or_email:
+        error("Input tidak boleh kosong!")
+        return
+    
+    if "@" in uid_or_email:
+        loading_tqdm("Mencari user", 20)
+        ok, users = auth.list_users()
+        if ok and users:
+            for u in users:
+                if u and u.get("email", "").lower() == uid_or_email.lower():
+                    user_id = u.get("id", "")
+                    break
+            if not user_id:
+                error(f"User dengan email {uid_or_email} tidak ditemukan!")
+                return
+        else:
+            error("Gagal mengambil data user!")
+            return
+    else:
+        user_id = uid_or_email
+    
+    current_credit = get_user_credit(user_id)
+    info(f"Credit saat ini: {current_credit}")
+    
+    amount_str = input(f" {GR}[?]{R} Jumlah credit yang dikurangi : {CY}").strip()
+    print(R, end="")
+    
+    try:
+        amount = int(amount_str)
+        if amount < 1:
+            error("Jumlah harus lebih dari 0!")
+            return
+    except:
+        error("Input harus berupa angka!")
+        return
+    
+    remove_credit(user_id, amount)
+    cdef int new_credit = get_user_credit(user_id)
+    success(f"Berhasil mengurangi {amount} credit!")
+    info(f"Credit user sekarang: {new_credit}")
+
+cpdef void admin_view_all_limits(Auth auth):
+    cdef dict all_credits
+    cdef list table_data
+    cdef str uid
+    cdef dict data
+    cdef bint ok
+    cdef object users
+    cdef dict email_map = {}
+    
+    section("LIHAT SEMUA LIMIT")
+    loading_tqdm("Mengambil data", 25)
+    
+    ok, users = auth.list_users()
+    if ok and users:
+        for u in users:
+            if u:
+                email_map[u.get("id", "")] = u.get("email", "N/A")
+    
+    all_credits = get_all_credits()
+    
+    if not all_credits:
+        info("Belum ada data credit user")
+        return
+    
+    table_data = []
+    for uid, data in all_credits.items():
+        email = email_map.get(uid, "N/A")
+        credit = data.get("credit", DEFAULT_CREDIT)
+        used = data.get("used", 0)
+        short_uid = uid[:8] + "..." if len(uid) > 8 else uid
+        table_data.append([short_uid, email, credit, used])
+    
+    print()
+    print(tabulate(table_data, headers=["UID", "Email", "Credit", "Used"], tablefmt="pretty"))
+
+cpdef void admin_reset_limit(Auth auth):
+    cdef str uid_or_email
+    cdef bint ok
+    cdef object users
+    cdef str user_id = ""
+    
+    section("RESET LIMIT")
+    uid_or_email = input(f" {GR}[?]{R} UID atau Email User : {CY}").strip()
+    print(R, end="")
+    
+    if not uid_or_email:
+        error("Input tidak boleh kosong!")
+        return
+    
+    if "@" in uid_or_email:
+        loading_tqdm("Mencari user", 20)
+        ok, users = auth.list_users()
+        if ok and users:
+            for u in users:
+                if u and u.get("email", "").lower() == uid_or_email.lower():
+                    user_id = u.get("id", "")
+                    break
+            if not user_id:
+                error(f"User dengan email {uid_or_email} tidak ditemukan!")
+                return
+        else:
+            error("Gagal mengambil data user!")
+            return
+    else:
+        user_id = uid_or_email
+    
+    reset_user_credit(user_id)
+    success(f"Credit user berhasil direset ke default ({DEFAULT_CREDIT})!")
+
+cpdef void admin_set_limit(Auth auth):
+    cdef str uid_or_email, amount_str
+    cdef int amount
+    cdef bint ok
+    cdef object users
+    cdef str user_id = ""
+    
+    section("SET LIMIT")
+    uid_or_email = input(f" {GR}[?]{R} UID atau Email User : {CY}").strip()
+    print(R, end="")
+    
+    if not uid_or_email:
+        error("Input tidak boleh kosong!")
+        return
+    
+    if "@" in uid_or_email:
+        loading_tqdm("Mencari user", 20)
+        ok, users = auth.list_users()
+        if ok and users:
+            for u in users:
+                if u and u.get("email", "").lower() == uid_or_email.lower():
+                    user_id = u.get("id", "")
+                    break
+            if not user_id:
+                error(f"User dengan email {uid_or_email} tidak ditemukan!")
+                return
+        else:
+            error("Gagal mengambil data user!")
+            return
+    else:
+        user_id = uid_or_email
+    
+    cdef int current = get_user_credit(user_id)
+    info(f"Credit saat ini: {current}")
+    
+    amount_str = input(f" {GR}[?]{R} Set credit ke : {CY}").strip()
+    print(R, end="")
+    
+    try:
+        amount = int(amount_str)
+        if amount < 0:
+            error("Credit tidak boleh negatif!")
+            return
+    except:
+        error("Input harus berupa angka!")
+        return
+    
+    set_credit(user_id, amount)
+    success(f"Credit user berhasil diset ke {amount}!")
+
+cpdef void admin_credit_menu(Auth auth):
+    cdef int sel
+    
+    while True:
+        clear()
+        print()
+        
+        title_box = (
+            f"\n{YL}{B}"
+            f"╭───────────────────────────────╮\n"
+            f"│    KELOLA LIMIT (CREDIT)      │\n"
+            f"│   Manajemen Credit User       │\n"
+            f"╰───────────────────────────────╯"
+            f"{R}"
+        )
+        
+        credit_options = [
+            f"{B}Add Limit     - Tambah credit user{R}",
+            f"{B}Remove Limit  - Kurangi credit user{R}",
+            f"{B}Lihat Semua   - Lihat semua credit{R}",
+            f"{B}Reset Limit   - Reset ke default (3){R}",
+            f"{B}Set Limit     - Set credit tertentu{R}",
+            f"{B}Kembali       - Admin panel{R}",
+        ]
+        
+        credit_menu = TerminalMenu(
+            menu_entries=credit_options,
+            title=title_box,
+            menu_cursor="▶ ",
+            menu_cursor_style=("fg_red",),
+            menu_highlight_style=("fg_yellow", "bold"),
+        )
+        
+        sel = credit_menu.show()
+        
+        if sel == 0:
+            admin_add_limit(auth)
+        elif sel == 1:
+            admin_remove_limit(auth)
+        elif sel == 2:
+            admin_view_all_limits(auth)
+        elif sel == 3:
+            admin_reset_limit(auth)
+        elif sel == 4:
+            admin_set_limit(auth)
+        elif sel == 5 or sel is None:
+            break
+        
+        print()
+        input(f" {D}Tekan Enter...{R}")
+
 cpdef void admin_panel(Auth auth, dict cfg):
     cdef int sel
     cdef bint ok
@@ -1465,6 +1736,7 @@ cpdef void admin_panel(Auth auth, dict cfg):
         options = [
             f"{B}List User    - Lihat & pilih user{R}",
             f"{B}Hapus User   - Delete user{R}",
+            f"{B}Kelola Limit - Manajemen credit{R}",
             f"{B}Database     - Lihat statistik{R}",
             f"{B}Logout       - Keluar admin{R}",
         ]
@@ -1484,6 +1756,8 @@ cpdef void admin_panel(Auth auth, dict cfg):
         elif sel == 1:
             admin_delete_user(auth)
         elif sel == 2:
+            admin_credit_menu(auth)
+        elif sel == 3:
             section("DATABASE STATS")
             ok, users = auth.list_users()
             if ok:
@@ -1500,7 +1774,7 @@ cpdef void admin_panel(Auth auth, dict cfg):
                 error("Gagal mengambil statistik")
             print()
             input(f" {D}Tekan Enter...{R}")
-        elif sel == 3 or sel is None:
+        elif sel == 4 or sel is None:
             loading_tqdm("Logout admin", 20)
             success("Logout admin berhasil!")
             break

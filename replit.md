@@ -76,12 +76,42 @@ Sistem menggunakan Dexatel untuk pengiriman OTP melalui SMS:
 |---------|------|-----------|
 | **Dexatel** | SMS | Kirim OTP via SMS menggunakan Dexatel API |
 
+### Credit/Limit System
+- **Purpose**: Controls usage limits for WhatsApp Bomber feature
+- **Storage**: Credits stored locally in `limit_data.json`
+- **Default Credit**: 3 credits for new users
+- **Usage**: Each use of WhatsApp Bomber deducts 1 credit (checked BEFORE use)
+- **Data Structure**:
+  ```json
+  {
+    "user_id": {
+      "credit": 3,
+      "used": 0
+    }
+  }
+  ```
+- **Core Functions**:
+  - `get_user_credit(user_id)` - Get current credit balance
+  - `get_user_used(user_id)` - Get total usage count
+  - `use_credit(user_id, amount)` - Deduct credit (returns False if insufficient)
+  - `add_credit(user_id, amount)` - Add credit to user
+  - `remove_credit(user_id, amount)` - Remove credit from user
+  - `set_credit(user_id, amount)` - Set specific credit amount
+  - `reset_user_credit(user_id)` - Reset to default (3)
+  - `get_all_credits()` - Get all credit data
+
 ### Admin System
 - **Admin Login**: Hardcoded credentials (username: xyraofficial, password: admin)
 - **Admin Panel Features**:
   - List Users - View all registered users in table format
   - Detail User - View detailed info for specific user by UID
   - Delete User - Remove user from database with confirmation
+  - Kelola Limit - Credit management submenu:
+    - Add Limit - Add credits to user by UID or email
+    - Remove Limit - Remove credits from user
+    - Lihat Semua - View all users' credit balances in table format
+    - Reset Limit - Reset user credit to default (3)
+    - Set Limit - Set specific credit amount for user
   - Database Stats - View user statistics (total, verified, unverified)
 - **Admin API**: Uses Supabase service_key for admin operations (list_users, delete_user, get_user)
 
