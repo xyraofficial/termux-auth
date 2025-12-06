@@ -925,12 +925,12 @@ cpdef void do_sms_config_with_cfg(dict cfg, str user_id):
                     success_count += 1
                     round_results.append((name, True, "Terkirim"))
                     console.print(f"   [bold green]✓[/bold green] Status: [green]BERHASIL[/green]")
-                    save_otp_log(user_id, phone_clean, "success")
+                    save_otp_log(user_id, phone_clean, "success", name)
                 else:
                     fail_count += 1
                     round_results.append((name, False, result_msg[:20]))
                     console.print(f"   [bold red]✗[/bold red] Status: [red]GAGAL[/red] - {result_msg[:25]}")
-                    save_otp_log(user_id, phone_clean, "failed")
+                    save_otp_log(user_id, phone_clean, "failed", name)
                 
                 results.append((str(request_num), f"R{round_num}-{name}", "[green]OK[/green]" if ok else "[red]GAGAL[/red]", "Terkirim" if ok else result_msg[:15]))
                 print()
@@ -978,6 +978,8 @@ cpdef void do_sms_config_with_cfg(dict cfg, str user_id):
             border_style="green" if success_count > fail_count else "red",
             padding=(0, 2)
         ))
+        
+        update_target_rounds(user_id, phone_clean, send_count)
         
     except KeyboardInterrupt:
         print()
@@ -1187,32 +1189,115 @@ cpdef void do_signup(Auth auth, dict cfg):
     else:
         error(res)
 
-cpdef void save_otp_log(str user_id, str phone, str status):
+cpdef dict _get_target_log(str user_id, str phone):
     cdef dict headers = _supabase_headers()
-    cdef str url = f"{SUPABASE_URL}/rest/v1/otp_logs"
-    cdef dict payload = {
-        "user_id": user_id,
-        "phone": phone,
-        "status": status
-    }
+    cdef str url = f"{SUPABASE_URL}/rest/v1/otp_target_logs?user_id=eq.{user_id}&phone=eq.{phone}"
     try:
-        r = requests.post(url, json=payload, headers=headers, timeout=10)
+        r = requests.get(url, headers=headers, timeout=10)
+        if r.status_code == 200:
+            data = r.json()
+            if data and len(data) > 0:
+                return data[0]
+        return None
     except:
-        pass
+        return None
+
+cpdef void save_otp_log(str user_id, str phone, str status, str service_name=""):
+    cdef dict headers = _supabase_headers()
+    cdef dict existing = _get_target_log(user_id, phone)
+    cdef dict services, payload
+    cdef int total_success, total_failed, total_rounds
+    cdef str url
+    
+    if existing is None:
+        services = {}
+        if service_name:
+            services[service_name] = {"success": 1 if status == "success" else 0, "failed": 1 if status == "failed" else 0}
+        
+        payload = {
+            "user_id": user_id,
+            "phone": phone,
+            "services": json.dumps(services),
+            "total_success": 1 if status == "success" else 0,
+            "total_failed": 1 if status == "failed" else 0,
+            "total_rounds": 0
+        }
+        url = f"{SUPABASE_URL}/rest/v1/otp_target_logs"
+        try:
+            r = requests.post(url, json=payload, headers=headers, timeout=10)
+        except:
+            pass
+    else:
+        services = existing.get("services", {})
+        if isinstance(services, str):
+            try:
+                services = json.loads(services)
+            except:
+                services = {}
+        
+        if service_name:
+            if service_name not in services:
+                services[service_name] = {"success": 0, "failed": 0}
+            if status == "success":
+                services[service_name]["success"] = services[service_name].get("success", 0) + 1
+            else:
+                services[service_name]["failed"] = services[service_name].get("failed", 0) + 1
+        
+        total_success = existing.get("total_success", 0) + (1 if status == "success" else 0)
+        total_failed = existing.get("total_failed", 0) + (1 if status == "failed" else 0)
+        
+        payload = {
+            "services": json.dumps(services),
+            "total_success": total_success,
+            "total_failed": total_failed,
+            "last_sent_at": datetime.now().isoformat()
+        }
+        url = f"{SUPABASE_URL}/rest/v1/otp_target_logs?user_id=eq.{user_id}&phone=eq.{phone}"
+        try:
+            r = requests.patch(url, json=payload, headers=headers, timeout=10)
+        except:
+            pass
+
+cpdef void update_target_rounds(str user_id, str phone, int rounds):
+    cdef dict headers = _supabase_headers()
+    cdef dict existing = _get_target_log(user_id, phone)
+    cdef str url
+    cdef dict payload
+    
+    if existing:
+        payload = {
+            "total_rounds": existing.get("total_rounds", 0) + rounds
+        }
+        url = f"{SUPABASE_URL}/rest/v1/otp_target_logs?user_id=eq.{user_id}&phone=eq.{phone}"
+        try:
+            r = requests.patch(url, json=payload, headers=headers, timeout=10)
+        except:
+            pass
 
 cpdef list get_otp_logs(str user_id):
     cdef dict headers = _supabase_headers()
-    cdef str url = f"{SUPABASE_URL}/rest/v1/otp_logs?user_id=eq.{user_id}&order=created_at.desc&limit=50"
+    cdef str url = f"{SUPABASE_URL}/rest/v1/otp_target_logs?user_id=eq.{user_id}&order=last_sent_at.desc&limit=20"
     cdef list result = []
+    cdef dict services
     try:
         r = requests.get(url, headers=headers, timeout=10)
         if r.status_code == 200:
             data = r.json()
             for item in data:
+                services = item.get("services", {})
+                if isinstance(services, str):
+                    try:
+                        services = json.loads(services)
+                    except:
+                        services = {}
                 result.append({
                     "phone": item.get("phone", ""),
-                    "status": item.get("status", ""),
-                    "time": item.get("created_at", "")
+                    "services": services,
+                    "total_success": item.get("total_success", 0),
+                    "total_failed": item.get("total_failed", 0),
+                    "total_rounds": item.get("total_rounds", 0),
+                    "first_sent": item.get("first_sent_at", ""),
+                    "last_sent": item.get("last_sent_at", "")
                 })
         return result
     except:
@@ -1382,28 +1467,51 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                 if len(logs) == 0:
                     info("Belum ada riwayat pengiriman OTP")
                 else:
-                    success(f"Total: {len(logs)} log")
+                    success(f"Total: {len(logs)} target")
                     print()
                     
-                    log_table = Table(title="Riwayat Kirim OTP", show_header=True, header_style="bold cyan")
-                    log_table.add_column("No", style="dim", width=4)
-                    log_table.add_column("Nomor HP", style="cyan")
-                    log_table.add_column("Status", style="green")
-                    log_table.add_column("Waktu", style="yellow")
-                    
-                    for i, log in enumerate(logs[-10:], 1):
-                        status_style = "green" if log.get("status") == "success" else "red"
-                        log_table.add_row(
-                            str(i),
-                            log.get("phone", "N/A"),
-                            f"[{status_style}]{log.get('status', 'N/A')}[/{status_style}]",
-                            log.get("time", "N/A")
+                    for i, log in enumerate(logs, 1):
+                        phone = log.get("phone", "N/A")
+                        services = log.get("services", {})
+                        total_success = log.get("total_success", 0)
+                        total_failed = log.get("total_failed", 0)
+                        total_rounds = log.get("total_rounds", 0)
+                        last_sent = log.get("last_sent", "")[:10] if log.get("last_sent") else "N/A"
+                        
+                        target_header = (
+                            f"[bold cyan]TARGET #{i}[/bold cyan]\n"
+                            f"[bold white]📱 Nomor[/bold white]: +62{phone}\n"
+                            f"[bold white]📅 Terakhir[/bold white]: {last_sent}"
                         )
+                        console.print(Panel(target_header, border_style="cyan", padding=(0, 2)))
+                        
+                        stats_table = Table(show_header=False, box=None, padding=(0, 1))
+                        stats_table.add_column("Label", style="dim")
+                        stats_table.add_column("Value", style="white")
+                        stats_table.add_row("✅ Berhasil", f"[green]{total_success}[/green]")
+                        stats_table.add_row("❌ Gagal", f"[red]{total_failed}[/red]")
+                        stats_table.add_row("🔄 Total Round", f"[cyan]{total_rounds}[/cyan]")
+                        console.print(stats_table)
+                        
+                        if services:
+                            print()
+                            console.print(f"  [bold yellow]📋 Detail Layanan:[/bold yellow]")
+                            svc_table = Table(show_header=True, header_style="bold white", box=None, padding=(0, 1))
+                            svc_table.add_column("Layanan", style="cyan", width=15)
+                            svc_table.add_column("Sukses", style="green", width=8)
+                            svc_table.add_column("Gagal", style="red", width=8)
+                            
+                            for svc_name, svc_data in services.items():
+                                svc_success = svc_data.get("success", 0) if isinstance(svc_data, dict) else 0
+                                svc_failed = svc_data.get("failed", 0) if isinstance(svc_data, dict) else 0
+                                svc_table.add_row(svc_name, str(svc_success), str(svc_failed))
+                            
+                            console.print(svc_table)
+                        
+                        print()
                     
-                    console.print(log_table)
-                    
-                    if len(logs) > 10:
-                        info(f"Menampilkan 10 log terbaru dari {len(logs)} total")
+                    if len(logs) >= 20:
+                        info(f"Menampilkan 20 target terbaru")
                 
                 print()
                 input(f" {D}Tekan Enter untuk kembali...{R}")
