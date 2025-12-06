@@ -1491,36 +1491,44 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                         total_rounds = log.get("total_rounds", 0)
                         last_sent = log.get("last_sent", "")[:10] if log.get("last_sent") else "N/A"
                         
-                        target_header = (
-                            f"[bold cyan]TARGET #{i}[/bold cyan]\n"
-                            f"[bold white]📱 Nomor[/bold white]: +62{phone}\n"
-                            f"[bold white]📅 Terakhir[/bold white]: {last_sent}"
-                        )
-                        console.print(Panel(target_header, border_style="cyan", padding=(0, 2)))
+                        print(f"{CY}{B}╔{'═' * 50}╗{R}")
+                        print(f"{CY}{B}║{R}  {WH}{B}TARGET #{i}{R}{' ' * (40 - len(str(i)))}{CY}{B}║{R}")
+                        print(f"{CY}{B}╠{'═' * 50}╣{R}")
+                        print(f"{CY}{B}║{R}  {GR}📱 Nomor{R}     : {WH}+62{phone}{R}{' ' * (28 - len(phone))}{CY}{B}║{R}")
+                        print(f"{CY}{B}║{R}  {GR}📅 Terakhir{R}  : {WH}{last_sent}{R}{' ' * (28 - len(last_sent))}{CY}{B}║{R}")
+                        print(f"{CY}{B}╠{'═' * 50}╣{R}")
+                        print(f"{CY}{B}║{R}  {YL}📊 STATISTIK{R}{' ' * 36}{CY}{B}║{R}")
+                        print(f"{CY}{B}╠{'═' * 50}╣{R}")
                         
-                        stats_table = Table(show_header=False, box=None, padding=(0, 1))
-                        stats_table.add_column("Label", style="dim")
-                        stats_table.add_column("Value", style="white")
-                        stats_table.add_row("✅ Berhasil", f"[green]{total_success}[/green]")
-                        stats_table.add_row("❌ Gagal", f"[red]{total_failed}[/red]")
-                        stats_table.add_row("🔄 Total Round", f"[cyan]{total_rounds}[/cyan]")
-                        console.print(stats_table)
+                        stats_data = [
+                            ["✅ Berhasil", f"{GR}{total_success}{R}"],
+                            ["❌ Gagal", f"{RD}{total_failed}{R}"],
+                            ["🔄 Round", f"{CY}{total_rounds}{R}"]
+                        ]
+                        stats_str = tabulate(stats_data, tablefmt="plain")
+                        for line in stats_str.split('\n'):
+                            padded = f"  {line}"
+                            print(f"{CY}{B}║{R}{padded}{' ' * (50 - len(line) - 2)}{CY}{B}║{R}")
                         
                         if services:
-                            print()
-                            console.print(f"  [bold yellow]📋 Detail Layanan:[/bold yellow]")
-                            svc_table = Table(show_header=True, header_style="bold white", box=None, padding=(0, 1))
-                            svc_table.add_column("Layanan", style="cyan", width=15)
-                            svc_table.add_column("Sukses", style="green", width=8)
-                            svc_table.add_column("Gagal", style="red", width=8)
+                            print(f"{CY}{B}╠{'═' * 50}╣{R}")
+                            print(f"{CY}{B}║{R}  {MG}📋 DETAIL LAYANAN{R}{' ' * 31}{CY}{B}║{R}")
+                            print(f"{CY}{B}╠{'═' * 50}╣{R}")
                             
+                            svc_rows = []
                             for svc_name, svc_data in services.items():
                                 svc_success = svc_data.get("success", 0) if isinstance(svc_data, dict) else 0
                                 svc_failed = svc_data.get("failed", 0) if isinstance(svc_data, dict) else 0
-                                svc_table.add_row(svc_name, str(svc_success), str(svc_failed))
+                                svc_rows.append([svc_name[:18], f"{GR}{svc_success}{R}", f"{RD}{svc_failed}{R}"])
                             
-                            console.print(svc_table)
+                            svc_header = ["Layanan", "Sukses", "Gagal"]
+                            svc_str = tabulate(svc_rows, headers=svc_header, tablefmt="simple")
+                            for line in svc_str.split('\n'):
+                                padded = f"  {line}"
+                                visible_len = len(line.replace(GR, '').replace(RD, '').replace(R, ''))
+                                print(f"{CY}{B}║{R}{padded}{' ' * (50 - visible_len - 2)}{CY}{B}║{R}")
                         
+                        print(f"{CY}{B}╚{'═' * 50}╝{R}")
                         print()
                     
                     if len(logs) >= 20:
