@@ -168,6 +168,14 @@ Sistem menggunakan Dexatel untuk pengiriman OTP melalui SMS:
 
 ## Recent Changes
 
+**December 6, 2024:**
+- Fixed `fg_magenta` style error in TerminalMenu (changed to `fg_purple`)
+- Improved target confirmation box with modern design (emoji icons, colored labels, styled table)
+- Added internet connection check at startup with offline warning
+- Redesigned system loading screen with status indicators
+- Updated dependency check to show cleaner installation messages
+- Added service list table with status column
+
 **December 2024:**
 - Fixed User ID display in user profile to show full ID instead of truncated version
 - Added professional README.md with animations for GitHub

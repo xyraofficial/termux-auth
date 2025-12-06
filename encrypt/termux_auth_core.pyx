@@ -821,20 +821,31 @@ cpdef void do_sms_config_with_cfg(dict cfg, str user_id):
     total_requests = total_services * send_count
     
     print()
+    target_box = (
+        f"[bold white on green]  📱 TARGET INFO  [/bold white on green]\n\n"
+        f"[bold green]┃[/bold green] [bold white]📞 Target[/bold white]     [dim]::[/dim] [bold cyan]+62{phone_clean}[/bold cyan]\n"
+        f"[bold green]┃[/bold green] [bold white]🔧 Layanan[/bold white]    [dim]::[/dim] [bold yellow]{total_services}[/bold yellow] WhatsApp Services\n"
+        f"[bold green]┃[/bold green] [bold white]🔄 Pengiriman[/bold white] [dim]::[/dim] [bold magenta]{send_count}x[/bold magenta] round\n"
+        f"[bold green]┃[/bold green] [bold white]📊 Total[/bold white]      [dim]::[/dim] [bold blue]{total_requests}[/bold blue] request\n"
+        f"[bold green]╰[/bold green][dim]─────────────────────────────────[/dim]\n"
+        f"[bold yellow]💳[/bold yellow] [bold red]{send_count}[/bold red] credit akan digunakan"
+    )
     console.print(Panel(
-        f"[bold green]TARGET[/bold green]: +62{phone_clean}\n"
-        f"[bold cyan]LAYANAN[/bold cyan]: {total_services} WhatsApp Services\n"
-        f"[bold magenta]JUMLAH[/bold magenta]: {send_count}x pengiriman\n"
-        f"[bold yellow]TOTAL[/bold yellow]: {total_requests} request\n"
-        f"[bold red]CREDIT[/bold red]: {send_count} credit akan digunakan",
+        target_box,
         border_style="green",
-        padding=(0, 2)
+        padding=(1, 2),
+        title="[bold green]★ KONFIRMASI ★[/bold green]",
+        subtitle="[dim]WhatsApp OTP Sender[/dim]"
     ))
     print()
     
-    console.print(" [bold white]DAFTAR LAYANAN:[/bold white]")
+    service_header = Table(show_header=True, header_style="bold cyan", box=None)
+    service_header.add_column("No", style="cyan", width=4)
+    service_header.add_column("Nama Layanan", style="white")
+    service_header.add_column("Status", style="green", width=10)
     for idx, (name, _) in enumerate(WA_SERVICES, 1):
-        console.print(f"   [cyan]{idx}.[/cyan] {name}")
+        service_header.add_row(f"{idx}.", name, "✓ Ready")
+    console.print(Panel(service_header, title="[bold white]📋 DAFTAR LAYANAN[/bold white]", border_style="cyan"))
     print()
     
     options = [
