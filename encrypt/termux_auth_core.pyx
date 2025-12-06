@@ -1281,9 +1281,9 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                     credit_icon = "○"
                 
                 account_content = (
-                    f"[bold cyan]╭{'─' * 42}╮[/bold cyan]\n"
-                    f"[bold cyan]│[/bold cyan]  [bold white]I N F O   A C C O U N T[/bold white]              [bold cyan]│[/bold cyan]\n"
-                    f"[bold cyan]╰{'─' * 42}╯[/bold cyan]\n\n"
+                    f"[bold cyan]╭{'─' * 34}╮[/bold cyan]\n"
+                    f"[bold cyan]│[/bold cyan]  [bold white]I N F O   A C C O U N T[/bold white] [bold cyan]│[/bold cyan]\n"
+                    f"[bold cyan]╰{'─' * 34}╯[/bold cyan]\n\n"
                     f"[bold white]┌─ DATA PENGGUNA ─────────────────────────┐[/bold white]\n"
                     f"[bold white]│[/bold white]\n"
                     f"[bold white]│[/bold white]  [cyan]Email[/cyan]      : [bold white]{res['email']}[/bold white]\n"
@@ -1314,9 +1314,9 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                 print()
                 
                 uid_content = (
-                    f"[bold yellow]╭{'─' * 44}╮[/bold yellow]\n"
-                    f"[bold yellow]│[/bold yellow]  [bold white]C E K   U S E R   I D[/bold white]                  [bold yellow]│[/bold yellow]\n"
-                    f"[bold yellow]╰{'─' * 44}╯[/bold yellow]\n\n"
+                    f"[bold yellow]╭{'─' * 34}╮[/bold yellow]\n"
+                    f"[bold yellow]│[/bold yellow]  [bold white]C E K   U S E R   I D[/bold white] [bold yellow]│[/bold yellow]\n"
+                    f"[bold yellow]╰{'─' * 34}╯[/bold yellow]\n\n"
                     f"[bold white]┌─ YOUR USER ID ────────────────────────────┐[/bold white]\n"
                     f"[bold white]│[/bold white]\n"
                     f"[bold white]│[/bold white]  [bold green]{res['uid']}[/bold green]\n"
@@ -1326,7 +1326,7 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                     f"[dim]│[/dim]  [yellow]●[/yellow] UID adalah identitas unik akun Anda\n"
                     f"[dim]│[/dim]  [yellow]●[/yellow] Digunakan untuk identifikasi sistem\n"
                     f"[dim]│[/dim]  [red]●[/red] Jangan bagikan ke orang lain!\n"
-                    f"[dim]└──────────────────────────────────────────────┘[/dim]"
+                    f"[dim]└─────────────────────────────────────────────┘[/dim]"
                 )
                 
                 console.print(Panel(
