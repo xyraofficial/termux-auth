@@ -55,6 +55,11 @@ run/                        # PUBLIC - For distribution
 ### Security Notes
 - **Obfuscation Level**: Config encryption protects against casual users viewing credentials
 - **Limitation**: Encryption keys are embedded in the `.so` binary; skilled attackers with reverse-engineering tools can potentially extract them
+- **Service Key Usage**: The Supabase service key is used for both admin operations and credit management. This is by design for this Termux distribution model where a backend proxy is not practical
+- **Credit System Security**: Credit operations use the service key via REST API. For production environments, consider:
+  - Implementing Row Level Security (RLS) on the `user_credits` table
+  - Using a backend proxy for credit operations
+  - Moving credit management to Supabase Edge Functions
 - **Best Practice**: This is adequate for casual protection but not suitable for high-security environments
 
 ### UI/UX Features
@@ -78,27 +83,31 @@ Sistem menggunakan Dexatel untuk pengiriman OTP melalui SMS:
 
 ### Credit/Limit System
 - **Purpose**: Controls usage limits for WhatsApp Bomber feature
-- **Storage**: Credits stored locally in `limit_data.json`
+- **Storage**: Credits stored in Supabase database (table: `user_credits`)
 - **Default Credit**: 3 credits for new users
-- **Usage**: Each use of WhatsApp Bomber deducts 1 credit (checked BEFORE use)
-- **Data Structure**:
-  ```json
-  {
-    "user_id": {
-      "credit": 3,
-      "used": 0
-    }
-  }
+- **Usage**: Each ROUND of WhatsApp Bomber costs 1 credit
+  - User inputs number of rounds (1-4)
+  - System checks if `credit >= rounds` BEFORE sending
+  - If credit insufficient, user gets error message
+  - Example: If user has 2 credits and wants 4 rounds, system rejects
+- **Supabase Table Structure**:
+  ```sql
+  CREATE TABLE user_credits (
+    user_id TEXT PRIMARY KEY,
+    credit INTEGER DEFAULT 3,
+    used INTEGER DEFAULT 0
+  );
   ```
-- **Core Functions**:
+- **Core Functions** (using Supabase REST API):
+  - `init_supabase_credit(url, service_key)` - Initialize Supabase connection
   - `get_user_credit(user_id)` - Get current credit balance
   - `get_user_used(user_id)` - Get total usage count
-  - `use_credit(user_id, amount)` - Deduct credit (returns False if insufficient)
+  - `use_credit(user_id, amount)` - Deduct credit by amount (returns False if insufficient)
   - `add_credit(user_id, amount)` - Add credit to user
   - `remove_credit(user_id, amount)` - Remove credit from user
   - `set_credit(user_id, amount)` - Set specific credit amount
   - `reset_user_credit(user_id)` - Reset to default (3)
-  - `get_all_credits()` - Get all credit data
+  - `get_all_credits()` - Get all credit data from Supabase
 
 ### Admin System
 - **Admin Login**: Hardcoded credentials (username: xyraofficial, password: admin)

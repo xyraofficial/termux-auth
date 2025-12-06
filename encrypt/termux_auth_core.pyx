@@ -26,9 +26,16 @@ from fake_useragent import UserAgent
 cdef str CONFIG_FILE = "config.enc"
 cdef str CONFIG_FILE_PLAIN = "config.json"
 cdef str OTP_FILE = "otp_data.json"
-cdef str CREDIT_FILE = "limit_data.json"
 cdef int OTP_EXPIRY = 300
 cdef int DEFAULT_CREDIT = 3
+
+cdef str SUPABASE_URL = ""
+cdef str SUPABASE_SERVICE_KEY = ""
+
+cpdef void init_supabase_credit(str url, str service_key):
+    global SUPABASE_URL, SUPABASE_SERVICE_KEY
+    SUPABASE_URL = url
+    SUPABASE_SERVICE_KEY = service_key
 
 cdef bytes SALT = b"TermuxAuth2024SecureSalt"
 cdef bytes PASSPHRASE = b"Tx@uth#Pr0t3ct3d$K3y!2024"
@@ -359,89 +366,134 @@ cpdef tuple check_otp(str email, str code):
         json.dump(data, f)
     return (True, "Valid")
 
-cpdef dict load_credits():
-    cdef dict data = {}
-    if os.path.exists(CREDIT_FILE):
-        try:
-            with open(CREDIT_FILE, 'r') as f:
-                data = json.load(f)
-        except:
-            data = {}
-    return data
+cpdef dict _supabase_headers():
+    return {
+        "apikey": SUPABASE_SERVICE_KEY,
+        "Authorization": f"Bearer {SUPABASE_SERVICE_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
+    }
 
-cpdef void save_credits(dict data):
-    with open(CREDIT_FILE, 'w') as f:
-        json.dump(data, f, indent=2)
+cpdef dict _get_user_credit_data(str user_id):
+    cdef dict headers = _supabase_headers()
+    cdef str url = f"{SUPABASE_URL}/rest/v1/user_credits?user_id=eq.{user_id}"
+    try:
+        r = requests.get(url, headers=headers, timeout=10)
+        if r.status_code == 200:
+            data = r.json()
+            if data and len(data) > 0:
+                return data[0]
+        return None
+    except:
+        return None
+
+cpdef bint _create_user_credit(str user_id, int credit, int used):
+    cdef dict headers = _supabase_headers()
+    cdef str url = f"{SUPABASE_URL}/rest/v1/user_credits"
+    cdef dict payload = {"user_id": user_id, "credit": credit, "used": used}
+    try:
+        r = requests.post(url, json=payload, headers=headers, timeout=10)
+        return r.status_code in [200, 201]
+    except:
+        return False
+
+cpdef bint _update_user_credit(str user_id, int credit, int used):
+    cdef dict headers = _supabase_headers()
+    cdef str url = f"{SUPABASE_URL}/rest/v1/user_credits?user_id=eq.{user_id}"
+    cdef dict payload = {"credit": credit, "used": used}
+    try:
+        r = requests.patch(url, json=payload, headers=headers, timeout=10)
+        return r.status_code == 200
+    except:
+        return False
 
 cpdef int get_user_credit(str user_id):
-    cdef dict data = load_credits()
-    if user_id not in data:
-        data[user_id] = {"credit": DEFAULT_CREDIT, "used": 0}
-        save_credits(data)
-    return data[user_id].get("credit", DEFAULT_CREDIT)
+    cdef dict data = _get_user_credit_data(user_id)
+    if data is None:
+        _create_user_credit(user_id, DEFAULT_CREDIT, 0)
+        return DEFAULT_CREDIT
+    return data.get("credit", DEFAULT_CREDIT)
 
 cpdef int get_user_used(str user_id):
-    cdef dict data = load_credits()
-    if user_id not in data:
+    cdef dict data = _get_user_credit_data(user_id)
+    if data is None:
         return 0
-    return data[user_id].get("used", 0)
+    return data.get("used", 0)
 
 cpdef bint use_credit(str user_id, int amount=1):
-    cdef dict data = load_credits()
-    cdef int current_credit
+    cdef dict data = _get_user_credit_data(user_id)
+    cdef int current_credit, current_used
     
-    if user_id not in data:
-        data[user_id] = {"credit": DEFAULT_CREDIT, "used": 0}
+    if data is None:
+        _create_user_credit(user_id, DEFAULT_CREDIT, 0)
+        data = {"credit": DEFAULT_CREDIT, "used": 0}
     
-    current_credit = data[user_id].get("credit", DEFAULT_CREDIT)
+    current_credit = data.get("credit", DEFAULT_CREDIT)
+    current_used = data.get("used", 0)
     
     if current_credit < amount:
         return False
     
-    data[user_id]["credit"] = current_credit - amount
-    data[user_id]["used"] = data[user_id].get("used", 0) + amount
-    save_credits(data)
+    _update_user_credit(user_id, current_credit - amount, current_used + amount)
     return True
 
 cpdef void add_credit(str user_id, int amount):
-    cdef dict data = load_credits()
+    cdef dict data = _get_user_credit_data(user_id)
+    cdef int current_credit, current_used
     
-    if user_id not in data:
-        data[user_id] = {"credit": DEFAULT_CREDIT, "used": 0}
+    if data is None:
+        _create_user_credit(user_id, DEFAULT_CREDIT + amount, 0)
+        return
     
-    data[user_id]["credit"] = data[user_id].get("credit", DEFAULT_CREDIT) + amount
-    save_credits(data)
+    current_credit = data.get("credit", DEFAULT_CREDIT)
+    current_used = data.get("used", 0)
+    _update_user_credit(user_id, current_credit + amount, current_used)
 
 cpdef void remove_credit(str user_id, int amount):
-    cdef dict data = load_credits()
-    cdef int current_credit
+    cdef dict data = _get_user_credit_data(user_id)
+    cdef int current_credit, current_used
     
-    if user_id not in data:
-        data[user_id] = {"credit": DEFAULT_CREDIT, "used": 0}
+    if data is None:
+        _create_user_credit(user_id, max(0, DEFAULT_CREDIT - amount), 0)
+        return
     
-    current_credit = data[user_id].get("credit", DEFAULT_CREDIT)
-    data[user_id]["credit"] = max(0, current_credit - amount)
-    save_credits(data)
+    current_credit = data.get("credit", DEFAULT_CREDIT)
+    current_used = data.get("used", 0)
+    _update_user_credit(user_id, max(0, current_credit - amount), current_used)
 
 cpdef void set_credit(str user_id, int amount):
-    cdef dict data = load_credits()
+    cdef dict data = _get_user_credit_data(user_id)
     
-    if user_id not in data:
-        data[user_id] = {"credit": 0, "used": 0}
+    if data is None:
+        _create_user_credit(user_id, max(0, amount), 0)
+        return
     
-    data[user_id]["credit"] = max(0, amount)
-    save_credits(data)
+    _update_user_credit(user_id, max(0, amount), data.get("used", 0))
 
 cpdef void reset_user_credit(str user_id):
-    cdef dict data = load_credits()
+    cdef dict data = _get_user_credit_data(user_id)
     
-    if user_id in data:
-        data[user_id]["credit"] = DEFAULT_CREDIT
-        data[user_id]["used"] = 0
-        save_credits(data)
+    if data is None:
+        _create_user_credit(user_id, DEFAULT_CREDIT, 0)
+        return
+    
+    _update_user_credit(user_id, DEFAULT_CREDIT, 0)
 
 cpdef dict get_all_credits():
-    return load_credits()
+    cdef dict headers = _supabase_headers()
+    cdef str url = f"{SUPABASE_URL}/rest/v1/user_credits"
+    cdef dict result = {}
+    try:
+        r = requests.get(url, headers=headers, timeout=10)
+        if r.status_code == 200:
+            data = r.json()
+            for item in data:
+                user_id = item.get("user_id", "")
+                if user_id:
+                    result[user_id] = {"credit": item.get("credit", 0), "used": item.get("used", 0)}
+        return result
+    except:
+        return {}
 
 cpdef str email_template(str otp, str to):
     return f'''<!DOCTYPE html><html><body style="margin:0;padding:0;font-family:Arial;background:#0f0f23">
@@ -749,6 +801,18 @@ cpdef void do_sms_config_with_cfg(dict cfg, str user_id):
         error("Input tidak valid, menggunakan default: 1")
         send_count = 1
     
+    if current_credit < send_count:
+        print()
+        console.print(Panel(
+            f"[bold red]CREDIT TIDAK CUKUP![/bold red]\n\n"
+            f"[bold white]Credit Anda:[/bold white] [red]{current_credit}[/red]\n"
+            f"[bold white]Dibutuhkan:[/bold white] [yellow]{send_count}[/yellow] (untuk {send_count}x round)\n\n"
+            f"[dim]Kurangi jumlah round atau hubungi admin untuk menambah credit.[/dim]",
+            border_style="red",
+            padding=(1, 2)
+        ))
+        return
+    
     total_services = len(WA_SERVICES)
     total_requests = total_services * send_count
     
@@ -757,7 +821,8 @@ cpdef void do_sms_config_with_cfg(dict cfg, str user_id):
         f"[bold green]TARGET[/bold green]: +62{phone_clean}\n"
         f"[bold cyan]LAYANAN[/bold cyan]: {total_services} WhatsApp Services\n"
         f"[bold magenta]JUMLAH[/bold magenta]: {send_count}x pengiriman\n"
-        f"[bold yellow]TOTAL[/bold yellow]: {total_requests} request",
+        f"[bold yellow]TOTAL[/bold yellow]: {total_requests} request\n"
+        f"[bold red]CREDIT[/bold red]: {send_count} credit akan digunakan",
         border_style="green",
         padding=(0, 2)
     ))
@@ -769,7 +834,7 @@ cpdef void do_sms_config_with_cfg(dict cfg, str user_id):
     print()
     
     options = [
-        f"{B}Mulai Kirim - Kirim ke semua layanan{R}",
+        f"{B}Mulai Kirim - Kirim ke semua layanan ({send_count} credit){R}",
         f"{B}← Batal{R}",
     ]
     
@@ -787,15 +852,15 @@ cpdef void do_sms_config_with_cfg(dict cfg, str user_id):
         info("Dibatalkan")
         return
     
-    if not use_credit(user_id, 1):
+    if not use_credit(user_id, send_count):
         print()
-        error("Gagal mengurangi credit!")
+        error("Gagal mengurangi credit! Credit tidak cukup.")
         return
     
     new_credit = get_user_credit(user_id)
     print()
     console.print(Panel(
-        f"[bold yellow]💳 1 Credit digunakan[/bold yellow]\n"
+        f"[bold yellow]💳 {send_count} Credit digunakan[/bold yellow]\n"
         f"[bold white]Credit Tersisa:[/bold white] [green]{new_credit}[/green]",
         border_style="yellow",
         padding=(0, 2)
@@ -1880,6 +1945,8 @@ cpdef void run_main():
         error("Konfigurasi SMTP tidak lengkap")
         input(f"\n {D}Tekan Enter...{R}")
         return
+    
+    init_supabase_credit(url, svc_key)
     
     auth = Auth(url, key, svc_key)
     
