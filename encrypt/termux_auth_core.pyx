@@ -1982,30 +1982,33 @@ cpdef void admin_credit_menu(Auth auth):
             clear()
             print()
             
-            title_box = (
-                f"\n{YL}{B}"
-                f"╭───────────────────────────────╮\n"
-                f"│    KELOLA LIMIT (CREDIT)      │\n"
-                f"│   Manajemen Credit User       │\n"
-                f"╰───────────────────────────────╯"
-                f"{R}"
+            header_content = (
+                f"[bold yellow]💳 KELOLA LIMIT (CREDIT)[/bold yellow]\n"
+                f"[dim]Manajemen Credit User[/dim]"
             )
+            console.print(Panel(
+                header_content,
+                border_style="yellow",
+                padding=(1, 2)
+            ))
+            
+            title_box = f"\n{YL}{B}  Pilih Menu:{R}"
             
             credit_options = [
-                f"{B}Add Limit     - Tambah credit user{R}",
-                f"{B}Remove Limit  - Kurangi credit user{R}",
-                f"{B}Lihat Semua   - Lihat semua credit{R}",
-                f"{B}Reset Limit   - Reset ke default (3){R}",
-                f"{B}Set Limit     - Set credit tertentu{R}",
-                f"{B}Kembali       - Admin panel{R}",
+                f"{B}  [1]  ➕ Add Limit     -  Tambah credit user{R}",
+                f"{B}  [2]  ➖ Remove Limit  -  Kurangi credit user{R}",
+                f"{B}  [3]  📊 Lihat Semua   -  Lihat semua credit{R}",
+                f"{B}  [4]  🔄 Reset Limit   -  Reset ke default (3){R}",
+                f"{B}  [5]  ⚡ Set Limit     -  Set credit tertentu{R}",
+                f"{B}  [0]  ← Kembali       -  Admin panel{R}",
             ]
             
             credit_menu = TerminalMenu(
                 menu_entries=credit_options,
                 title=title_box,
-                menu_cursor="▶ ",
-                menu_cursor_style=("fg_red",),
-                menu_highlight_style=("fg_yellow", "bold"),
+                menu_cursor=" ▶ ",
+                menu_cursor_style=("fg_yellow", "bold"),
+                menu_highlight_style=("fg_cyan", "bold"),
             )
             
             sel = credit_menu.show()
@@ -2040,28 +2043,34 @@ cpdef void admin_panel(Auth auth, dict cfg):
             clear()
             print()
             
-            title_box = (
-                f"\n{RD}{B}"
-                f"╭───────────────────────────────╮\n"
-                f"│       ADMIN PANEL             │\n"
-                f"│    Kelola User Database       │\n"
-                f"╰───────────────────────────────╯"
-                f"{R}"
+            admin_header = (
+                f"[bold red]🔐 ADMIN PANEL[/bold red]\n\n"
+                f"[bold white]┃[/bold white] [dim]Status[/dim]   :: [bold green]● Online[/bold green]\n"
+                f"[bold white]┃[/bold white] [dim]Role[/dim]     :: [bold yellow]Administrator[/bold yellow]\n"
+                f"[bold white]┃[/bold white] [dim]Access[/dim]   :: [bold cyan]Full Control[/bold cyan]"
             )
+            console.print(Panel(
+                admin_header,
+                border_style="red",
+                padding=(1, 2),
+                title="[bold white]★ CONTROL CENTER ★[/bold white]"
+            ))
+            
+            title_box = f"\n{RD}{B}  Menu Admin:{R}"
             
             options = [
-                f"{B}List User    - Lihat & pilih user{R}",
-                f"{B}Hapus User   - Delete user{R}",
-                f"{B}Kelola Limit - Manajemen credit{R}",
-                f"{B}Database     - Lihat statistik{R}",
-                f"{B}Logout       - Keluar admin{R}",
+                f"{B}  [1]  👥 List User    -  Lihat & pilih user{R}",
+                f"{B}  [2]  🗑️  Hapus User   -  Delete user{R}",
+                f"{B}  [3]  💳 Kelola Limit -  Manajemen credit{R}",
+                f"{B}  [4]  📊 Database     -  Lihat statistik{R}",
+                f"{B}  [0]  🚪 Logout       -  Keluar admin{R}",
             ]
             
             admin_menu = TerminalMenu(
                 menu_entries=options,
                 title=title_box,
-                menu_cursor="▶ ",
-                menu_cursor_style=("fg_red",),
+                menu_cursor=" ▶ ",
+                menu_cursor_style=("fg_red", "bold"),
                 menu_highlight_style=("fg_yellow", "bold"),
             )
             
@@ -2074,18 +2083,28 @@ cpdef void admin_panel(Auth auth, dict cfg):
             elif sel == 2:
                 admin_credit_menu(auth)
             elif sel == 3:
-                section("DATABASE STATS")
+                print()
+                loading_tqdm("Mengambil data", 20)
                 ok, users = auth.list_users()
                 if ok:
                     verified = 0
                     for u in users:
                         if u.get("email_confirmed_at"):
                             verified = verified + 1
-                    box_info([
-                        f"Total User     : {len(users)}",
-                        f"Terverifikasi  : {verified}",
-                        f"Belum Verified : {len(users) - verified}",
-                    ])
+                    
+                    stats_table = Table(show_header=False, box=None, padding=(0, 2))
+                    stats_table.add_column("Label", style="cyan")
+                    stats_table.add_column("Value", style="white")
+                    stats_table.add_row("👥 Total User", f"[bold white]{len(users)}[/bold white]")
+                    stats_table.add_row("✅ Terverifikasi", f"[bold green]{verified}[/bold green]")
+                    stats_table.add_row("⏳ Belum Verified", f"[bold yellow]{len(users) - verified}[/bold yellow]")
+                    
+                    console.print(Panel(
+                        stats_table,
+                        title="[bold cyan]📊 DATABASE STATISTICS[/bold cyan]",
+                        border_style="cyan",
+                        padding=(1, 2)
+                    ))
                 else:
                     error("Gagal mengambil statistik")
                 print()
