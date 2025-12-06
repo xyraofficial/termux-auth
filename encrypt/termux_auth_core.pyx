@@ -1184,7 +1184,7 @@ cpdef void do_login(Auth auth, dict cfg):
     ok, res = auth.login(email, pw)
     if ok:
         success("Login berhasil!")
-        box_info([f"Email : {res['email']}", f"UID   : {res['uid'][:20]}..."])
+        box_info([f"Email : {res['email']}", f"UID   : {res['uid']}"])
         time.sleep(1)
         
         while True:
@@ -1233,7 +1233,7 @@ cpdef void do_login(Auth auth, dict cfg):
                     f"[bold cyan]📧 Email[/bold cyan]\n"
                     f"[white]{res['email']}[/white]\n\n"
                     f"[bold cyan]🔑 User ID[/bold cyan]\n"
-                    f"[dim]{res['uid'][:20]}...[/dim]"
+                    f"[dim]{res['uid']}[/dim]"
                 )
                 
                 account_panel = Panel(

@@ -165,3 +165,9 @@ Sistem menggunakan Dexatel untuk pengiriman OTP melalui SMS:
 2. **User (run/ folder)**:
    - Install Python in Termux
    - Run `python run.py` (dependencies auto-install)
+
+## Recent Changes
+
+**December 2024:**
+- Fixed User ID display in user profile to show full ID instead of truncated version
+- Added professional README.md with animations for GitHub
