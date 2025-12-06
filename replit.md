@@ -171,3 +171,8 @@ Sistem menggunakan Dexatel untuk pengiriman OTP melalui SMS:
 **December 2024:**
 - Fixed User ID display in user profile to show full ID instead of truncated version
 - Added professional README.md with animations for GitHub
+- Fixed logout issue (no more double Enter press required)
+- Improved Main Menu UI with icons, emojis, and better styling
+- Improved User Dashboard UI with modern design
+- Added ASCII art banner in intro loading screen
+- Updated exit message with beautiful panel design

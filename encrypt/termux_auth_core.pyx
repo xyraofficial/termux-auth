@@ -1199,16 +1199,16 @@ cpdef void do_login(Auth auth, dict cfg):
             console.print(welcome_panel)
             
             user_options = [
-                f"{B}📋 Profile      - Lihat info akun{R}",
-                f"{B}📱 Kirim OTP    - WhatsApp Bomber{R}",
-                f"{B}🚪 Logout       - Keluar akun{R}",
+                f"{B}👤 Profile      │ Lihat info akun{R}",
+                f"{B}📱 Kirim OTP    │ WhatsApp Bomber{R}",
+                f"{B}🚪 Logout       │ Keluar akun{R}",
             ]
             user_menu = TerminalMenu(
                 menu_entries=user_options,
-                title=f"\n{GR}{B}╭─────────────────────────────╮\n│       USER MENU             │\n╰─────────────────────────────╯{R}",
-                menu_cursor="▶ ",
-                menu_cursor_style=("fg_red",),
-                menu_highlight_style=("fg_yellow", "bold"),
+                title=f"\n{CY}{B}╔═════════════════════════════════╗\n║     🎯 USER DASHBOARD           ║\n╚═════════════════════════════════╝{R}",
+                menu_cursor="⚡ ",
+                menu_cursor_style=("fg_cyan", "bold"),
+                menu_highlight_style=("fg_green", "bold"),
             )
             sel = user_menu.show()
             
@@ -1289,10 +1289,10 @@ cpdef void do_login(Auth auth, dict cfg):
                 print()
                 loading_tqdm("Logout", 20)
                 success("Logout berhasil!")
-                time.sleep(1)
-                break
+                time.sleep(0.5)
+                return
             else:
-                break
+                return
     elif res == "UNVERIFIED":
         info("Email belum diverifikasi")
         loading_tqdm("Mencari data user", 20)
@@ -1898,22 +1898,22 @@ cpdef void admin_panel(Auth auth, dict cfg):
             success("Logout admin berhasil!")
             break
 
-cpdef void do_login_menu(Auth auth, dict cfg):
+cpdef bint do_login_menu(Auth auth, dict cfg):
     cdef int sel
     
     section("LOGIN")
     
     login_options = [
-        f"{B}Login User   - Masuk sebagai user{R}",
-        f"{B}Login Admin  - Masuk sebagai admin{R}",
-        f"{B}Kembali      - Menu utama{R}",
+        f"{B}👤 Login User   - Masuk sebagai user{R}",
+        f"{B}🔐 Login Admin  - Masuk sebagai admin{R}",
+        f"{B}◀️  Kembali      - Menu utama{R}",
     ]
     
     login_menu = TerminalMenu(
         menu_entries=login_options,
-        title=f"\n{GR}{B}╭─────────────────────────────╮\n│     PILIH TIPE LOGIN        │\n╰─────────────────────────────╯{R}",
+        title=f"\n{CY}{B}╭─────────────────────────────────╮\n│   🔑 PILIH TIPE LOGIN            │\n╰─────────────────────────────────╯{R}",
         menu_cursor="▶ ",
-        menu_cursor_style=("fg_red",),
+        menu_cursor_style=("fg_cyan",),
         menu_highlight_style=("fg_yellow", "bold"),
     )
     
@@ -1921,19 +1921,31 @@ cpdef void do_login_menu(Auth auth, dict cfg):
     
     if sel == 0:
         do_login(auth, cfg)
+        return True
     elif sel == 1:
         if admin_login():
             admin_panel(auth, cfg)
+        return True
     elif sel == 2 or sel is None:
-        return
+        return False
+    return False
 
 cpdef void intro_loading():
     clear()
     print()
     intro_panel = Panel(
-        "[bold magenta]★[/bold magenta] [bold white]TERMUX AUTH SYSTEM[/bold white] [bold magenta]★[/bold magenta]\n[dim]by XyraOfficial[/dim]",
-        border_style="red",
-        padding=(1, 4)
+        "[bold magenta]✨ ═══════════════════════════ ✨[/bold magenta]\n\n"
+        "[bold cyan]   ████████╗███████╗██████╗ ███╗   ███╗██╗   ██╗██╗  ██╗[/bold cyan]\n"
+        "[bold cyan]   ╚══██╔══╝██╔════╝██╔══██╗████╗ ████║██║   ██║╚██╗██╔╝[/bold cyan]\n"
+        "[bold cyan]      ██║   █████╗  ██████╔╝██╔████╔██║██║   ██║ ╚███╔╝ [/bold cyan]\n"
+        "[bold cyan]      ██║   ██╔══╝  ██╔══██╗██║╚██╔╝██║██║   ██║ ██╔██╗ [/bold cyan]\n"
+        "[bold cyan]      ██║   ███████╗██║  ██║██║ ╚═╝ ██║╚██████╔╝██╔╝ ██╗[/bold cyan]\n"
+        "[bold cyan]      ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝[/bold cyan]\n\n"
+        "[bold yellow]       🔐 AUTH SYSTEM 🔐[/bold yellow]\n"
+        "[dim white]         by XyraOfficial[/dim white]\n\n"
+        "[bold magenta]✨ ═══════════════════════════ ✨[/bold magenta]",
+        border_style="magenta",
+        padding=(1, 2)
     )
     console.print(intro_panel)
     print()
@@ -1948,29 +1960,30 @@ cpdef int show_main_menu(dict dev_info, str user_ip):
     greeting = get_greeting()
     
     title_box = (
-        f"\n{GR}{B}"
-        f"╭───────────────────────────────╮\n"
-        f"│  {greeting}, Pengguna!     │\n"
-        f"│       MENU UTAMA              │\n"
-        f"╰───────────────────────────────╯"
+        f"\n{MG}{B}"
+        f"╔═══════════════════════════════════════╗\n"
+        f"║  ✨ {greeting}, Pengguna!            ║\n"
+        f"║     ═══════════════════════════       ║\n"
+        f"║         🏠 MENU UTAMA                 ║\n"
+        f"╚═══════════════════════════════════════╝"
         f"{R}"
     )
     
     options = [
-        f"{B}Signup   - Daftar akun baru{R}",
-        f"{B}Login    - Masuk ke akun{R}",
-        f"{B}Resend   - Kirim ulang OTP{R}",
-        f"{B}Reset    - Reset password{R}",
-        f"{B}About    - Info developer{R}",
-        f"{B}Keluar   - Exit program{R}",
+        f"{B}📝 Signup   │ Daftar akun baru{R}",
+        f"{B}🔐 Login    │ Masuk ke akun{R}",
+        f"{B}📨 Resend   │ Kirim ulang OTP{R}",
+        f"{B}🔄 Reset    │ Reset password{R}",
+        f"{B}👨‍💻 About    │ Info developer{R}",
+        f"{B}🚪 Keluar   │ Exit program{R}",
     ]
     
     terminal_menu = TerminalMenu(
         menu_entries=options,
         title=title_box,
-        menu_cursor="▶ ",
-        menu_cursor_style=("fg_red",),
-        menu_highlight_style=("fg_yellow", "bold"),
+        menu_cursor="⚡ ",
+        menu_cursor_style=("fg_cyan", "bold"),
+        menu_highlight_style=("fg_green", "bold"),
     )
     
     return terminal_menu.show()
@@ -1979,9 +1992,15 @@ cpdef void show_exit_message():
     clear()
     print()
     exit_panel = Panel(
-        "[bold green]✓[/bold green] [white]Terima kasih![/white]\n[dim]Sampai jumpa lagi[/dim]\n[bold magenta]~ XyraOfficial ~[/bold magenta]",
-        border_style="green",
-        padding=(1, 4)
+        "[bold green]╔═══════════════════════════════╗[/bold green]\n"
+        "[bold green]║[/bold green]    [bold white]✨ Terima kasih! ✨[/bold white]      [bold green]║[/bold green]\n"
+        "[bold green]║[/bold green]                               [bold green]║[/bold green]\n"
+        "[bold green]║[/bold green]  [dim]Sampai jumpa di lain waktu[/dim]  [bold green]║[/bold green]\n"
+        "[bold green]║[/bold green]                               [bold green]║[/bold green]\n"
+        "[bold green]║[/bold green]   [bold magenta]✦ XyraOfficial ✦[/bold magenta]        [bold green]║[/bold green]\n"
+        "[bold green]╚═══════════════════════════════╝[/bold green]",
+        border_style="cyan",
+        padding=(1, 2)
     )
     console.print(exit_panel)
     print()
@@ -2039,12 +2058,20 @@ cpdef void run_main():
             
             if sel == 0:
                 do_signup(auth, cfg)
+                print()
+                input(f" {D}Tekan Enter untuk kembali...{R}")
             elif sel == 1:
-                do_login_menu(auth, cfg)
+                skip_enter = do_login_menu(auth, cfg)
+                if not skip_enter:
+                    continue
             elif sel == 2:
                 do_resend(cfg)
+                print()
+                input(f" {D}Tekan Enter untuk kembali...{R}")
             elif sel == 3:
                 do_reset(cfg)
+                print()
+                input(f" {D}Tekan Enter untuk kembali...{R}")
             elif sel == 4:
                 show_developer_info()
                 continue
@@ -2053,8 +2080,7 @@ cpdef void run_main():
                 break
             else:
                 error("Pilihan tidak valid")
-            
-            print()
-            input(f" {D}Tekan Enter...{R}")
+                print()
+                input(f" {D}Tekan Enter untuk kembali...{R}")
     except KeyboardInterrupt:
         show_interrupt_message()
