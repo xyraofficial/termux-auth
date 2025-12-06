@@ -1,0 +1,32 @@
+git pull && rm -f termux_auth_lib.cpython-312.so && cd ~/termux-auth/encrypt && rm -f termux_auth_lib.cpython-312.so && sh build_so.sh && cp termux_auth_lib.cpython-312.so ~/termux-auth/run && cd ~/termux-auth/run && clear && python run.py
+Already up to date.                                                                                                         -e   ╭──────────────────────────────────────╮
+-e   │  KOMPILASI .SO ANTI-DECRYPT          │                 -e   ╰──────────────────────────────────────╯                 
+-e   [1/2] Kompilasi Cython ke .so...
+Compiling termux_auth_core.pyx because it changed.            [1/1] Cythonizing termux_auth_core.pyx
+
+Error compiling Cython file:
+------------------------------------------------------------  ...
+        print()
+                                                                  error("Terlalu banyak percobaan gagal!")                      return False
+
+cpdef void admin_list_users(Auth auth):
+^
+------------------------------------------------------------
+termux_auth_core.pyx:1579:0: closures inside cpdef functions not yet supported                                              warning: termux_auth_core.pyx:1209:21: the result of using negative indices inside of code sections marked as 'wraparound=False' is undefined
+warning: termux_auth_core.pyx:1400:50: the result of using negative indices inside of code sections marked as 'wraparound=False' is undefined
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/home/termux-auth/encrypt/setup.py", line 16, in <module>
+    ext_modules=cythonize(
+                ^^^^^^^^^^
+  File "/data/data/com.termux/files/usr/lib/python3.12/site-packages/Cython/Build/Dependencies.py", line 1153, in cythonize
+    cythonize_one(*args)
+  File "/data/data/com.termux/files/usr/lib/python3.12/site-packages/Cython/Build/Dependencies.py", line 1297, in cythonize_one
+    raise CompileError(None, pyx_file)
+Cython.Compiler.Errors.CompileError: termux_auth_core.pyx
+
+-e   ✗ Kompilasi gagal!
+
+cp: cannot stat 'termux_auth_lib.cpython-312.so': No such file or directory
+~/termux-auth/encrypt $
+
+

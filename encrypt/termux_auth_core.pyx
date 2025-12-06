@@ -1579,7 +1579,7 @@ cpdef bint admin_login():
 cpdef void admin_list_users(Auth auth):
     cdef bint ok
     cdef object users, selected_user
-    cdef int sel, verified_count
+    cdef int sel, verified_count, i
     cdef list menu_options
     cdef str email, uid, verified_status, created_date
     
@@ -1592,7 +1592,10 @@ cpdef void admin_list_users(Auth auth):
             info("Belum ada user terdaftar")
             return
         
-        verified_count = sum(1 for u in users if u.get("email_confirmed_at"))
+        verified_count = 0
+        for u in users:
+            if u.get("email_confirmed_at"):
+                verified_count += 1
         
         stats_panel = Panel(
             f"[bold cyan]Total User[/bold cyan]: [bold white]{len(users)}[/bold white]\n"
