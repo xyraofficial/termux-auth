@@ -1506,11 +1506,17 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                         svc_lines = []
                         if services:
                             svc_rows = []
+                            svc_no = 1
                             for svc_name, svc_data in services.items():
                                 svc_success = svc_data.get("success", 0) if isinstance(svc_data, dict) else 0
                                 svc_failed = svc_data.get("failed", 0) if isinstance(svc_data, dict) else 0
-                                svc_rows.append([svc_name, f"{GR}{svc_success}{R}", f"{RD}{svc_failed}{R}"])
-                            svc_header = ["Layanan", "Sukses", "Gagal"]
+                                if svc_success > 0:
+                                    svc_rows.append([svc_no, svc_name, f"{GR}OK{R}", f"{GR}Terkirim{R}"])
+                                    svc_no += 1
+                                if svc_failed > 0:
+                                    svc_rows.append([svc_no, svc_name, f"{RD}GAGAL{R}", f"{RD}Gagal kirim{R}"])
+                                    svc_no += 1
+                            svc_header = ["No", "Layanan", "Status", "Keterangan"]
                             svc_str = tabulate(svc_rows, headers=svc_header, tablefmt="simple")
                             svc_lines = svc_str.split('\n')
                         
