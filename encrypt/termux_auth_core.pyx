@@ -1247,7 +1247,7 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                 menu_entries=profile_options,
                 title=title_box,
                 menu_cursor=" > ",
-                menu_cursor_style=("fg_magenta", "bold"),
+                menu_cursor_style=("fg_purple", "bold"),
                 menu_highlight_style=("fg_cyan", "bold"),
             )
             
