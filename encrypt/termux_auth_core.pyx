@@ -1516,13 +1516,13 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                         
                         content_widths = []
                         content_widths.append(len(f"TARGET #{i}") + 2)
-                        content_widths.append(len(f"📱 Nomor     : +62{phone}") + 2)
-                        content_widths.append(len(f"📅 Terakhir  : {last_sent}") + 2)
-                        content_widths.append(len("📊 STATISTIK") + 2)
+                        content_widths.append(len(f"📱 Nomor     : +62{phone}") + 1)
+                        content_widths.append(len(f"📅 Terakhir  : {last_sent}") + 1)
+                        content_widths.append(len("📊 STATISTIK") + 1)
                         for line in stats_lines:
                             content_widths.append(len(strip_ansi_codes(line)) + 4)
                         if services:
-                            content_widths.append(len("📋 DETAIL LAYANAN") + 2)
+                            content_widths.append(len("📋 DETAIL LAYANAN") + 1)
                             for line in svc_lines:
                                 content_widths.append(len(strip_ansi_codes(line)) + 4)
                         
