@@ -2179,16 +2179,10 @@ cpdef void admin_panel(Auth auth, dict cfg):
             print()
             
             admin_header = (
-                f"[bold red]╭{'─' * 40}╮[/bold red]\n"
-                f"[bold red]│[/bold red]  [bold white]A D M I N   P A N E L[/bold white]                [bold red]│[/bold red]\n"
-                f"[bold red]╰{'─' * 40}╯[/bold red]\n\n"
-                f"[bold white]┌─ STATUS ADMINISTRATOR ──────────────────┐[/bold white]\n"
-                f"[bold white]│[/bold white]\n"
-                f"[bold white]│[/bold white]  [cyan]Status[/cyan]    : [bold green]● Online[/bold green]\n"
-                f"[bold white]│[/bold white]  [cyan]Role[/cyan]      : [bold yellow]★ Administrator[/bold yellow]\n"
-                f"[bold white]│[/bold white]  [cyan]Access[/cyan]    : [bold cyan]Full Control[/bold cyan]\n"
-                f"[bold white]│[/bold white]\n"
-                f"[bold white]└──────────────────────────────────────────┘[/bold white]"
+                f"[bold red]ADMIN PANEL[/bold red]\n\n"
+                f"[bold white]|[/bold white] [dim]Status[/dim]   :: [bold green]Online[/bold green]\n"
+                f"[bold white]|[/bold white] [dim]Role[/dim]     :: [bold yellow]Administrator[/bold yellow]\n"
+                f"[bold white]|[/bold white] [dim]Access[/dim]   :: [bold cyan]Full Control[/bold cyan]"
             )
             console.print(Panel(
                 admin_header,
@@ -2233,24 +2227,18 @@ cpdef void admin_panel(Auth auth, dict cfg):
                         if u.get("email_confirmed_at"):
                             verified = verified + 1
                     
-                    stats_content = (
-                        f"[bold cyan]╭{'─' * 44}╮[/bold cyan]\n"
-                        f"[bold cyan]│[/bold cyan]  [bold white]D A T A B A S E   S T A T I S T I C S[/bold white]   [bold cyan]│[/bold cyan]\n"
-                        f"[bold cyan]╰{'─' * 44}╯[/bold cyan]\n\n"
-                        f"[bold white]┌─ RINGKASAN DATA USER ─────────────────────┐[/bold white]\n"
-                        f"[bold white]│[/bold white]\n"
-                        f"[bold white]│[/bold white]  [cyan]👥 Total User[/cyan]       : [bold white]{len(users)}[/bold white] [dim]pengguna[/dim]\n"
-                        f"[bold white]│[/bold white]  [green]✅ Terverifikasi[/green]    : [bold green]{verified}[/bold green] [dim]pengguna[/dim]\n"
-                        f"[bold white]│[/bold white]  [yellow]⏳ Belum Verified[/yellow]   : [bold yellow]{len(users) - verified}[/bold yellow] [dim]pengguna[/dim]\n"
-                        f"[bold white]│[/bold white]\n"
-                        f"[bold white]└────────────────────────────────────────────┘[/bold white]"
-                    )
+                    stats_table = Table(show_header=False, box=None, padding=(0, 2))
+                    stats_table.add_column("Label", style="cyan")
+                    stats_table.add_column("Value", style="white")
+                    stats_table.add_row("👥 Total User", f"[bold white]{len(users)}[/bold white]")
+                    stats_table.add_row("✅ Terverifikasi", f"[bold green]{verified}[/bold green]")
+                    stats_table.add_row("⏳ Belum Verified", f"[bold yellow]{len(users) - verified}[/bold yellow]")
                     
                     console.print(Panel(
-                        stats_content,
+                        stats_table,
+                        title="[bold cyan]📊 DATABASE STATISTICS[/bold cyan]",
                         border_style="cyan",
-                        padding=(1, 2),
-                        title="[bold magenta]★ STATISTIK DATABASE ★[/bold magenta]"
+                        padding=(1, 2)
                     ))
                 else:
                     error("Gagal mengambil statistik")
