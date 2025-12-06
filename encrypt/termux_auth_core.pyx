@@ -2376,12 +2376,6 @@ cpdef void run_main():
     cdef int sel
     
     try:
-        intro_loading()
-        
-        for _ in tqdm(range(40), desc=f"  Memuat config", 
-                      bar_format="{desc}: {percentage:3.0f}%|{bar}| {n}/{total}",
-                      ncols=50, leave=True):
-            time.sleep(0.02)
         cfg = load_config()
         if cfg is None:
             input(f"\n {D}Tekan Enter...{R}")
@@ -2404,12 +2398,7 @@ cpdef void run_main():
         auth = Auth(url, key, svc_key)
         
         dev_info = get_device_info()
-        for _ in tqdm(range(40), desc=f"  Mengambil IP", 
-                      bar_format="{desc}: {percentage:3.0f}%|{bar}| {n}/{total}",
-                      ncols=50, leave=True):
-            time.sleep(0.02)
         user_ip = get_ip()
-        print()
         
         while True:
             sel = show_main_menu(dev_info, user_ip)

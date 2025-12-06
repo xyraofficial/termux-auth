@@ -120,6 +120,18 @@ def show_loading_screen():
     config_ok = os.path.exists("config.enc")
     print(f"  {GR}[OK]{R}" if config_ok else f"  {RD}[NOT FOUND]{R}")
     
+    for _ in tqdm(range(40), desc=f"  Memuat Config", 
+                  bar_format="{desc}: {percentage:3.0f}%|{bar}| {n}/{total}",
+                  ncols=50, leave=True):
+        time.sleep(0.02)
+    print(f"  {GR}[OK]{R}")
+    
+    for _ in tqdm(range(40), desc=f"  Mengambil IP", 
+                  bar_format="{desc}: {percentage:3.0f}%|{bar}| {n}/{total}",
+                  ncols=50, leave=True):
+        time.sleep(0.02)
+    print(f"  {GR}[OK]{R}")
+    
     print()
     
     if not online:
