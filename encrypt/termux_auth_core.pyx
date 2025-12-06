@@ -1511,12 +1511,12 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                                 svc_success = svc_data.get("success", 0) if isinstance(svc_data, dict) else 0
                                 svc_failed = svc_data.get("failed", 0) if isinstance(svc_data, dict) else 0
                                 if svc_success > 0:
-                                    svc_rows.append([svc_no, svc_name, f"{GR}OK{R}", f"{GR}Terkirim ({svc_success}x){R}"])
+                                    svc_rows.append([svc_no, i, svc_name, f"{GR}OK{R}", f"{GR}Terkirim ({svc_success}x){R}"])
                                     svc_no += 1
                                 if svc_failed > 0:
-                                    svc_rows.append([svc_no, svc_name, f"{RD}GAGAL{R}", f"{RD}Gagal ({svc_failed}x){R}"])
+                                    svc_rows.append([svc_no, i, svc_name, f"{RD}GAGAL{R}", f"{RD}Gagal ({svc_failed}x){R}"])
                                     svc_no += 1
-                            svc_header = ["No", "Layanan", "Status", "Keterangan"]
+                            svc_header = ["No", "Target", "Layanan", "Status", "Keterangan"]
                             svc_str = tabulate(svc_rows, headers=svc_header, tablefmt="simple")
                             svc_lines = svc_str.split('\n')
                         
