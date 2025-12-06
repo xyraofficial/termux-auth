@@ -5,19 +5,5 @@
     "smtp_email": "xyraofficialsup@gmail.com",
     "smtp_app_password": "mzyu vbsi nals izvv",
     
-    "_comment_otp_services": "=== LAYANAN OTP - Isi dengan API key Anda ===",
-    
-    "twilio_account_sid": "",
-    "twilio_auth_token": "",
-    "twilio_phone_number": "",
-    
-    "fonnte_token": "",
-    
-    "wasendit_api_key": "",
-    
-    "msg91_auth_key": "",
-    "msg91_sender_id": "TXAUTH",
-    "msg91_template_id": "",
-    
     "dexatel_bearer_token": ""
 }
