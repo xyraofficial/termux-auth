@@ -1491,44 +1491,84 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                         total_rounds = log.get("total_rounds", 0)
                         last_sent = log.get("last_sent", "")[:10] if log.get("last_sent") else "N/A"
                         
-                        print(f"{CY}{B}╔{'═' * 50}╗{R}")
-                        print(f"{CY}{B}║{R}  {WH}{B}TARGET #{i}{R}{' ' * (40 - len(str(i)))}{CY}{B}║{R}")
-                        print(f"{CY}{B}╠{'═' * 50}╣{R}")
-                        print(f"{CY}{B}║{R}  {GR}📱 Nomor{R}     : {WH}+62{phone}{R}{' ' * (28 - len(phone))}{CY}{B}║{R}")
-                        print(f"{CY}{B}║{R}  {GR}📅 Terakhir{R}  : {WH}{last_sent}{R}{' ' * (28 - len(last_sent))}{CY}{B}║{R}")
-                        print(f"{CY}{B}╠{'═' * 50}╣{R}")
-                        print(f"{CY}{B}║{R}  {YL}📊 STATISTIK{R}{' ' * 36}{CY}{B}║{R}")
-                        print(f"{CY}{B}╠{'═' * 50}╣{R}")
-                        
                         stats_data = [
                             ["✅ Berhasil", f"{GR}{total_success}{R}"],
                             ["❌ Gagal", f"{RD}{total_failed}{R}"],
                             ["🔄 Round", f"{CY}{total_rounds}{R}"]
                         ]
                         stats_str = tabulate(stats_data, tablefmt="plain")
-                        for line in stats_str.split('\n'):
-                            padded = f"  {line}"
-                            print(f"{CY}{B}║{R}{padded}{' ' * (50 - len(line) - 2)}{CY}{B}║{R}")
+                        stats_lines = stats_str.split('\n')
                         
+                        svc_str = ""
+                        svc_lines = []
                         if services:
-                            print(f"{CY}{B}╠{'═' * 50}╣{R}")
-                            print(f"{CY}{B}║{R}  {MG}📋 DETAIL LAYANAN{R}{' ' * 31}{CY}{B}║{R}")
-                            print(f"{CY}{B}╠{'═' * 50}╣{R}")
-                            
                             svc_rows = []
                             for svc_name, svc_data in services.items():
                                 svc_success = svc_data.get("success", 0) if isinstance(svc_data, dict) else 0
                                 svc_failed = svc_data.get("failed", 0) if isinstance(svc_data, dict) else 0
-                                svc_rows.append([svc_name[:18], f"{GR}{svc_success}{R}", f"{RD}{svc_failed}{R}"])
-                            
+                                svc_rows.append([svc_name, f"{GR}{svc_success}{R}", f"{RD}{svc_failed}{R}"])
                             svc_header = ["Layanan", "Sukses", "Gagal"]
                             svc_str = tabulate(svc_rows, headers=svc_header, tablefmt="simple")
-                            for line in svc_str.split('\n'):
-                                padded = f"  {line}"
-                                visible_len = len(line.replace(GR, '').replace(RD, '').replace(R, ''))
-                                print(f"{CY}{B}║{R}{padded}{' ' * (50 - visible_len - 2)}{CY}{B}║{R}")
+                            svc_lines = svc_str.split('\n')
                         
-                        print(f"{CY}{B}╚{'═' * 50}╝{R}")
+                        def strip_ansi(s):
+                            import re
+                            return re.sub(r'\x1b\[[0-9;]*m', '', s)
+                        
+                        content_widths = []
+                        content_widths.append(len(f"TARGET #{i}") + 2)
+                        content_widths.append(len(f"📱 Nomor     : +62{phone}") + 2)
+                        content_widths.append(len(f"📅 Terakhir  : {last_sent}") + 2)
+                        content_widths.append(len("📊 STATISTIK") + 2)
+                        for line in stats_lines:
+                            content_widths.append(len(strip_ansi(line)) + 4)
+                        if services:
+                            content_widths.append(len("📋 DETAIL LAYANAN") + 2)
+                            for line in svc_lines:
+                                content_widths.append(len(strip_ansi(line)) + 4)
+                        
+                        box_width = max(content_widths) + 4
+                        box_width = max(box_width, 30)
+                        inner_width = box_width - 2
+                        
+                        def pad_line(text, visible_len):
+                            padding = inner_width - visible_len - 2
+                            return f"{CY}{B}║{R}  {text}{' ' * max(0, padding)}{CY}{B}║{R}"
+                        
+                        print(f"{CY}{B}╔{'═' * inner_width}╗{R}")
+                        title = f"{WH}{B}TARGET #{i}{R}"
+                        title_visible = len(f"TARGET #{i}")
+                        print(pad_line(title, title_visible))
+                        print(f"{CY}{B}╠{'═' * inner_width}╣{R}")
+                        
+                        nomor_text = f"{GR}📱 Nomor{R}     : {WH}+62{phone}{R}"
+                        nomor_visible = len(f"📱 Nomor     : +62{phone}")
+                        print(pad_line(nomor_text, nomor_visible))
+                        
+                        terakhir_text = f"{GR}📅 Terakhir{R}  : {WH}{last_sent}{R}"
+                        terakhir_visible = len(f"📅 Terakhir  : {last_sent}")
+                        print(pad_line(terakhir_text, terakhir_visible))
+                        
+                        print(f"{CY}{B}╠{'═' * inner_width}╣{R}")
+                        stats_title = f"{YL}📊 STATISTIK{R}"
+                        print(pad_line(stats_title, len("📊 STATISTIK")))
+                        print(f"{CY}{B}╠{'═' * inner_width}╣{R}")
+                        
+                        for line in stats_lines:
+                            visible_len = len(strip_ansi(line))
+                            print(pad_line(line, visible_len))
+                        
+                        if services:
+                            print(f"{CY}{B}╠{'═' * inner_width}╣{R}")
+                            detail_title = f"{MG}📋 DETAIL LAYANAN{R}"
+                            print(pad_line(detail_title, len("📋 DETAIL LAYANAN")))
+                            print(f"{CY}{B}╠{'═' * inner_width}╣{R}")
+                            
+                            for line in svc_lines:
+                                visible_len = len(strip_ansi(line))
+                                print(pad_line(line, visible_len))
+                        
+                        print(f"{CY}{B}╚{'═' * inner_width}╝{R}")
                         print()
                     
                     if len(logs) >= 20:

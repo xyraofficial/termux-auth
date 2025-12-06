@@ -168,6 +168,11 @@ Sistem menggunakan Dexatel untuk pengiriman OTP melalui SMS:
 
 ## Recent Changes
 
+**December 7, 2024:**
+- Improved LOGS KIRIM OTP table with auto-adjusting width based on content
+- Service names in DETAIL LAYANAN table are no longer truncated
+- Dynamic box sizing adapts to phone numbers, dates, and service names
+
 **December 6, 2024:**
 - Fixed `fg_magenta` style error in TerminalMenu (changed to `fg_purple`)
 - Improved target confirmation box with modern design (emoji icons, colored labels, styled table)
