@@ -1215,15 +1215,69 @@ cpdef void do_login(Auth auth, dict cfg):
             if sel == 0:
                 clear()
                 print()
-                section("PROFILE")
+                
                 user_credit = get_user_credit(res['uid'])
                 user_used = get_user_used(res['uid'])
-                box_info([
-                    f"Email   : {res['email']}", 
-                    f"UID     : {res['uid']}",
-                    f"Credit  : {user_credit}",
-                    f"Terpakai: {user_used}x"
-                ])
+                
+                profile_header = Panel(
+                    "[bold magenta]👤[/bold magenta] [bold white]PROFIL PENGGUNA[/bold white]",
+                    border_style="magenta",
+                    padding=(0, 2)
+                )
+                console.print(profile_header)
+                print()
+                
+                profile_table = Table(show_header=False, box=None, padding=(0, 2))
+                
+                account_content = (
+                    f"[bold cyan]📧 Email[/bold cyan]\n"
+                    f"[white]{res['email']}[/white]\n\n"
+                    f"[bold cyan]🔑 User ID[/bold cyan]\n"
+                    f"[dim]{res['uid'][:20]}...[/dim]"
+                )
+                
+                account_panel = Panel(
+                    account_content,
+                    title="[bold cyan]AKUN[/bold cyan]",
+                    border_style="cyan",
+                    padding=(1, 2)
+                )
+                
+                if user_credit >= 3:
+                    credit_color = "green"
+                    credit_icon = "🟢"
+                elif user_credit >= 1:
+                    credit_color = "yellow"
+                    credit_icon = "🟡"
+                else:
+                    credit_color = "red"
+                    credit_icon = "🔴"
+                
+                stats_content = (
+                    f"[bold {credit_color}]{credit_icon} Credit[/bold {credit_color}]\n"
+                    f"[bold white]{user_credit}[/bold white] [dim]tersisa[/dim]\n\n"
+                    f"[bold blue]📊 Terpakai[/bold blue]\n"
+                    f"[bold white]{user_used}[/bold white] [dim]kali digunakan[/dim]"
+                )
+                
+                stats_panel = Panel(
+                    stats_content,
+                    title="[bold green]STATISTIK[/bold green]",
+                    border_style="green",
+                    padding=(1, 2)
+                )
+                
+                profile_table.add_row(account_panel, stats_panel)
+                console.print(profile_table)
+                
+                print()
+                tip_panel = Panel(
+                    "[dim]💡 Credit digunakan untuk fitur WhatsApp Bomber[/dim]\n"
+                    "[dim]   Setiap round membutuhkan 1 credit[/dim]",
+                    border_style="dim"
+                )
+                console.print(tip_panel)
+                
                 print()
                 input(f" {D}Tekan Enter untuk kembali...{R}")
             elif sel == 1:
@@ -1921,68 +1975,86 @@ cpdef int show_main_menu(dict dev_info, str user_ip):
     
     return terminal_menu.show()
 
+cpdef void show_exit_message():
+    clear()
+    print()
+    exit_panel = Panel(
+        "[bold green]✓[/bold green] [white]Terima kasih![/white]\n[dim]Sampai jumpa lagi[/dim]\n[bold magenta]~ XyraOfficial ~[/bold magenta]",
+        border_style="green",
+        padding=(1, 4)
+    )
+    console.print(exit_panel)
+    print()
+
+cpdef void show_interrupt_message():
+    print()
+    print()
+    interrupt_panel = Panel(
+        "[bold yellow]⚡[/bold yellow] [white]Program dihentikan[/white]\n[dim]Tekan Ctrl+C terdeteksi[/dim]\n[bold magenta]~ XyraOfficial ~[/bold magenta]",
+        border_style="yellow",
+        padding=(1, 4)
+    )
+    console.print(interrupt_panel)
+    print()
+
 cpdef void run_main():
     cdef dict cfg, dev_info
     cdef str url, key, svc_key, user_ip
     cdef Auth auth
     cdef int sel
     
-    intro_loading()
-    
-    cfg = load_config()
-    if cfg is None:
-        input(f"\n {D}Tekan Enter...{R}")
-        return
-    
-    url = cfg.get("supabase_url", "")
-    key = cfg.get("supabase_key", "")
-    svc_key = cfg.get("supabase_service_key", key)
-    if not url or not key:
-        error("Konfigurasi Supabase tidak lengkap")
-        input(f"\n {D}Tekan Enter...{R}")
-        return
-    if not cfg.get("smtp_email") or not cfg.get("smtp_app_password"):
-        error("Konfigurasi SMTP tidak lengkap")
-        input(f"\n {D}Tekan Enter...{R}")
-        return
-    
-    init_supabase_credit(url, svc_key)
-    
-    auth = Auth(url, key, svc_key)
-    
-    dev_info = get_device_info()
-    user_ip = get_ip()
-    
-    while True:
-        sel = show_main_menu(dev_info, user_ip)
+    try:
+        intro_loading()
         
-        clear()
-        print()
-        print_info_table(dev_info, user_ip)
+        cfg = load_config()
+        if cfg is None:
+            input(f"\n {D}Tekan Enter...{R}")
+            return
         
-        if sel == 0:
-            do_signup(auth, cfg)
-        elif sel == 1:
-            do_login_menu(auth, cfg)
-        elif sel == 2:
-            do_resend(cfg)
-        elif sel == 3:
-            do_reset(cfg)
-        elif sel == 4:
-            show_developer_info()
-        elif sel == 5 or sel is None:
+        url = cfg.get("supabase_url", "")
+        key = cfg.get("supabase_key", "")
+        svc_key = cfg.get("supabase_service_key", key)
+        if not url or not key:
+            error("Konfigurasi Supabase tidak lengkap")
+            input(f"\n {D}Tekan Enter...{R}")
+            return
+        if not cfg.get("smtp_email") or not cfg.get("smtp_app_password"):
+            error("Konfigurasi SMTP tidak lengkap")
+            input(f"\n {D}Tekan Enter...{R}")
+            return
+        
+        init_supabase_credit(url, svc_key)
+        
+        auth = Auth(url, key, svc_key)
+        
+        dev_info = get_device_info()
+        user_ip = get_ip()
+        
+        while True:
+            sel = show_main_menu(dev_info, user_ip)
+            
             clear()
             print()
-            exit_panel = Panel(
-                "[bold green]✓[/bold green] [white]Terima kasih![/white]\n[dim]Sampai jumpa lagi[/dim]\n[bold magenta]~ XyraOfficial ~[/bold magenta]",
-                border_style="green",
-                padding=(1, 4)
-            )
-            console.print(exit_panel)
+            print_info_table(dev_info, user_ip)
+            
+            if sel == 0:
+                do_signup(auth, cfg)
+            elif sel == 1:
+                do_login_menu(auth, cfg)
+            elif sel == 2:
+                do_resend(cfg)
+            elif sel == 3:
+                do_reset(cfg)
+            elif sel == 4:
+                show_developer_info()
+                continue
+            elif sel == 5 or sel is None:
+                show_exit_message()
+                break
+            else:
+                error("Pilihan tidak valid")
+            
             print()
-            break
-        else:
-            error("Pilihan tidak valid")
-        
-        print()
-        input(f" {D}Tekan Enter...{R}")
+            input(f" {D}Tekan Enter...{R}")
+    except KeyboardInterrupt:
+        show_interrupt_message()
