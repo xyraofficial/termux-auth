@@ -46,6 +46,17 @@ cdef str ADMIN_PASSWORD = "admin"
 cdef str strip_ansi_codes(str s):
     return re.sub(r'\x1b\[[0-9;]*m', '', s)
 
+cdef int visible_width(str s):
+    cdef str clean = re.sub(r'\x1b\[[0-9;]*m', '', s)
+    cdef int width = 0
+    cdef str ch
+    for ch in clean:
+        if ord(ch) > 0x1F00:
+            width += 2
+        else:
+            width += 1
+    return width
+
 cdef bytes derive_key_internal(bytes passphrase, bytes salt):
     cdef bytes key = hashlib.pbkdf2_hmac('sha256', passphrase, salt, 100000)
     return base64.urlsafe_b64encode(key)
@@ -1511,26 +1522,26 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                                 svc_success = svc_data.get("success", 0) if isinstance(svc_data, dict) else 0
                                 svc_failed = svc_data.get("failed", 0) if isinstance(svc_data, dict) else 0
                                 if svc_success > 0:
-                                    svc_rows.append([svc_no, i, svc_name, f"{GR}OK{R}", f"{GR}Terkirim ({svc_success}x){R}"])
+                                    svc_rows.append([svc_no, svc_name, f"{GR}OK{R}", f"{GR}Terkirim ({svc_success}x){R}"])
                                     svc_no += 1
                                 if svc_failed > 0:
-                                    svc_rows.append([svc_no, i, svc_name, f"{RD}GAGAL{R}", f"{RD}Gagal ({svc_failed}x){R}"])
+                                    svc_rows.append([svc_no, svc_name, f"{RD}GAGAL{R}", f"{RD}Gagal ({svc_failed}x){R}"])
                                     svc_no += 1
-                            svc_header = ["No", "Target", "Layanan", "Status", "Keterangan"]
+                            svc_header = ["No", "Layanan", "Status", "Keterangan"]
                             svc_str = tabulate(svc_rows, headers=svc_header, tablefmt="simple")
                             svc_lines = svc_str.split('\n')
                         
                         content_widths = []
-                        content_widths.append(len(f"TARGET #{i}") + 2)
-                        content_widths.append(len(f"📱 Nomor     : +62{phone}") + 1)
-                        content_widths.append(len(f"📅 Terakhir  : {last_sent}") + 1)
-                        content_widths.append(len("📊 STATISTIK") + 1)
+                        content_widths.append(visible_width(f"TARGET #{i}") + 2)
+                        content_widths.append(visible_width(f"📱 Nomor     : +62{phone}") + 2)
+                        content_widths.append(visible_width(f"📅 Terakhir  : {last_sent}") + 2)
+                        content_widths.append(visible_width("📊 STATISTIK") + 2)
                         for line in stats_lines:
-                            content_widths.append(len(strip_ansi_codes(line)) + 4)
+                            content_widths.append(visible_width(line) + 4)
                         if services:
-                            content_widths.append(len("📋 DETAIL LAYANAN") + 1)
+                            content_widths.append(visible_width("📋 DETAIL LAYANAN") + 2)
                             for line in svc_lines:
-                                content_widths.append(len(strip_ansi_codes(line)) + 4)
+                                content_widths.append(visible_width(line) + 4)
                         
                         box_width = max(content_widths) + 4
                         if box_width < 30:
@@ -1539,42 +1550,37 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                         
                         print(f"{CY}{B}╔{'═' * inner_width}╗{R}")
                         title = f"{WH}{B}TARGET #{i}{R}"
-                        title_visible = len(f"TARGET #{i}")
-                        title_pad = inner_width - title_visible - 2
+                        title_pad = inner_width - visible_width(f"TARGET #{i}") - 2
                         print(f"{CY}{B}║{R}  {title}{' ' * max(0, title_pad)}{CY}{B}║{R}")
                         print(f"{CY}{B}╠{'═' * inner_width}╣{R}")
                         
                         nomor_text = f"{GR}📱 Nomor{R}     : {WH}+62{phone}{R}"
-                        nomor_visible = len(f"📱 Nomor     : +62{phone}")
-                        nomor_pad = inner_width - nomor_visible - 2
+                        nomor_pad = inner_width - visible_width(f"📱 Nomor     : +62{phone}") - 2
                         print(f"{CY}{B}║{R}  {nomor_text}{' ' * max(0, nomor_pad)}{CY}{B}║{R}")
                         
                         terakhir_text = f"{GR}📅 Terakhir{R}  : {WH}{last_sent}{R}"
-                        terakhir_visible = len(f"📅 Terakhir  : {last_sent}")
-                        terakhir_pad = inner_width - terakhir_visible - 2
+                        terakhir_pad = inner_width - visible_width(f"📅 Terakhir  : {last_sent}") - 2
                         print(f"{CY}{B}║{R}  {terakhir_text}{' ' * max(0, terakhir_pad)}{CY}{B}║{R}")
                         
                         print(f"{CY}{B}╠{'═' * inner_width}╣{R}")
                         stats_title = f"{YL}📊 STATISTIK{R}"
-                        stats_title_pad = inner_width - len("📊 STATISTIK") - 2
-                        print(f"{CY}{B}║{R}  {stats_title}{' ' * max(0, stats_title_pad)}{CY}{B}║{R}")
+                        stats_pad = inner_width - visible_width("📊 STATISTIK") - 2
+                        print(f"{CY}{B}║{R}  {stats_title}{' ' * max(0, stats_pad)}{CY}{B}║{R}")
                         print(f"{CY}{B}╠{'═' * inner_width}╣{R}")
                         
                         for line in stats_lines:
-                            visible_len = len(strip_ansi_codes(line))
-                            line_pad = inner_width - visible_len - 2
+                            line_pad = inner_width - visible_width(line) - 2
                             print(f"{CY}{B}║{R}  {line}{' ' * max(0, line_pad)}{CY}{B}║{R}")
                         
                         if services:
                             print(f"{CY}{B}╠{'═' * inner_width}╣{R}")
                             detail_title = f"{MG}📋 DETAIL LAYANAN{R}"
-                            detail_pad = inner_width - len("📋 DETAIL LAYANAN") - 2
+                            detail_pad = inner_width - visible_width("📋 DETAIL LAYANAN") - 2
                             print(f"{CY}{B}║{R}  {detail_title}{' ' * max(0, detail_pad)}{CY}{B}║{R}")
                             print(f"{CY}{B}╠{'═' * inner_width}╣{R}")
                             
                             for line in svc_lines:
-                                visible_len = len(strip_ansi_codes(line))
-                                line_pad = inner_width - visible_len - 2
+                                line_pad = inner_width - visible_width(line) - 2
                                 print(f"{CY}{B}║{R}  {line}{' ' * max(0, line_pad)}{CY}{B}║{R}")
                         
                         print(f"{CY}{B}╚{'═' * inner_width}╝{R}")
