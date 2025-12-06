@@ -2305,7 +2305,6 @@ cpdef void intro_loading():
     )
     console.print(intro_panel)
     print()
-    loading_tqdm("Memuat sistem", 40)
     time.sleep(0.3)
 
 cpdef int show_main_menu(dict dev_info, str user_ip):
