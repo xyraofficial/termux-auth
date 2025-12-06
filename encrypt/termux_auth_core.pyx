@@ -469,9 +469,9 @@ cpdef tuple send_sms_dexatel(str phone, dict cfg):
         return (False, f"Dexatel Error: {str(e)}")
 
 cpdef void do_sms_config_with_cfg(dict cfg):
-    cdef str phone_input, phone_clean, msg
+    cdef str phone_input, phone_clean, msg, count_input
     cdef bint valid, ok
-    cdef int i, sel
+    cdef int i, sel, send_count, success_count, fail_count
     
     clear()
     print()
@@ -492,16 +492,35 @@ cpdef void do_sms_config_with_cfg(dict cfg):
     success(f"Nomor valid: +62{phone_clean}")
     print()
     
+    print(f" {YL}[!]{R} Berapa kali kirim? (Max 10)")
+    count_input = input(f" {GR}[?]{R} Jumlah Kirim : {CY}").strip()
+    print(R, end="")
+    
+    try:
+        send_count = int(count_input)
+        if send_count < 1:
+            send_count = 1
+        elif send_count > 10:
+            send_count = 10
+            info("Jumlah diatur ke maksimal 10")
+    except:
+        send_count = 1
+        info("Input tidak valid, diatur ke 1")
+    
+    success(f"Akan mengirim {send_count}x ke +62{phone_clean}")
+    print()
+    
     title_box = (
         f"\n{CY}{B}"
         f"╭───────────────────────────────╮\n"
         f"│      KIRIM OTP DEXATEL        │\n"
+        f"│      Total: {send_count}x kirim            │\n"
         f"╰───────────────────────────────╯"
         f"{R}"
     )
     
     options = [
-        f"{B}Kirim OTP   - Kirim SMS via Dexatel{R}",
+        f"{B}Kirim OTP   - Kirim {send_count}x via Dexatel{R}",
         f"{B}← Batal{R}",
     ]
     
@@ -523,17 +542,59 @@ cpdef void do_sms_config_with_cfg(dict cfg):
     print()
     section("MENGIRIM OTP")
     info(f"Target: +62{phone_clean}")
+    info(f"Jumlah: {send_count}x kirim")
     info("Layanan: Dexatel SMS")
+    info("Tekan CTRL+C untuk stop")
     print()
     
-    loading_tqdm("Mengirim via Dexatel", 20)
+    success_count = 0
+    fail_count = 0
     
-    ok, msg = send_sms_dexatel(phone_clean, cfg)
-    
-    if ok:
-        success(msg)
-    else:
-        error(msg)
+    try:
+        for i in range(send_count):
+            print(f"\n {CY}[{i+1}/{send_count}]{R} Mengirim...")
+            
+            if i == 0:
+                info("Delay pertama: 10 detik...")
+                for sec in range(10, 0, -1):
+                    print(f"\r {YL}[!]{R} Menunggu {sec} detik...  ", end="", flush=True)
+                    time.sleep(1)
+                print()
+            else:
+                info("Delay: 60 detik...")
+                for sec in range(60, 0, -1):
+                    print(f"\r {YL}[!]{R} Menunggu {sec} detik...  ", end="", flush=True)
+                    time.sleep(1)
+                print()
+            
+            loading_tqdm(f"Mengirim ke-{i+1}", 20)
+            
+            ok, msg = send_sms_dexatel(phone_clean, cfg)
+            
+            if ok:
+                success(msg)
+                success_count += 1
+            else:
+                error(msg)
+                fail_count += 1
+        
+        print()
+        section("HASIL PENGIRIMAN")
+        success(f"Berhasil: {success_count}x")
+        if fail_count > 0:
+            error(f"Gagal: {fail_count}x")
+        info(f"Total: {send_count}x")
+        
+    except KeyboardInterrupt:
+        print()
+        print()
+        info("Proses dihentikan oleh user (CTRL+C)")
+        print()
+        section("HASIL PENGIRIMAN (TERHENTI)")
+        success(f"Berhasil: {success_count}x")
+        if fail_count > 0:
+            error(f"Gagal: {fail_count}x")
+        info(f"Terkirim: {success_count + fail_count}/{send_count}")
     
     print()
 
