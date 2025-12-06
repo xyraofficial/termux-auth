@@ -136,15 +136,11 @@ def show_loading_screen():
     
     if not online:
         print(f"\n  {RD}╭─────────────────────────────────────────╮{R}")
-        print(f"  {RD}│{R}   {RD}  PERINGATAN: TIDAK ADA INTERNET    {R}  {RD}│{R}")
+        print(f"  {RD}│{R}     {RD}TIDAK ADA KONEKSI INTERNET{R}        {RD}│{R}")
         print(f"  {RD}╰─────────────────────────────────────────╯{R}")
-        print(f"\n  {YL}[!]{R} Beberapa fitur tidak akan berfungsi")
-        print(f"      {D}* Login/Signup * Kirim OTP * Verifikasi{R}\n")
-        confirm = input(f"  {YL}[?]{R} Lanjutkan offline? (y/n): ").strip().lower()
-        if confirm != 'y':
-            print(f"\n  {GR}[v]{R} Sampai jumpa!\n")
-            return False
-        print()
+        print(f"\n  {RD}[✗]{R} Script tidak dapat digunakan tanpa internet")
+        print(f"  {YL}[!]{R} Pastikan koneksi internet aktif\n")
+        return False
     
     if not so_file:
         print(f"  {RD}[x]{R} Module tidak ditemukan!")
