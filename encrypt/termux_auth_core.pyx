@@ -174,10 +174,10 @@ cpdef str get_time_str():
     cdef object now = datetime.now()
     return f"{now.hour:02d}:{now.minute:02d}:{now.second:02d} WIB"
 
-cpdef void loading_tqdm(str desc, int steps=30):
+cpdef void loading_tqdm(str desc, int steps=50):
     for i in tqdm(range(steps), desc=f"  {desc}", colour="green", 
-                  bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}", ncols=40):
-        time.sleep(0.03)
+                  bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}", ncols=50):
+        time.sleep(0.05)
     print()
 
 cpdef void clear():
@@ -1579,12 +1579,12 @@ cpdef bint admin_login():
 cpdef void admin_list_users(Auth auth):
     cdef bint ok
     cdef object users, selected_user
-    cdef int sel
+    cdef int sel, verified_count
     cdef list menu_options
-    cdef str email, uid, verified_status
+    cdef str email, uid, verified_status, created_date
     
     section("DAFTAR USER")
-    loading_tqdm("Mengambil data", 25)
+    loading_tqdm("Mengambil data", 40)
     
     ok, users = auth.list_users()
     if ok:
@@ -1592,34 +1592,58 @@ cpdef void admin_list_users(Auth auth):
             info("Belum ada user terdaftar")
             return
         
-        success(f"Total: {len(users)} user")
+        verified_count = sum(1 for u in users if u.get("email_confirmed_at"))
+        
+        stats_panel = Panel(
+            f"[bold cyan]Total User[/bold cyan]: [bold white]{len(users)}[/bold white]\n"
+            f"[bold green]Verified[/bold green]: [bold white]{verified_count}[/bold white]  |  "
+            f"[bold yellow]Unverified[/bold yellow]: [bold white]{len(users) - verified_count}[/bold white]",
+            border_style="cyan",
+            padding=(0, 2)
+        )
+        console.print(stats_panel)
         
         try:
             while True:
                 print()
+                
+                user_table = Table(
+                    title="[bold cyan]DAFTAR USER TERDAFTAR[/bold cyan]",
+                    show_header=True,
+                    header_style="bold white on blue",
+                    border_style="cyan",
+                    show_lines=True
+                )
+                user_table.add_column("No", style="dim", width=4, justify="center")
+                user_table.add_column("Email", style="cyan", min_width=25)
+                user_table.add_column("Status", style="white", width=12, justify="center")
+                user_table.add_column("Dibuat", style="dim", width=12)
+                
+                for i, u in enumerate(users):
+                    email = u.get("email", "N/A")
+                    verified_status = "[bold green]Verified[/bold green]" if u.get("email_confirmed_at") else "[bold yellow]Pending[/bold yellow]"
+                    created_date = u.get("created_at", "N/A")[:10] if u.get("created_at") else "N/A"
+                    user_table.add_row(str(i+1), email, verified_status, created_date)
+                
+                console.print(user_table)
+                print()
+                
                 menu_options = []
                 for i, u in enumerate(users):
                     email = u.get("email", "N/A")
-                    verified_status = "✓" if u.get("email_confirmed_at") else "✗"
-                    menu_options.append(f"{B}{i+1}. {email} [{verified_status}]{R}")
+                    verified_status = "[V]" if u.get("email_confirmed_at") else "[P]"
+                    menu_options.append(f"{B}{i+1}. {email} {verified_status}{R}")
                 
-                menu_options.append(f"{B}← Kembali{R}")
+                menu_options.append(f"{B}<- Kembali{R}")
                 
-                title_box = (
-                    f"\n{CY}{B}"
-                    f"╭───────────────────────────────╮\n"
-                    f"│      PILIH USER               │\n"
-                    f"│   Tekan Enter untuk detail    │\n"
-                    f"╰───────────────────────────────╯"
-                    f"{R}"
-                )
+                title_box = f"\n{CY}{B}  Pilih user untuk lihat detail:{R}"
                 
                 user_menu = TerminalMenu(
                     menu_entries=menu_options,
                     title=title_box,
-                    menu_cursor="▶ ",
-                    menu_cursor_style=("fg_red",),
-                    menu_highlight_style=("fg_yellow", "bold"),
+                    menu_cursor=" > ",
+                    menu_cursor_style=("fg_cyan", "bold"),
+                    menu_highlight_style=("fg_green", "bold"),
                 )
                 
                 sel = user_menu.show()
@@ -1630,23 +1654,45 @@ cpdef void admin_list_users(Auth auth):
                 selected_user = users[sel]
                 clear()
                 print()
-                section("DETAIL USER")
                 
-                box_info([
-                    f"UID      : {selected_user.get('id', 'N/A')}",
-                    f"Email    : {selected_user.get('email', 'N/A')}",
-                    f"Dibuat   : {selected_user.get('created_at', 'N/A')[:19]}",
-                    f"Verified : {'Ya' if selected_user.get('email_confirmed_at') else 'Tidak'}",
-                    f"Provider : {selected_user.get('app_metadata', {}).get('provider', 'email')}",
-                    f"Last Sign: {selected_user.get('last_sign_in_at', 'Belum pernah')[:19] if selected_user.get('last_sign_in_at') else 'Belum pernah'}",
-                ])
+                user_credit = get_user_credit(selected_user.get('id', ''))
+                user_used = get_user_used(selected_user.get('id', ''))
+                
+                detail_content = (
+                    f"[bold cyan]UID[/bold cyan]\n"
+                    f"[dim]{selected_user.get('id', 'N/A')}[/dim]\n\n"
+                    f"[bold cyan]Email[/bold cyan]\n"
+                    f"[white]{selected_user.get('email', 'N/A')}[/white]\n\n"
+                    f"[bold cyan]Status[/bold cyan]\n"
+                    f"{'[bold green]Terverifikasi[/bold green]' if selected_user.get('email_confirmed_at') else '[bold yellow]Belum Verified[/bold yellow]'}\n\n"
+                    f"[bold cyan]Provider[/bold cyan]\n"
+                    f"[white]{selected_user.get('app_metadata', {}).get('provider', 'email')}[/white]"
+                )
+                
+                stats_content = (
+                    f"[bold green]Credit[/bold green]\n"
+                    f"[bold white]{user_credit}[/bold white] [dim]tersisa[/dim]\n\n"
+                    f"[bold blue]Terpakai[/bold blue]\n"
+                    f"[bold white]{user_used}[/bold white] [dim]kali[/dim]\n\n"
+                    f"[bold cyan]Dibuat[/bold cyan]\n"
+                    f"[dim]{selected_user.get('created_at', 'N/A')[:19]}[/dim]\n\n"
+                    f"[bold cyan]Last Login[/bold cyan]\n"
+                    f"[dim]{selected_user.get('last_sign_in_at', 'Belum pernah')[:19] if selected_user.get('last_sign_in_at') else 'Belum pernah'}[/dim]"
+                )
+                
+                detail_table = Table(show_header=False, box=None, padding=(0, 2))
+                detail_table.add_row(
+                    Panel(detail_content, title="[bold cyan]INFO AKUN[/bold cyan]", border_style="cyan", padding=(1, 2)),
+                    Panel(stats_content, title="[bold green]STATISTIK[/bold green]", border_style="green", padding=(1, 2))
+                )
+                console.print(detail_table)
                 
                 print()
                 input(f" {D}Tekan Enter untuk kembali...{R}")
                 clear()
                 print()
                 section("DAFTAR USER")
-                success(f"Total: {len(users)} user")
+                console.print(stats_panel)
         except KeyboardInterrupt:
             show_interrupt_message()
             raise SystemExit(0)
@@ -1654,14 +1700,14 @@ cpdef void admin_list_users(Auth auth):
         error(f"Gagal mengambil data: {users}")
 
 cpdef void admin_delete_user(Auth auth):
-    cdef str uid, confirm, email, verified_status
+    cdef str uid, confirm, email, verified_status, created_date
     cdef bint ok
     cdef object msg, users, selected_user
-    cdef int sel
+    cdef int sel, user_credit
     cdef list menu_options
     
     section("HAPUS USER")
-    loading_tqdm("Mengambil data", 25)
+    loading_tqdm("Mengambil data", 40)
     
     ok, users = auth.list_users()
     if not ok:
@@ -1672,32 +1718,53 @@ cpdef void admin_delete_user(Auth auth):
         info("Belum ada user terdaftar")
         return
     
-    info(f"Total: {len(users)} user")
+    warning_panel = Panel(
+        f"[bold red]PERINGATAN[/bold red]\n"
+        f"[white]Menghapus user akan menghilangkan semua data secara permanen![/white]\n"
+        f"[dim]Total user: {len(users)}[/dim]",
+        border_style="red",
+        padding=(0, 2)
+    )
+    console.print(warning_panel)
+    print()
+    
+    user_table = Table(
+        title="[bold red]PILIH USER UNTUK DIHAPUS[/bold red]",
+        show_header=True,
+        header_style="bold white on red",
+        border_style="red",
+        show_lines=True
+    )
+    user_table.add_column("No", style="dim", width=4, justify="center")
+    user_table.add_column("Email", style="white", min_width=25)
+    user_table.add_column("Status", style="white", width=12, justify="center")
+    user_table.add_column("Credit", style="cyan", width=8, justify="center")
+    
+    for i, u in enumerate(users):
+        email = u.get("email", "N/A")
+        verified_status = "[green]Verified[/green]" if u.get("email_confirmed_at") else "[yellow]Pending[/yellow]"
+        user_credit = get_user_credit(u.get("id", ""))
+        user_table.add_row(str(i+1), email, verified_status, str(user_credit))
+    
+    console.print(user_table)
     print()
     
     menu_options = []
     for i, u in enumerate(users):
         email = u.get("email", "N/A")
-        verified_status = "✓" if u.get("email_confirmed_at") else "✗"
-        menu_options.append(f"{B}{i+1}. {email} [{verified_status}]{R}")
+        verified_status = "[V]" if u.get("email_confirmed_at") else "[P]"
+        menu_options.append(f"{B}{i+1}. {email} {verified_status}{R}")
     
-    menu_options.append(f"{B}← Batal{R}")
+    menu_options.append(f"{B}<- Batal{R}")
     
-    title_box = (
-        f"\n{RD}{B}"
-        f"╭───────────────────────────────╮\n"
-        f"│      PILIH USER UNTUK         │\n"
-        f"│         DIHAPUS               │\n"
-        f"╰───────────────────────────────╯"
-        f"{R}"
-    )
+    title_box = f"\n{RD}{B}  Pilih user yang akan dihapus:{R}"
     
     user_menu = TerminalMenu(
         menu_entries=menu_options,
         title=title_box,
-        menu_cursor="▶ ",
-        menu_cursor_style=("fg_red",),
-        menu_highlight_style=("fg_red", "bold"),
+        menu_cursor=" > ",
+        menu_cursor_style=("fg_red", "bold"),
+        menu_highlight_style=("fg_yellow", "bold"),
     )
     
     sel = user_menu.show()
@@ -1711,8 +1778,17 @@ cpdef void admin_delete_user(Auth auth):
     email = selected_user.get("email", "N/A")
     
     print()
-    console.print(f" [bold red]⚠ PERINGATAN:[/bold red] User [bold]{email}[/bold] akan dihapus!")
-    confirm = input(f" {RD}[!]{R} Ketik 'HAPUS' untuk konfirmasi: {CY}").strip()
+    confirm_panel = Panel(
+        f"[bold red]KONFIRMASI HAPUS[/bold red]\n\n"
+        f"[white]Email: [bold]{email}[/bold][/white]\n"
+        f"[dim]UID: {uid}[/dim]\n\n"
+        f"[bold yellow]Ketik 'HAPUS' untuk melanjutkan[/bold yellow]",
+        border_style="red",
+        padding=(1, 2)
+    )
+    console.print(confirm_panel)
+    
+    confirm = input(f" {RD}[!]{R} Konfirmasi: {CY}").strip()
     print(R, end="")
     
     if confirm != 'HAPUS':
@@ -1720,7 +1796,7 @@ cpdef void admin_delete_user(Auth auth):
         return
     
     print()
-    loading_tqdm("Menghapus user", 25)
+    loading_tqdm("Menghapus user", 30)
     ok, msg = auth.delete_user(uid)
     if ok:
         success(f"User {email} berhasil dihapus!")
@@ -1757,9 +1833,10 @@ cpdef void admin_user_detail(Auth auth):
 cpdef void admin_add_limit(Auth auth):
     cdef str uid_or_email, amount_str
     cdef int amount
-    cdef bint ok
+    cdef bint ok, user_found
     cdef object users, user
     cdef str user_id = ""
+    cdef str user_email = ""
     
     section("ADD LIMIT")
     uid_or_email = input(f" {GR}[?]{R} UID atau Email User : {CY}").strip()
@@ -1769,22 +1846,38 @@ cpdef void admin_add_limit(Auth auth):
         error("Input tidak boleh kosong!")
         return
     
+    loading_tqdm("Mencari user", 30)
+    ok, users = auth.list_users()
+    
+    if not ok or not users:
+        error("Gagal mengambil data user!")
+        return
+    
+    user_found = False
+    
     if "@" in uid_or_email:
-        loading_tqdm("Mencari user", 20)
-        ok, users = auth.list_users()
-        if ok and users:
-            for u in users:
-                if u and u.get("email", "").lower() == uid_or_email.lower():
-                    user_id = u.get("id", "")
-                    break
-            if not user_id:
-                error(f"User dengan email {uid_or_email} tidak ditemukan!")
-                return
-        else:
-            error("Gagal mengambil data user!")
-            return
+        for u in users:
+            if u and u.get("email", "").lower() == uid_or_email.lower():
+                user_id = u.get("id", "")
+                user_email = u.get("email", "")
+                user_found = True
+                break
     else:
-        user_id = uid_or_email
+        for u in users:
+            if u and u.get("id", "") == uid_or_email:
+                user_id = u.get("id", "")
+                user_email = u.get("email", "")
+                user_found = True
+                break
+    
+    if not user_found:
+        error(f"User '{uid_or_email}' tidak ditemukan dalam daftar user!")
+        info("Pastikan UID atau Email yang dimasukkan benar")
+        return
+    
+    success(f"User ditemukan: {user_email}")
+    cdef int current = get_user_credit(user_id)
+    info(f"Credit saat ini: {current}")
     
     amount_str = input(f" {GR}[?]{R} Jumlah credit yang ditambahkan : {CY}").strip()
     print(R, end="")
@@ -1800,15 +1893,16 @@ cpdef void admin_add_limit(Auth auth):
     
     add_credit(user_id, amount)
     cdef int new_credit = get_user_credit(user_id)
-    success(f"Berhasil menambahkan {amount} credit!")
+    success(f"Berhasil menambahkan {amount} credit ke {user_email}!")
     info(f"Credit user sekarang: {new_credit}")
 
 cpdef void admin_remove_limit(Auth auth):
     cdef str uid_or_email, amount_str
     cdef int amount, current_credit
-    cdef bint ok
+    cdef bint ok, user_found
     cdef object users
     cdef str user_id = ""
+    cdef str user_email = ""
     
     section("REMOVE LIMIT")
     uid_or_email = input(f" {GR}[?]{R} UID atau Email User : {CY}").strip()
@@ -1818,23 +1912,36 @@ cpdef void admin_remove_limit(Auth auth):
         error("Input tidak boleh kosong!")
         return
     
-    if "@" in uid_or_email:
-        loading_tqdm("Mencari user", 20)
-        ok, users = auth.list_users()
-        if ok and users:
-            for u in users:
-                if u and u.get("email", "").lower() == uid_or_email.lower():
-                    user_id = u.get("id", "")
-                    break
-            if not user_id:
-                error(f"User dengan email {uid_or_email} tidak ditemukan!")
-                return
-        else:
-            error("Gagal mengambil data user!")
-            return
-    else:
-        user_id = uid_or_email
+    loading_tqdm("Mencari user", 30)
+    ok, users = auth.list_users()
     
+    if not ok or not users:
+        error("Gagal mengambil data user!")
+        return
+    
+    user_found = False
+    
+    if "@" in uid_or_email:
+        for u in users:
+            if u and u.get("email", "").lower() == uid_or_email.lower():
+                user_id = u.get("id", "")
+                user_email = u.get("email", "")
+                user_found = True
+                break
+    else:
+        for u in users:
+            if u and u.get("id", "") == uid_or_email:
+                user_id = u.get("id", "")
+                user_email = u.get("email", "")
+                user_found = True
+                break
+    
+    if not user_found:
+        error(f"User '{uid_or_email}' tidak ditemukan dalam daftar user!")
+        info("Pastikan UID atau Email yang dimasukkan benar")
+        return
+    
+    success(f"User ditemukan: {user_email}")
     current_credit = get_user_credit(user_id)
     info(f"Credit saat ini: {current_credit}")
     
@@ -1852,7 +1959,7 @@ cpdef void admin_remove_limit(Auth auth):
     
     remove_credit(user_id, amount)
     cdef int new_credit = get_user_credit(user_id)
-    success(f"Berhasil mengurangi {amount} credit!")
+    success(f"Berhasil mengurangi {amount} credit dari {user_email}!")
     info(f"Credit user sekarang: {new_credit}")
 
 cpdef void admin_view_all_limits(Auth auth):
@@ -1892,9 +1999,10 @@ cpdef void admin_view_all_limits(Auth auth):
 
 cpdef void admin_reset_limit(Auth auth):
     cdef str uid_or_email
-    cdef bint ok
+    cdef bint ok, user_found
     cdef object users
     cdef str user_id = ""
+    cdef str user_email = ""
     
     section("RESET LIMIT")
     uid_or_email = input(f" {GR}[?]{R} UID atau Email User : {CY}").strip()
@@ -1904,32 +2012,49 @@ cpdef void admin_reset_limit(Auth auth):
         error("Input tidak boleh kosong!")
         return
     
+    loading_tqdm("Mencari user", 30)
+    ok, users = auth.list_users()
+    
+    if not ok or not users:
+        error("Gagal mengambil data user!")
+        return
+    
+    user_found = False
+    
     if "@" in uid_or_email:
-        loading_tqdm("Mencari user", 20)
-        ok, users = auth.list_users()
-        if ok and users:
-            for u in users:
-                if u and u.get("email", "").lower() == uid_or_email.lower():
-                    user_id = u.get("id", "")
-                    break
-            if not user_id:
-                error(f"User dengan email {uid_or_email} tidak ditemukan!")
-                return
-        else:
-            error("Gagal mengambil data user!")
-            return
+        for u in users:
+            if u and u.get("email", "").lower() == uid_or_email.lower():
+                user_id = u.get("id", "")
+                user_email = u.get("email", "")
+                user_found = True
+                break
     else:
-        user_id = uid_or_email
+        for u in users:
+            if u and u.get("id", "") == uid_or_email:
+                user_id = u.get("id", "")
+                user_email = u.get("email", "")
+                user_found = True
+                break
+    
+    if not user_found:
+        error(f"User '{uid_or_email}' tidak ditemukan dalam daftar user!")
+        info("Pastikan UID atau Email yang dimasukkan benar")
+        return
+    
+    success(f"User ditemukan: {user_email}")
+    cdef int current = get_user_credit(user_id)
+    info(f"Credit saat ini: {current}")
     
     reset_user_credit(user_id)
-    success(f"Credit user berhasil direset ke default ({DEFAULT_CREDIT})!")
+    success(f"Credit user {user_email} berhasil direset ke default ({DEFAULT_CREDIT})!")
 
 cpdef void admin_set_limit(Auth auth):
     cdef str uid_or_email, amount_str
     cdef int amount
-    cdef bint ok
+    cdef bint ok, user_found
     cdef object users
     cdef str user_id = ""
+    cdef str user_email = ""
     
     section("SET LIMIT")
     uid_or_email = input(f" {GR}[?]{R} UID atau Email User : {CY}").strip()
@@ -1939,23 +2064,36 @@ cpdef void admin_set_limit(Auth auth):
         error("Input tidak boleh kosong!")
         return
     
-    if "@" in uid_or_email:
-        loading_tqdm("Mencari user", 20)
-        ok, users = auth.list_users()
-        if ok and users:
-            for u in users:
-                if u and u.get("email", "").lower() == uid_or_email.lower():
-                    user_id = u.get("id", "")
-                    break
-            if not user_id:
-                error(f"User dengan email {uid_or_email} tidak ditemukan!")
-                return
-        else:
-            error("Gagal mengambil data user!")
-            return
-    else:
-        user_id = uid_or_email
+    loading_tqdm("Mencari user", 30)
+    ok, users = auth.list_users()
     
+    if not ok or not users:
+        error("Gagal mengambil data user!")
+        return
+    
+    user_found = False
+    
+    if "@" in uid_or_email:
+        for u in users:
+            if u and u.get("email", "").lower() == uid_or_email.lower():
+                user_id = u.get("id", "")
+                user_email = u.get("email", "")
+                user_found = True
+                break
+    else:
+        for u in users:
+            if u and u.get("id", "") == uid_or_email:
+                user_id = u.get("id", "")
+                user_email = u.get("email", "")
+                user_found = True
+                break
+    
+    if not user_found:
+        error(f"User '{uid_or_email}' tidak ditemukan dalam daftar user!")
+        info("Pastikan UID atau Email yang dimasukkan benar")
+        return
+    
+    success(f"User ditemukan: {user_email}")
     cdef int current = get_user_credit(user_id)
     info(f"Credit saat ini: {current}")
     
@@ -1972,7 +2110,7 @@ cpdef void admin_set_limit(Auth auth):
         return
     
     set_credit(user_id, amount)
-    success(f"Credit user berhasil diset ke {amount}!")
+    success(f"Credit user {user_email} berhasil diset ke {amount}!")
 
 cpdef void admin_credit_menu(Auth auth):
     cdef int sel
@@ -2044,10 +2182,10 @@ cpdef void admin_panel(Auth auth, dict cfg):
             print()
             
             admin_header = (
-                f"[bold red]🔐 ADMIN PANEL[/bold red]\n\n"
-                f"[bold white]┃[/bold white] [dim]Status[/dim]   :: [bold green]● Online[/bold green]\n"
-                f"[bold white]┃[/bold white] [dim]Role[/dim]     :: [bold yellow]Administrator[/bold yellow]\n"
-                f"[bold white]┃[/bold white] [dim]Access[/dim]   :: [bold cyan]Full Control[/bold cyan]"
+                f"[bold red]ADMIN PANEL[/bold red]\n\n"
+                f"[bold white]|[/bold white] [dim]Status[/dim]   :: [bold green]Online[/bold green]\n"
+                f"[bold white]|[/bold white] [dim]Role[/dim]     :: [bold yellow]Administrator[/bold yellow]\n"
+                f"[bold white]|[/bold white] [dim]Access[/dim]   :: [bold cyan]Full Control[/bold cyan]"
             )
             console.print(Panel(
                 admin_header,
@@ -2059,11 +2197,11 @@ cpdef void admin_panel(Auth auth, dict cfg):
             title_box = f"\n{RD}{B}  Menu Admin:{R}"
             
             options = [
-                f"{B}  [1]  👥 List User    -  Lihat & pilih user{R}",
-                f"{B}  [2]  🗑️  Hapus User   -  Delete user{R}",
-                f"{B}  [3]  💳 Kelola Limit -  Manajemen credit{R}",
-                f"{B}  [4]  📊 Database     -  Lihat statistik{R}",
-                f"{B}  [0]  🚪 Logout       -  Keluar admin{R}",
+                f"{B}  [1]  List User    -  Lihat & pilih user{R}",
+                f"{B}  [2]  Hapus User   -  Delete user{R}",
+                f"{B}  [3]  Kelola Limit -  Manajemen credit{R}",
+                f"{B}  [4]  Database     -  Lihat statistik{R}",
+                f"{B}  [0]  Logout       -  Keluar admin{R}",
             ]
             
             admin_menu = TerminalMenu(

@@ -99,16 +99,16 @@ def show_loading_screen():
     so_file = None
     config_ok = False
     
-    for i in tqdm(range(40), desc=f"  {CY}Memuat sistem{R}", 
+    for i in tqdm(range(100), desc=f"  {CY}Memuat sistem{R}", 
                   bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}",
                   colour="green", ncols=60):
-        if i == 10:
+        if i == 20:
             online = check_internet()
-        elif i == 20:
+        elif i == 50:
             so_file = find_so_file()
-        elif i == 30:
+        elif i == 80:
             config_ok = os.path.exists("config.enc")
-        time.sleep(0.04)
+        time.sleep(0.05)
     
     print()
     
