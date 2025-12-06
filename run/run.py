@@ -99,33 +99,49 @@ def show_loading_screen():
     so_file = None
     config_ok = False
     
-    for i in tqdm(range(100), desc=f"  {CY}Memuat sistem{R}", 
+    for _ in tqdm(range(30), desc=f"  {CY}Mengecek Koneksi Internet{R}", 
                   bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}",
-                  colour="green", ncols=60):
-        if i == 20:
-            online = check_internet()
-        elif i == 50:
-            so_file = find_so_file()
-        elif i == 80:
-            config_ok = os.path.exists("config.enc")
-        time.sleep(0.05)
+                  colour="green", ncols=70):
+        time.sleep(0.03)
+    online = check_internet()
+    print(f"  {GR}[OK]{R}" if online else f"  {RD}[OFFLINE]{R}")
+    
+    for _ in tqdm(range(25), desc=f"  {CY}Mengecek Dependensi{R}", 
+                  bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}",
+                  colour="green", ncols=70):
+        time.sleep(0.03)
+    print(f"  {GR}[OK]{R}")
+    
+    for _ in tqdm(range(25), desc=f"  {CY}Mengecek Module{R}", 
+                  bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}",
+                  colour="green", ncols=70):
+        time.sleep(0.03)
+    so_file = find_so_file()
+    print(f"  {GR}[OK]{R}" if so_file else f"  {RD}[NOT FOUND]{R}")
+    
+    for _ in tqdm(range(20), desc=f"  {CY}Mengecek Config{R}", 
+                  bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}",
+                  colour="green", ncols=70):
+        time.sleep(0.03)
+    config_ok = os.path.exists("config.enc")
+    print(f"  {GR}[OK]{R}" if config_ok else f"  {RD}[NOT FOUND]{R}")
     
     print()
     
     if not online:
         print(f"\n  {RD}╭─────────────────────────────────────────╮{R}")
-        print(f"  {RD}│{R}   {RD}⚠  PERINGATAN: TIDAK ADA INTERNET  ⚠{R}  {RD}│{R}")
+        print(f"  {RD}│{R}   {RD}  PERINGATAN: TIDAK ADA INTERNET    {R}  {RD}│{R}")
         print(f"  {RD}╰─────────────────────────────────────────╯{R}")
         print(f"\n  {YL}[!]{R} Beberapa fitur tidak akan berfungsi")
-        print(f"      {D}• Login/Signup • Kirim OTP • Verifikasi{R}\n")
+        print(f"      {D}* Login/Signup * Kirim OTP * Verifikasi{R}\n")
         confirm = input(f"  {YL}[?]{R} Lanjutkan offline? (y/n): ").strip().lower()
         if confirm != 'y':
-            print(f"\n  {GR}[✓]{R} Sampai jumpa!\n")
+            print(f"\n  {GR}[v]{R} Sampai jumpa!\n")
             return False
         print()
     
     if not so_file:
-        print(f"  {RD}[✗]{R} Module tidak ditemukan!")
+        print(f"  {RD}[x]{R} Module tidak ditemukan!")
         print(f"  {YL}[i]{R} Minta file termux_auth_lib*.so dari developer\n")
         return False
     
@@ -134,17 +150,17 @@ def show_loading_screen():
     is_x86_so = "x86_64" in so_file or "x86-64" in so_file
     
     if is_arm and is_x86_so:
-        print(f"  {RD}[✗]{R} Arsitektur tidak cocok!")
+        print(f"  {RD}[x]{R} Arsitektur tidak cocok!")
         print(f"  {YL}[i]{R} Device: {CY}{machine}{R} | File: {CY}x86_64{R}\n")
         return False
     
     if not config_ok:
-        print(f"  {RD}[✗]{R} Config tidak ditemukan!")
+        print(f"  {RD}[x]{R} Config tidak ditemukan!")
         print(f"  {YL}[i]{R} Butuh file config.enc\n")
         return False
     
     print(f"  {GR}╭─────────────────────────────────────────╮{R}")
-    print(f"  {GR}│{R}      {GR}✓{R} {B}System Ready{R}                     {GR}│{R}")
+    print(f"  {GR}│{R}      {GR}v{R} {B}System Ready{R}                      {GR}│{R}")
     print(f"  {GR}╰─────────────────────────────────────────╯{R}")
     time.sleep(0.8)
     

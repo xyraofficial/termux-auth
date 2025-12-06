@@ -2124,7 +2124,7 @@ cpdef void admin_credit_menu(Auth auth):
             print()
             
             header_content = (
-                f"[bold yellow]💳 KELOLA LIMIT (CREDIT)[/bold yellow]\n"
+                f"[bold yellow]KELOLA LIMIT (CREDIT)[/bold yellow]\n"
                 f"[dim]Manajemen Credit User[/dim]"
             )
             console.print(Panel(
@@ -2136,12 +2136,12 @@ cpdef void admin_credit_menu(Auth auth):
             title_box = f"\n{YL}{B}  Pilih Menu:{R}"
             
             credit_options = [
-                f"{B}  [1]  ➕ Add Limit     -  Tambah credit user{R}",
-                f"{B}  [2]  ➖ Remove Limit  -  Kurangi credit user{R}",
-                f"{B}  [3]  📊 Lihat Semua   -  Lihat semua credit{R}",
-                f"{B}  [4]  🔄 Reset Limit   -  Reset ke default (3){R}",
-                f"{B}  [5]  ⚡ Set Limit     -  Set credit tertentu{R}",
-                f"{B}  [0]  ← Kembali       -  Admin panel{R}",
+                f"{B}  [1]  Add Limit     -  Tambah credit user{R}",
+                f"{B}  [2]  Remove Limit  -  Kurangi credit user{R}",
+                f"{B}  [3]  Lihat Semua   -  Lihat semua credit{R}",
+                f"{B}  [4]  Reset Limit   -  Reset ke default (3){R}",
+                f"{B}  [5]  Set Limit     -  Set credit tertentu{R}",
+                f"{B}  [0]  Kembali       -  Admin panel{R}",
             ]
             
             credit_menu = TerminalMenu(
