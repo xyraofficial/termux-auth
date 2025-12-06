@@ -243,46 +243,50 @@ cpdef void show_developer_info():
         ("GitHub", "https://github.com/XyraOfficial"),
     ]
     
-    while True:
-        clear()
-        print()
-        
-        title_box = (
-            f"\n{GR}{B}"
-            f"╭───────────────────────────────╮\n"
-            f"│       DEVELOPER INFO          │\n"
-            f"│      by XyraOfficial          │\n"
-            f"╰───────────────────────────────╯"
-            f"{R}"
-        )
-        
-        options = [
-            f"{B}WhatsApp  - Hubungi via WA{R}",
-            f"{B}YouTube   - Channel Tutorial{R}",
-            f"{B}Email     - Kirim Email{R}",
-            f"{B}GitHub    - Source Code{R}",
-            f"{B}Kembali   - Menu Utama{R}",
-        ]
-        
-        dev_menu = TerminalMenu(
-            menu_entries=options,
-            title=title_box,
-            menu_cursor="▶ ",
-            menu_cursor_style=("fg_red",),
-            menu_highlight_style=("fg_yellow", "bold"),
-        )
-        
-        sel = dev_menu.show()
-        
-        if sel is None or sel == 4:
-            break
-        elif sel >= 0 and sel < 4:
-            name, url = dev_links[sel]
-            loading_tqdm(f"Membuka {name}", 20)
-            open_url(url)
-            success(f"{name} dibuka!")
+    try:
+        while True:
+            clear()
             print()
-            input(f" {D}Tekan Enter...{R}")
+            
+            title_box = (
+                f"\n{GR}{B}"
+                f"╭───────────────────────────────╮\n"
+                f"│       DEVELOPER INFO          │\n"
+                f"│      by XyraOfficial          │\n"
+                f"╰───────────────────────────────╯"
+                f"{R}"
+            )
+            
+            options = [
+                f"{B}WhatsApp  - Hubungi via WA{R}",
+                f"{B}YouTube   - Channel Tutorial{R}",
+                f"{B}Email     - Kirim Email{R}",
+                f"{B}GitHub    - Source Code{R}",
+                f"{B}Kembali   - Menu Utama{R}",
+            ]
+            
+            dev_menu = TerminalMenu(
+                menu_entries=options,
+                title=title_box,
+                menu_cursor="▶ ",
+                menu_cursor_style=("fg_red",),
+                menu_highlight_style=("fg_yellow", "bold"),
+            )
+            
+            sel = dev_menu.show()
+            
+            if sel is None or sel == 4:
+                break
+            elif sel >= 0 and sel < 4:
+                name, url = dev_links[sel]
+                loading_tqdm(f"Membuka {name}", 20)
+                open_url(url)
+                success(f"{name} dibuka!")
+                print()
+                input(f" {D}Tekan Enter...{R}")
+    except KeyboardInterrupt:
+        show_interrupt_message()
+        sys.exit(0)
 
 cpdef void section(str title):
     print()
@@ -1187,112 +1191,116 @@ cpdef void do_login(Auth auth, dict cfg):
         box_info([f"Email : {res['email']}", f"UID   : {res['uid']}"])
         time.sleep(1)
         
-        while True:
-            clear()
-            print()
-            
-            welcome_panel = Panel(
-                f"[bold green][OK][/bold green] [white]Selamat datang![/white]\n[bold cyan]{res['email']}[/bold cyan]",
-                border_style="green",
-                padding=(0, 2)
-            )
-            console.print(welcome_panel)
-            
-            user_options = [
-                f"{B}  [1]  Profile     -  Lihat info akun{R}",
-                f"{B}  [2]  Kirim OTP   -  WhatsApp Bomber{R}",
-                f"{B}  [0]  Logout      -  Keluar akun{R}",
-            ]
-            user_menu = TerminalMenu(
-                menu_entries=user_options,
-                title=f"\n{CY}{B}╭─────────────────────────────────╮\n│                                 │\n│        U S E R   M E N U        │\n│                                 │\n╰─────────────────────────────────╯{R}",
-                menu_cursor=" > ",
-                menu_cursor_style=("fg_cyan", "bold"),
-                menu_highlight_style=("fg_green", "bold"),
-            )
-            sel = user_menu.show()
-            
-            if sel == 0:
+        try:
+            while True:
                 clear()
                 print()
                 
-                user_credit = get_user_credit(res['uid'])
-                user_used = get_user_used(res['uid'])
-                
-                profile_header = Panel(
-                    "[bold white]P R O F I L   P E N G G U N A[/bold white]",
-                    border_style="magenta",
+                welcome_panel = Panel(
+                    f"[bold green][OK][/bold green] [white]Selamat datang![/white]\n[bold cyan]{res['email']}[/bold cyan]",
+                    border_style="green",
                     padding=(0, 2)
                 )
-                console.print(profile_header)
-                print()
+                console.print(welcome_panel)
                 
-                profile_table = Table(show_header=False, box=None, padding=(0, 2))
-                
-                account_content = (
-                    f"[bold cyan]Email[/bold cyan]\n"
-                    f"[white]{res['email']}[/white]\n\n"
-                    f"[bold cyan]User ID[/bold cyan]\n"
-                    f"[dim]{res['uid']}[/dim]"
+                user_options = [
+                    f"{B}  [1]  Profile     -  Lihat info akun{R}",
+                    f"{B}  [2]  Kirim OTP   -  WhatsApp Bomber{R}",
+                    f"{B}  [0]  Logout      -  Keluar akun{R}",
+                ]
+                user_menu = TerminalMenu(
+                    menu_entries=user_options,
+                    title=f"\n{CY}{B}╭─────────────────────────────────╮\n│                                 │\n│        U S E R   M E N U        │\n│                                 │\n╰─────────────────────────────────╯{R}",
+                    menu_cursor=" > ",
+                    menu_cursor_style=("fg_cyan", "bold"),
+                    menu_highlight_style=("fg_green", "bold"),
                 )
+                sel = user_menu.show()
                 
-                account_panel = Panel(
-                    account_content,
-                    title="[bold cyan]AKUN[/bold cyan]",
-                    border_style="cyan",
-                    padding=(1, 2)
-                )
-                
-                if user_credit >= 3:
-                    credit_color = "green"
-                    credit_icon = "[+]"
-                elif user_credit >= 1:
-                    credit_color = "yellow"
-                    credit_icon = "[!]"
+                if sel == 0:
+                    clear()
+                    print()
+                    
+                    user_credit = get_user_credit(res['uid'])
+                    user_used = get_user_used(res['uid'])
+                    
+                    profile_header = Panel(
+                        "[bold white]P R O F I L   P E N G G U N A[/bold white]",
+                        border_style="magenta",
+                        padding=(0, 2)
+                    )
+                    console.print(profile_header)
+                    print()
+                    
+                    profile_table = Table(show_header=False, box=None, padding=(0, 2))
+                    
+                    account_content = (
+                        f"[bold cyan]Email[/bold cyan]\n"
+                        f"[white]{res['email']}[/white]\n\n"
+                        f"[bold cyan]User ID[/bold cyan]\n"
+                        f"[dim]{res['uid']}[/dim]"
+                    )
+                    
+                    account_panel = Panel(
+                        account_content,
+                        title="[bold cyan]AKUN[/bold cyan]",
+                        border_style="cyan",
+                        padding=(1, 2)
+                    )
+                    
+                    if user_credit >= 3:
+                        credit_color = "green"
+                        credit_icon = "[+]"
+                    elif user_credit >= 1:
+                        credit_color = "yellow"
+                        credit_icon = "[!]"
+                    else:
+                        credit_color = "red"
+                        credit_icon = "[-]"
+                    
+                    stats_content = (
+                        f"[bold {credit_color}]{credit_icon} Credit[/bold {credit_color}]\n"
+                        f"[bold white]{user_credit}[/bold white] [dim]tersisa[/dim]\n\n"
+                        f"[bold blue]Terpakai[/bold blue]\n"
+                        f"[bold white]{user_used}[/bold white] [dim]kali digunakan[/dim]"
+                    )
+                    
+                    stats_panel = Panel(
+                        stats_content,
+                        title="[bold green]STATISTIK[/bold green]",
+                        border_style="green",
+                        padding=(1, 2)
+                    )
+                    
+                    profile_table.add_row(account_panel, stats_panel)
+                    console.print(profile_table)
+                    
+                    print()
+                    tip_panel = Panel(
+                        "[dim]Credit digunakan untuk fitur WhatsApp Bomber[/dim]\n"
+                        "[dim]Setiap round membutuhkan 1 credit[/dim]",
+                        border_style="dim"
+                    )
+                    console.print(tip_panel)
+                    
+                    print()
+                    input(f" {D}Tekan Enter untuk kembali...{R}")
+                elif sel == 1:
+                    do_sms_config_with_cfg(cfg, res['uid'])
+                    print()
+                    input(f" {D}Tekan Enter untuk kembali...{R}")
+                elif sel == 2:
+                    clear()
+                    print()
+                    loading_tqdm("Logout", 20)
+                    success("Logout berhasil!")
+                    time.sleep(0.5)
+                    return
                 else:
-                    credit_color = "red"
-                    credit_icon = "[-]"
-                
-                stats_content = (
-                    f"[bold {credit_color}]{credit_icon} Credit[/bold {credit_color}]\n"
-                    f"[bold white]{user_credit}[/bold white] [dim]tersisa[/dim]\n\n"
-                    f"[bold blue]Terpakai[/bold blue]\n"
-                    f"[bold white]{user_used}[/bold white] [dim]kali digunakan[/dim]"
-                )
-                
-                stats_panel = Panel(
-                    stats_content,
-                    title="[bold green]STATISTIK[/bold green]",
-                    border_style="green",
-                    padding=(1, 2)
-                )
-                
-                profile_table.add_row(account_panel, stats_panel)
-                console.print(profile_table)
-                
-                print()
-                tip_panel = Panel(
-                    "[dim]Credit digunakan untuk fitur WhatsApp Bomber[/dim]\n"
-                    "[dim]Setiap round membutuhkan 1 credit[/dim]",
-                    border_style="dim"
-                )
-                console.print(tip_panel)
-                
-                print()
-                input(f" {D}Tekan Enter untuk kembali...{R}")
-            elif sel == 1:
-                do_sms_config_with_cfg(cfg, res['uid'])
-                print()
-                input(f" {D}Tekan Enter untuk kembali...{R}")
-            elif sel == 2:
-                clear()
-                print()
-                loading_tqdm("Logout", 20)
-                success("Logout berhasil!")
-                time.sleep(0.5)
-                return
-            else:
-                return
+                    return
+        except KeyboardInterrupt:
+            show_interrupt_message()
+            sys.exit(0)
     elif res == "UNVERIFIED":
         info("Email belum diverifikasi")
         loading_tqdm("Mencari data user", 20)
@@ -1406,58 +1414,62 @@ cpdef void admin_list_users(Auth auth):
         
         success(f"Total: {len(users)} user")
         
-        while True:
-            print()
-            menu_options = []
-            for i, u in enumerate(users):
-                email = u.get("email", "N/A")
-                verified_status = "✓" if u.get("email_confirmed_at") else "✗"
-                menu_options.append(f"{B}{i+1}. {email} [{verified_status}]{R}")
-            
-            menu_options.append(f"{B}← Kembali{R}")
-            
-            title_box = (
-                f"\n{CY}{B}"
-                f"╭───────────────────────────────╮\n"
-                f"│      PILIH USER               │\n"
-                f"│   Tekan Enter untuk detail    │\n"
-                f"╰───────────────────────────────╯"
-                f"{R}"
-            )
-            
-            user_menu = TerminalMenu(
-                menu_entries=menu_options,
-                title=title_box,
-                menu_cursor="▶ ",
-                menu_cursor_style=("fg_red",),
-                menu_highlight_style=("fg_yellow", "bold"),
-            )
-            
-            sel = user_menu.show()
-            
-            if sel is None or sel == len(users):
-                break
-            
-            selected_user = users[sel]
-            clear()
-            print()
-            section("DETAIL USER")
-            
-            box_info([
-                f"UID      : {selected_user.get('id', 'N/A')}",
-                f"Email    : {selected_user.get('email', 'N/A')}",
-                f"Dibuat   : {selected_user.get('created_at', 'N/A')[:19]}",
-                f"Verified : {'Ya' if selected_user.get('email_confirmed_at') else 'Tidak'}",
-                f"Provider : {selected_user.get('app_metadata', {}).get('provider', 'email')}",
-                f"Last Sign: {selected_user.get('last_sign_in_at', 'Belum pernah')[:19] if selected_user.get('last_sign_in_at') else 'Belum pernah'}",
-            ])
-            
-            print()
-            input(f" {D}Tekan Enter untuk kembali...{R}")
-            clear()
-            print()
-            section("DAFTAR USER")
-            success(f"Total: {len(users)} user")
+        try:
+            while True:
+                print()
+                menu_options = []
+                for i, u in enumerate(users):
+                    email = u.get("email", "N/A")
+                    verified_status = "✓" if u.get("email_confirmed_at") else "✗"
+                    menu_options.append(f"{B}{i+1}. {email} [{verified_status}]{R}")
+                
+                menu_options.append(f"{B}← Kembali{R}")
+                
+                title_box = (
+                    f"\n{CY}{B}"
+                    f"╭───────────────────────────────╮\n"
+                    f"│      PILIH USER               │\n"
+                    f"│   Tekan Enter untuk detail    │\n"
+                    f"╰───────────────────────────────╯"
+                    f"{R}"
+                )
+                
+                user_menu = TerminalMenu(
+                    menu_entries=menu_options,
+                    title=title_box,
+                    menu_cursor="▶ ",
+                    menu_cursor_style=("fg_red",),
+                    menu_highlight_style=("fg_yellow", "bold"),
+                )
+                
+                sel = user_menu.show()
+                
+                if sel is None or sel == len(users):
+                    break
+                
+                selected_user = users[sel]
+                clear()
+                print()
+                section("DETAIL USER")
+                
+                box_info([
+                    f"UID      : {selected_user.get('id', 'N/A')}",
+                    f"Email    : {selected_user.get('email', 'N/A')}",
+                    f"Dibuat   : {selected_user.get('created_at', 'N/A')[:19]}",
+                    f"Verified : {'Ya' if selected_user.get('email_confirmed_at') else 'Tidak'}",
+                    f"Provider : {selected_user.get('app_metadata', {}).get('provider', 'email')}",
+                    f"Last Sign: {selected_user.get('last_sign_in_at', 'Belum pernah')[:19] if selected_user.get('last_sign_in_at') else 'Belum pernah'}",
+                ])
+                
+                print()
+                input(f" {D}Tekan Enter untuk kembali...{R}")
+                clear()
+                print()
+                section("DAFTAR USER")
+                success(f"Total: {len(users)} user")
+        except KeyboardInterrupt:
+            show_interrupt_message()
+            sys.exit(0)
     else:
         error(f"Gagal mengambil data: {users}")
 
@@ -1785,53 +1797,57 @@ cpdef void admin_set_limit(Auth auth):
 cpdef void admin_credit_menu(Auth auth):
     cdef int sel
     
-    while True:
-        clear()
-        print()
-        
-        title_box = (
-            f"\n{YL}{B}"
-            f"╭───────────────────────────────╮\n"
-            f"│    KELOLA LIMIT (CREDIT)      │\n"
-            f"│   Manajemen Credit User       │\n"
-            f"╰───────────────────────────────╯"
-            f"{R}"
-        )
-        
-        credit_options = [
-            f"{B}Add Limit     - Tambah credit user{R}",
-            f"{B}Remove Limit  - Kurangi credit user{R}",
-            f"{B}Lihat Semua   - Lihat semua credit{R}",
-            f"{B}Reset Limit   - Reset ke default (3){R}",
-            f"{B}Set Limit     - Set credit tertentu{R}",
-            f"{B}Kembali       - Admin panel{R}",
-        ]
-        
-        credit_menu = TerminalMenu(
-            menu_entries=credit_options,
-            title=title_box,
-            menu_cursor="▶ ",
-            menu_cursor_style=("fg_red",),
-            menu_highlight_style=("fg_yellow", "bold"),
-        )
-        
-        sel = credit_menu.show()
-        
-        if sel == 0:
-            admin_add_limit(auth)
-        elif sel == 1:
-            admin_remove_limit(auth)
-        elif sel == 2:
-            admin_view_all_limits(auth)
-        elif sel == 3:
-            admin_reset_limit(auth)
-        elif sel == 4:
-            admin_set_limit(auth)
-        elif sel == 5 or sel is None:
-            break
-        
-        print()
-        input(f" {D}Tekan Enter...{R}")
+    try:
+        while True:
+            clear()
+            print()
+            
+            title_box = (
+                f"\n{YL}{B}"
+                f"╭───────────────────────────────╮\n"
+                f"│    KELOLA LIMIT (CREDIT)      │\n"
+                f"│   Manajemen Credit User       │\n"
+                f"╰───────────────────────────────╯"
+                f"{R}"
+            )
+            
+            credit_options = [
+                f"{B}Add Limit     - Tambah credit user{R}",
+                f"{B}Remove Limit  - Kurangi credit user{R}",
+                f"{B}Lihat Semua   - Lihat semua credit{R}",
+                f"{B}Reset Limit   - Reset ke default (3){R}",
+                f"{B}Set Limit     - Set credit tertentu{R}",
+                f"{B}Kembali       - Admin panel{R}",
+            ]
+            
+            credit_menu = TerminalMenu(
+                menu_entries=credit_options,
+                title=title_box,
+                menu_cursor="▶ ",
+                menu_cursor_style=("fg_red",),
+                menu_highlight_style=("fg_yellow", "bold"),
+            )
+            
+            sel = credit_menu.show()
+            
+            if sel == 0:
+                admin_add_limit(auth)
+            elif sel == 1:
+                admin_remove_limit(auth)
+            elif sel == 2:
+                admin_view_all_limits(auth)
+            elif sel == 3:
+                admin_reset_limit(auth)
+            elif sel == 4:
+                admin_set_limit(auth)
+            elif sel == 5 or sel is None:
+                break
+            
+            print()
+            input(f" {D}Tekan Enter...{R}")
+    except KeyboardInterrupt:
+        show_interrupt_message()
+        sys.exit(0)
 
 cpdef void admin_panel(Auth auth, dict cfg):
     cdef int sel
@@ -1839,64 +1855,68 @@ cpdef void admin_panel(Auth auth, dict cfg):
     cdef object users
     cdef int verified
     
-    while True:
-        clear()
-        print()
-        
-        title_box = (
-            f"\n{RD}{B}"
-            f"╭───────────────────────────────╮\n"
-            f"│       ADMIN PANEL             │\n"
-            f"│    Kelola User Database       │\n"
-            f"╰───────────────────────────────╯"
-            f"{R}"
-        )
-        
-        options = [
-            f"{B}List User    - Lihat & pilih user{R}",
-            f"{B}Hapus User   - Delete user{R}",
-            f"{B}Kelola Limit - Manajemen credit{R}",
-            f"{B}Database     - Lihat statistik{R}",
-            f"{B}Logout       - Keluar admin{R}",
-        ]
-        
-        admin_menu = TerminalMenu(
-            menu_entries=options,
-            title=title_box,
-            menu_cursor="▶ ",
-            menu_cursor_style=("fg_red",),
-            menu_highlight_style=("fg_yellow", "bold"),
-        )
-        
-        sel = admin_menu.show()
-        
-        if sel == 0:
-            admin_list_users(auth)
-        elif sel == 1:
-            admin_delete_user(auth)
-        elif sel == 2:
-            admin_credit_menu(auth)
-        elif sel == 3:
-            section("DATABASE STATS")
-            ok, users = auth.list_users()
-            if ok:
-                verified = 0
-                for u in users:
-                    if u.get("email_confirmed_at"):
-                        verified = verified + 1
-                box_info([
-                    f"Total User     : {len(users)}",
-                    f"Terverifikasi  : {verified}",
-                    f"Belum Verified : {len(users) - verified}",
-                ])
-            else:
-                error("Gagal mengambil statistik")
+    try:
+        while True:
+            clear()
             print()
-            input(f" {D}Tekan Enter...{R}")
-        elif sel == 4 or sel is None:
-            loading_tqdm("Logout admin", 20)
-            success("Logout admin berhasil!")
-            break
+            
+            title_box = (
+                f"\n{RD}{B}"
+                f"╭───────────────────────────────╮\n"
+                f"│       ADMIN PANEL             │\n"
+                f"│    Kelola User Database       │\n"
+                f"╰───────────────────────────────╯"
+                f"{R}"
+            )
+            
+            options = [
+                f"{B}List User    - Lihat & pilih user{R}",
+                f"{B}Hapus User   - Delete user{R}",
+                f"{B}Kelola Limit - Manajemen credit{R}",
+                f"{B}Database     - Lihat statistik{R}",
+                f"{B}Logout       - Keluar admin{R}",
+            ]
+            
+            admin_menu = TerminalMenu(
+                menu_entries=options,
+                title=title_box,
+                menu_cursor="▶ ",
+                menu_cursor_style=("fg_red",),
+                menu_highlight_style=("fg_yellow", "bold"),
+            )
+            
+            sel = admin_menu.show()
+            
+            if sel == 0:
+                admin_list_users(auth)
+            elif sel == 1:
+                admin_delete_user(auth)
+            elif sel == 2:
+                admin_credit_menu(auth)
+            elif sel == 3:
+                section("DATABASE STATS")
+                ok, users = auth.list_users()
+                if ok:
+                    verified = 0
+                    for u in users:
+                        if u.get("email_confirmed_at"):
+                            verified = verified + 1
+                    box_info([
+                        f"Total User     : {len(users)}",
+                        f"Terverifikasi  : {verified}",
+                        f"Belum Verified : {len(users) - verified}",
+                    ])
+                else:
+                    error("Gagal mengambil statistik")
+                print()
+                input(f" {D}Tekan Enter...{R}")
+            elif sel == 4 or sel is None:
+                loading_tqdm("Logout admin", 20)
+                success("Logout admin berhasil!")
+                break
+    except KeyboardInterrupt:
+        show_interrupt_message()
+        sys.exit(0)
 
 cpdef bint do_login_menu(Auth auth, dict cfg):
     cdef int sel
