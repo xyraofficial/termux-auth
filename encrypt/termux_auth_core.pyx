@@ -1281,9 +1281,9 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                     credit_icon = "○"
                 
                 account_content = (
-                    f"[bold cyan]╭{'─' * 25}╮[/bold cyan]\n"
+                    f"[bold cyan]╭{'─' * 26}╮[/bold cyan]\n"
                     f"[bold cyan]│[/bold cyan]  [bold white]I N F O   A C C O U N T[/bold white] [bold cyan]│[/bold cyan]\n"
-                    f"[bold cyan]╰{'─' * 25}╯[/bold cyan]\n\n"
+                    f"[bold cyan]╰{'─' * 26}╯[/bold cyan]\n\n"
                     f"[bold white]┌─ DATA PENGGUNA ─────────────────────────┐[/bold white]\n"
                     f"[bold white]│[/bold white]\n"
                     f"[bold white]│[/bold white]  [cyan]Email[/cyan]      : [bold white]{res['email']}[/bold white]\n"
@@ -1321,7 +1321,7 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                     f"[bold white]│[/bold white]\n"
                     f"[bold white]│[/bold white]  [bold green]{res['uid']}[/bold green]\n"
                     f"[bold white]│[/bold white]\n"
-                    f"[bold white]└────────────────────────────────────────────┘[/bold white]\n\n"
+                    f"[bold white]└───────────────────────────────────────────┘[/bold white]\n\n"
                     f"[dim]┌─ INFORMASI ─────────────────────────────────┐[/dim]\n"
                     f"[dim]│[/dim]  [yellow]●[/yellow] UID adalah identitas unik akun Anda\n"
                     f"[dim]│[/dim]  [yellow]●[/yellow] Digunakan untuk identifikasi sistem\n"
