@@ -1283,18 +1283,22 @@ cpdef list get_otp_logs(str user_id):
     cdef dict headers = _supabase_headers()
     cdef str url = f"{SUPABASE_URL}/rest/v1/otp_target_logs?user_id=eq.{user_id}&order=last_sent_at.desc&limit=20"
     cdef list result = []
-    cdef dict services
+    services = {}
     try:
         r = requests.get(url, headers=headers, timeout=10)
         if r.status_code == 200:
             data = r.json()
             for item in data:
-                services = item.get("services", {})
-                if isinstance(services, str):
+                services_raw = item.get("services", {})
+                if isinstance(services_raw, str):
                     try:
-                        services = json.loads(services)
+                        services = json.loads(services_raw)
                     except:
                         services = {}
+                elif isinstance(services_raw, dict):
+                    services = services_raw
+                else:
+                    services = {}
                 result.append({
                     "phone": item.get("phone", ""),
                     "services": services,
