@@ -21,6 +21,7 @@ from rich.table import Table
 from rich.console import Console
 from rich.panel import Panel
 from tabulate import tabulate
+from fake_useragent import UserAgent
 
 cdef str CONFIG_FILE = "config.enc"
 cdef str CONFIG_FILE_PLAIN = "config.json"
@@ -400,6 +401,147 @@ cpdef tuple send_email(dict cfg, str to, str otp):
     except Exception as e:
         return (False, str(e))
 
+cpdef tuple valid_phone(str phone):
+    cdef str cleaned = phone.strip()
+    if cleaned.startswith("+62"):
+        cleaned = cleaned[3:]
+    elif cleaned.startswith("62"):
+        cleaned = cleaned[2:]
+    elif cleaned.startswith("0"):
+        cleaned = cleaned[1:]
+    
+    if not cleaned.startswith("8"):
+        return (False, "", "Nomor harus diawali 8 (contoh: 895325844493)")
+    
+    if not cleaned.isdigit():
+        return (False, "", "Nomor harus angka saja")
+    
+    if len(cleaned) < 9 or len(cleaned) > 13:
+        return (False, "", "Panjang nomor tidak valid (9-13 digit)")
+    
+    return (True, cleaned, "")
+
+cpdef str get_random_ua():
+    try:
+        ua = UserAgent()
+        return ua.random
+    except:
+        return "Mozilla/5.0 (Linux; Android 14; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36"
+
+cpdef tuple send_sms_authkey(str phone):
+    cdef str ua = get_random_ua()
+    cdef str url = "https://napi3.authkey.io/api/login"
+    cdef dict payload = {
+        "method": "otp_mobile_verification",
+        "user_id": 16738,
+        "token": "19ee5f415a57c113ad51f2eb92995292",
+        "mobile": phone,
+        "country_code": "62"
+    }
+    cdef dict headers = {
+        'User-Agent': ua,
+        'Accept': "application/json, text/plain, */*",
+        'Accept-Encoding': "gzip, deflate, br, zstd",
+        'Content-Type': "application/json",
+        'sec-ch-ua-platform': '"Android"',
+        'sec-ch-ua': '"Chromium";v="142", "Android WebView";v="142", "Not_A Brand";v="99"',
+        'sec-ch-ua-mobile': "?1",
+        'Origin': "https://console.authkey.io",
+        'X-Requested-With': "mark.via.gp",
+        'Sec-Fetch-Site': "same-site",
+        'Sec-Fetch-Mode': "cors",
+        'Sec-Fetch-Dest': "empty",
+        'Referer': "https://console.authkey.io/",
+        'Accept-Language': "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7"
+    }
+    try:
+        r = requests.post(url, data=json.dumps(payload), headers=headers, timeout=30)
+        return (True, f"AuthKey: {r.text[:100]}")
+    except Exception as e:
+        return (False, f"AuthKey Error: {str(e)}")
+
+cpdef tuple send_sms_dexatel(str phone):
+    cdef str ua = get_random_ua()
+    cdef str url = "https://api.dexatel.com/v1/phone_verifications"
+    cdef str phone_with_code = "62" + phone
+    cdef dict payload = {
+        "data": {
+            "phone": phone_with_code
+        }
+    }
+    cdef dict headers = {
+        'User-Agent': ua,
+        'Accept': "application/json, text/plain, */*",
+        'Accept-Encoding': "gzip, deflate, br, zstd",
+        'Content-Type': "application/json",
+        'sec-ch-ua-platform': '"Android"',
+        'authorization': "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwYW5na2V5anVsaW8yQGdtYWlsLmNvbSIsInJvbGUiOiJVU0VSIiwiYWNjb3VudF9pZCI6IjQ3MTg2OTk0LTBlNTUtNDYxYS04NDA5LTUxOTUzNGQwYmM2MCIsImFjY291bnRfdHlwZSI6IkFDQ09VTlQiLCJpbXBlcnNvbmF0ZWQiOmZhbHNlLCJhZG1pbl9pbXBlcnNvbmF0ZWQiOmZhbHNlLCJpYXQiOjE3NjQ5OTE0ODgsImV4cCI6MTc2NTAyMTQ4OH0.qN_x8FcybHUpsxVTdChm3O3WoQ4HNfWnZdh8WJJo0vM",
+        'sec-ch-ua': '"Chromium";v="142", "Android WebView";v="142", "Not_A Brand";v="99"',
+        'sec-ch-ua-mobile': "?1",
+        'origin': "https://dashboard.dexatel.com",
+        'x-requested-with': "mark.via.gp",
+        'sec-fetch-site': "same-site",
+        'sec-fetch-mode': "cors",
+        'sec-fetch-dest': "empty",
+        'referer': "https://dashboard.dexatel.com/",
+        'accept-language': "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+        'priority': "u=1, i"
+    }
+    try:
+        r = requests.post(url, data=json.dumps(payload), headers=headers, timeout=30)
+        return (True, f"Dexatel: {r.text[:100]}")
+    except Exception as e:
+        return (False, f"Dexatel Error: {str(e)}")
+
+cpdef void do_sms_config():
+    cdef str phone_input, phone_clean, msg
+    cdef bint valid, ok1, ok2
+    cdef int i
+    
+    section("RUN KONFIGURASI SMS")
+    
+    print(f" {YL}[!]{R} Format nomor: 8xxxxxxxxx (tanpa +62/0)")
+    print(f" {YL}[!]{R} Contoh: 895325844493")
+    print()
+    
+    phone_input = input(f" {GR}[?]{R} Nomor Target : {CY}").strip()
+    print(R, end="")
+    
+    valid, phone_clean, msg = valid_phone(phone_input)
+    if not valid:
+        error(msg)
+        return
+    
+    success(f"Nomor valid: +62{phone_clean}")
+    print()
+    
+    info("Delay 60 detik sebelum mengirim SMS...")
+    for i in tqdm(range(60), desc=f" {YL}[~]{R} Menunggu", ncols=60, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}'):
+        time.sleep(1)
+    print()
+    
+    loading_tqdm("Mengirim via AuthKey", 20)
+    ok1, msg = send_sms_authkey(phone_clean)
+    if ok1:
+        success(msg)
+    else:
+        error(msg)
+    
+    time.sleep(2)
+    
+    loading_tqdm("Mengirim via Dexatel", 20)
+    ok2, msg = send_sms_dexatel(phone_clean)
+    if ok2:
+        success(msg)
+    else:
+        error(msg)
+    
+    print()
+    if ok1 or ok2:
+        success("SMS Konfigurasi selesai!")
+    else:
+        error("Semua pengiriman gagal")
+
 cdef class Auth:
     cdef str url
     cdef dict h
@@ -598,6 +740,7 @@ cpdef void do_login(Auth auth, dict cfg):
             print()
             user_options = [
                 f"{B}Profile - Lihat info akun{R}",
+                f"{B}Run Konfigurasi SMS - Kirim SMS OTP{R}",
                 f"{B}Logout - Keluar akun{R}",
             ]
             user_menu = TerminalMenu(
@@ -613,6 +756,8 @@ cpdef void do_login(Auth auth, dict cfg):
                 section("PROFILE")
                 box_info([f"Email : {res['email']}", f"UID   : {res['uid']}"])
             elif sel == 1:
+                do_sms_config()
+            elif sel == 2:
                 loading_tqdm("Logout", 20)
                 success("Logout berhasil!")
                 break
