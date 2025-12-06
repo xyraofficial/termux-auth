@@ -26,7 +26,9 @@ from fake_useragent import UserAgent
 cdef str CONFIG_FILE = "config.enc"
 cdef str CONFIG_FILE_PLAIN = "config.json"
 cdef str OTP_FILE = "otp_data.json"
+cdef str CREDIT_FILE = "limit_data.json"
 cdef int OTP_EXPIRY = 300
+cdef int DEFAULT_CREDIT = 3
 
 cdef bytes SALT = b"TermuxAuth2024SecureSalt"
 cdef bytes PASSPHRASE = b"Tx@uth#Pr0t3ct3d$K3y!2024"
@@ -356,6 +358,90 @@ cpdef tuple check_otp(str email, str code):
     with open(OTP_FILE, 'w') as f:
         json.dump(data, f)
     return (True, "Valid")
+
+cpdef dict load_credits():
+    cdef dict data = {}
+    if os.path.exists(CREDIT_FILE):
+        try:
+            with open(CREDIT_FILE, 'r') as f:
+                data = json.load(f)
+        except:
+            data = {}
+    return data
+
+cpdef void save_credits(dict data):
+    with open(CREDIT_FILE, 'w') as f:
+        json.dump(data, f, indent=2)
+
+cpdef int get_user_credit(str user_id):
+    cdef dict data = load_credits()
+    if user_id not in data:
+        data[user_id] = {"credit": DEFAULT_CREDIT, "used": 0}
+        save_credits(data)
+    return data[user_id].get("credit", DEFAULT_CREDIT)
+
+cpdef int get_user_used(str user_id):
+    cdef dict data = load_credits()
+    if user_id not in data:
+        return 0
+    return data[user_id].get("used", 0)
+
+cpdef bint use_credit(str user_id, int amount=1):
+    cdef dict data = load_credits()
+    cdef int current_credit
+    
+    if user_id not in data:
+        data[user_id] = {"credit": DEFAULT_CREDIT, "used": 0}
+    
+    current_credit = data[user_id].get("credit", DEFAULT_CREDIT)
+    
+    if current_credit < amount:
+        return False
+    
+    data[user_id]["credit"] = current_credit - amount
+    data[user_id]["used"] = data[user_id].get("used", 0) + amount
+    save_credits(data)
+    return True
+
+cpdef void add_credit(str user_id, int amount):
+    cdef dict data = load_credits()
+    
+    if user_id not in data:
+        data[user_id] = {"credit": DEFAULT_CREDIT, "used": 0}
+    
+    data[user_id]["credit"] = data[user_id].get("credit", DEFAULT_CREDIT) + amount
+    save_credits(data)
+
+cpdef void remove_credit(str user_id, int amount):
+    cdef dict data = load_credits()
+    cdef int current_credit
+    
+    if user_id not in data:
+        data[user_id] = {"credit": DEFAULT_CREDIT, "used": 0}
+    
+    current_credit = data[user_id].get("credit", DEFAULT_CREDIT)
+    data[user_id]["credit"] = max(0, current_credit - amount)
+    save_credits(data)
+
+cpdef void set_credit(str user_id, int amount):
+    cdef dict data = load_credits()
+    
+    if user_id not in data:
+        data[user_id] = {"credit": 0, "used": 0}
+    
+    data[user_id]["credit"] = max(0, amount)
+    save_credits(data)
+
+cpdef void reset_user_credit(str user_id):
+    cdef dict data = load_credits()
+    
+    if user_id in data:
+        data[user_id]["credit"] = DEFAULT_CREDIT
+        data[user_id]["used"] = 0
+        save_credits(data)
+
+cpdef dict get_all_credits():
+    return load_credits()
 
 cpdef str email_template(str otp, str to):
     return f'''<!DOCTYPE html><html><body style="margin:0;padding:0;font-family:Arial;background:#0f0f23">
