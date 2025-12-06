@@ -100,31 +100,25 @@ def show_loading_screen():
     config_ok = False
     
     for _ in tqdm(range(30), desc=f"  {CY}Mengecek Koneksi Internet{R}", 
-                  bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}",
-                  colour="green", ncols=70):
-        time.sleep(0.03)
+                  bar_format="{desc}: {percentage:3.0f}%|{bar}|",
+                  colour="green", ncols=60, leave=False, file=sys.stdout):
+        time.sleep(0.02)
     online = check_internet()
-    print(f"  {GR}[OK]{R}" if online else f"  {RD}[OFFLINE]{R}")
-    
-    for _ in tqdm(range(25), desc=f"  {CY}Mengecek Dependensi{R}", 
-                  bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}",
-                  colour="green", ncols=70):
-        time.sleep(0.03)
-    print(f"  {GR}[OK]{R}")
+    print(f"  {CY}Mengecek Koneksi Internet{R}  {GR}[OK]{R}" if online else f"  {CY}Mengecek Koneksi Internet{R}  {RD}[OFFLINE]{R}")
     
     for _ in tqdm(range(25), desc=f"  {CY}Mengecek Module{R}", 
-                  bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}",
-                  colour="green", ncols=70):
-        time.sleep(0.03)
+                  bar_format="{desc}: {percentage:3.0f}%|{bar}|",
+                  colour="green", ncols=60, leave=False, file=sys.stdout):
+        time.sleep(0.02)
     so_file = find_so_file()
-    print(f"  {GR}[OK]{R}" if so_file else f"  {RD}[NOT FOUND]{R}")
+    print(f"  {CY}Mengecek Module{R}            {GR}[OK]{R}" if so_file else f"  {CY}Mengecek Module{R}            {RD}[NOT FOUND]{R}")
     
     for _ in tqdm(range(20), desc=f"  {CY}Mengecek Config{R}", 
-                  bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}",
-                  colour="green", ncols=70):
-        time.sleep(0.03)
+                  bar_format="{desc}: {percentage:3.0f}%|{bar}|",
+                  colour="green", ncols=60, leave=False, file=sys.stdout):
+        time.sleep(0.02)
     config_ok = os.path.exists("config.enc")
-    print(f"  {GR}[OK]{R}" if config_ok else f"  {RD}[NOT FOUND]{R}")
+    print(f"  {CY}Mengecek Config{R}            {GR}[OK]{R}" if config_ok else f"  {CY}Mengecek Config{R}            {RD}[NOT FOUND]{R}")
     
     print()
     
