@@ -1187,40 +1187,37 @@ cpdef void do_signup(Auth auth, dict cfg):
     else:
         error(res)
 
-cdef str OTP_LOG_FILE = "otp_logs.json"
-
 cpdef void save_otp_log(str user_id, str phone, str status):
-    cdef dict data = {}
-    cdef list logs = []
-    if os.path.exists(OTP_LOG_FILE):
-        try:
-            with open(OTP_LOG_FILE, 'r') as f:
-                data = json.load(f)
-        except:
-            data = {}
-    
-    logs = data.get(user_id, [])
-    logs.append({
+    cdef dict headers = _supabase_headers()
+    cdef str url = f"{SUPABASE_URL}/rest/v1/otp_logs"
+    cdef dict payload = {
+        "user_id": user_id,
         "phone": phone,
         "status": status,
-        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    })
-    if len(logs) > 50:
-        logs = logs[-50:]
-    data[user_id] = logs
-    
-    with open(OTP_LOG_FILE, 'w') as f:
-        json.dump(data, f, indent=2)
+        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    try:
+        requests.post(url, json=payload, headers=headers, timeout=10)
+    except:
+        pass
 
 cpdef list get_otp_logs(str user_id):
-    cdef dict data = {}
-    if os.path.exists(OTP_LOG_FILE):
-        try:
-            with open(OTP_LOG_FILE, 'r') as f:
-                data = json.load(f)
-        except:
-            return []
-    return data.get(user_id, [])
+    cdef dict headers = _supabase_headers()
+    cdef str url = f"{SUPABASE_URL}/rest/v1/otp_logs?user_id=eq.{user_id}&order=created_at.desc&limit=50"
+    cdef list result = []
+    try:
+        r = requests.get(url, headers=headers, timeout=10)
+        if r.status_code == 200:
+            data = r.json()
+            for item in data:
+                result.append({
+                    "phone": item.get("phone", ""),
+                    "status": item.get("status", ""),
+                    "time": item.get("created_at", "")
+                })
+        return result
+    except:
+        return []
 
 cpdef void show_user_profile_menu(dict res, dict cfg):
     cdef int sel, user_credit, user_used
@@ -1267,63 +1264,67 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
             if sel == 0:
                 clear()
                 print()
-                section("INFO ACCOUNT")
                 
                 user_credit = get_user_credit(res['uid'])
                 user_used = get_user_used(res['uid'])
                 
-                account_table = Table(show_header=False, box=None, padding=(0, 2))
-                
-                account_content = (
-                    f"[bold cyan]Email[/bold cyan]\n"
-                    f"[white]{res['email']}[/white]\n\n"
-                    f"[bold cyan]User ID[/bold cyan]\n"
-                    f"[dim]{res['uid']}[/dim]\n\n"
-                    f"[bold cyan]Status[/bold cyan]\n"
-                    f"[green]Terverifikasi[/green]"
-                )
-                
-                account_panel = Panel(
-                    account_content,
-                    title="[bold cyan]AKUN[/bold cyan]",
-                    border_style="cyan",
-                    padding=(1, 2)
-                )
-                
                 if user_credit >= 3:
                     credit_color = "green"
-                    credit_icon = "[+]"
+                    credit_status = "PREMIUM"
+                    credit_icon = "★"
                 elif user_credit >= 1:
                     credit_color = "yellow"
-                    credit_icon = "[!]"
+                    credit_status = "STANDAR"
+                    credit_icon = "◆"
                 else:
                     credit_color = "red"
-                    credit_icon = "[-]"
+                    credit_status = "HABIS"
+                    credit_icon = "✗"
                 
-                stats_content = (
-                    f"[bold {credit_color}]{credit_icon} Credit[/bold {credit_color}]\n"
-                    f"[bold white]{user_credit}[/bold white] [dim]tersisa[/dim]\n\n"
-                    f"[bold blue]Terpakai[/bold blue]\n"
-                    f"[bold white]{user_used}[/bold white] [dim]kali digunakan[/dim]"
+                header_panel = Panel(
+                    f"[bold magenta]╔══════════════════════════════════════════════════╗[/bold magenta]\n"
+                    f"[bold magenta]║[/bold magenta]  [bold white]I N F O   A C C O U N T[/bold white]                          [bold magenta]║[/bold magenta]\n"
+                    f"[bold magenta]╚══════════════════════════════════════════════════╝[/bold magenta]",
+                    border_style="magenta",
+                    padding=(0, 1)
                 )
-                
-                stats_panel = Panel(
-                    stats_content,
-                    title="[bold green]STATISTIK[/bold green]",
-                    border_style="green",
-                    padding=(1, 2)
-                )
-                
-                account_table.add_row(account_panel, stats_panel)
-                console.print(account_table)
-                
+                console.print(header_panel)
                 print()
-                tip_panel = Panel(
-                    "[dim]Credit digunakan untuk fitur WhatsApp Bomber[/dim]\n"
-                    "[dim]Setiap round membutuhkan 1 credit[/dim]",
-                    border_style="dim"
+                
+                email_panel = Panel(
+                    f"[bold cyan]📧 EMAIL[/bold cyan]\n"
+                    f"[bold white]{res['email']}[/bold white]",
+                    border_style="cyan",
+                    padding=(0, 2)
                 )
-                console.print(tip_panel)
+                console.print(email_panel)
+                
+                uid_panel = Panel(
+                    f"[bold yellow]🔑 USER ID (UID)[/bold yellow]\n"
+                    f"[bold green]{res['uid']}[/bold green]",
+                    border_style="yellow",
+                    padding=(0, 2)
+                )
+                console.print(uid_panel)
+                
+                status_panel = Panel(
+                    f"[bold green]✓ STATUS AKUN[/bold green]\n"
+                    f"[bold white]Terverifikasi[/bold white] [green]●[/green]",
+                    border_style="green",
+                    padding=(0, 2)
+                )
+                console.print(status_panel)
+                
+                credit_panel = Panel(
+                    f"[bold {credit_color}]{credit_icon} CREDIT STATUS: {credit_status}[/bold {credit_color}]\n\n"
+                    f"[bold white]┌─────────────────────────────┐[/bold white]\n"
+                    f"[bold white]│[/bold white]  [bold cyan]Credit Tersisa[/bold cyan]  : [bold {credit_color}]{user_credit}[/bold {credit_color}]       [bold white]│[/bold white]\n"
+                    f"[bold white]│[/bold white]  [bold blue]Credit Terpakai[/bold blue] : [bold white]{user_used}[/bold white]       [bold white]│[/bold white]\n"
+                    f"[bold white]└─────────────────────────────┘[/bold white]",
+                    border_style=credit_color,
+                    padding=(0, 2)
+                )
+                console.print(credit_panel)
                 
                 print()
                 input(f" {D}Tekan Enter untuk kembali...{R}")
@@ -1331,16 +1332,37 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
             elif sel == 1:
                 clear()
                 print()
-                section("CEK UID")
                 
-                uid_panel = Panel(
-                    f"[bold cyan]User ID Anda:[/bold cyan]\n\n"
-                    f"[bold white]{res['uid']}[/bold white]\n\n"
-                    f"[dim]UID ini unik untuk akun Anda[/dim]",
-                    border_style="cyan",
-                    padding=(1, 2)
+                uid_header = Panel(
+                    f"[bold yellow]╔══════════════════════════════════════════════════╗[/bold yellow]\n"
+                    f"[bold yellow]║[/bold yellow]  [bold white]🔑  U S E R   I D   ( U I D )[/bold white]                   [bold yellow]║[/bold yellow]\n"
+                    f"[bold yellow]╚══════════════════════════════════════════════════╝[/bold yellow]",
+                    border_style="yellow",
+                    padding=(0, 1)
                 )
-                console.print(uid_panel)
+                console.print(uid_header)
+                print()
+                
+                uid_box = Panel(
+                    f"[bold cyan]┌──────────────────────────────────────────────────┐[/bold cyan]\n"
+                    f"[bold cyan]│[/bold cyan]                                                  [bold cyan]│[/bold cyan]\n"
+                    f"[bold cyan]│[/bold cyan]  [bold green]{res['uid']}[/bold green]  [bold cyan]│[/bold cyan]\n"
+                    f"[bold cyan]│[/bold cyan]                                                  [bold cyan]│[/bold cyan]\n"
+                    f"[bold cyan]└──────────────────────────────────────────────────┘[/bold cyan]",
+                    border_style="green",
+                    padding=(0, 1)
+                )
+                console.print(uid_box)
+                
+                info_panel = Panel(
+                    f"[bold magenta]ℹ INFO[/bold magenta]\n"
+                    f"[dim]• UID adalah identitas unik akun Anda[/dim]\n"
+                    f"[dim]• Gunakan UID untuk keperluan admin[/dim]\n"
+                    f"[dim]• Jangan bagikan UID ke orang lain[/dim]",
+                    border_style="magenta",
+                    padding=(0, 2)
+                )
+                console.print(info_panel)
                 
                 print()
                 input(f" {D}Tekan Enter untuk kembali...{R}")
