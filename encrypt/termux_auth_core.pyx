@@ -712,7 +712,7 @@ cpdef void do_sms_config_with_cfg(dict cfg):
                 request_num = (round_num - 1) * total_services + i + 1
                 
                 console.print(f" [cyan]┌─────────────────────────────────────┐[/cyan]")
-                console.print(f" [cyan]│[/cyan] [bold white]Layanan:[/bold white] {name:<27} [cyan]│[/cyan]")
+                console.print(f" [cyan]│[/cyan] [bold white]Layanan:[/bold white] {name:<27}[cyan]│[/cyan]")
                 console.print(f" [cyan]│[/cyan] [bold white]Request:[/bold white] {request_num}/{total_requests:<24} [cyan]│[/cyan]")
                 console.print(f" [cyan]└─────────────────────────────────────┘[/cyan]")
                 
