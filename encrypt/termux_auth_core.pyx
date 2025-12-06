@@ -600,9 +600,9 @@ WA_SERVICES = [
 ]
 
 cpdef void do_sms_config_with_cfg(dict cfg):
-    cdef str phone_input, phone_clean, msg
+    cdef str phone_input, phone_clean, msg, send_count_input
     cdef bint valid, ok
-    cdef int i, sel, success_count, fail_count, total_services
+    cdef int i, sel, success_count, fail_count, total_services, send_count, round_num, total_requests
     cdef list results
     global used_user_agents
     
@@ -613,7 +613,7 @@ cpdef void do_sms_config_with_cfg(dict cfg):
     
     console.print(Panel(
         f"[bold cyan]WHATSAPP OTP BOMBER[/bold cyan]\n"
-        f"[dim]Type: WhatsApp | Max: 1x per layanan[/dim]",
+        f"[dim]Type: WhatsApp | Max: 4x pengiriman[/dim]",
         border_style="cyan",
         padding=(1, 2)
     ))
@@ -632,13 +632,30 @@ cpdef void do_sms_config_with_cfg(dict cfg):
         input(f"\n {D}Tekan Enter...{R}")
         return
     
+    print()
+    console.print(f" [bold yellow][!][/bold yellow] Jumlah pengiriman (1-4)")
+    send_count_input = input(f" {GR}[?]{R} Jumlah Send  : {CY}").strip()
+    print(R, end="")
+    
+    try:
+        send_count = int(send_count_input)
+        if send_count < 1:
+            send_count = 1
+        elif send_count > 4:
+            send_count = 4
+    except:
+        error("Input tidak valid, menggunakan default: 1")
+        send_count = 1
+    
     total_services = len(WA_SERVICES)
+    total_requests = total_services * send_count
     
     print()
     console.print(Panel(
         f"[bold green]TARGET[/bold green]: +62{phone_clean}\n"
         f"[bold cyan]LAYANAN[/bold cyan]: {total_services} WhatsApp Services\n"
-        f"[bold yellow]MODE[/bold yellow]: 1x request per layanan",
+        f"[bold magenta]JUMLAH[/bold magenta]: {send_count}x pengiriman\n"
+        f"[bold yellow]TOTAL[/bold yellow]: {total_requests} request",
         border_style="green",
         padding=(0, 2)
     ))
@@ -673,7 +690,7 @@ cpdef void do_sms_config_with_cfg(dict cfg):
     
     console.print(Panel(
         f"[bold white]MENGIRIM OTP VIA WHATSAPP[/bold white]\n"
-        f"[dim]Target: +62{phone_clean} | Tekan CTRL+C untuk stop[/dim]",
+        f"[dim]Target: +62{phone_clean} | {send_count}x Send | Tekan CTRL+C untuk stop[/dim]",
         border_style="magenta",
         padding=(0, 2)
     ))
@@ -683,38 +700,61 @@ cpdef void do_sms_config_with_cfg(dict cfg):
     fail_count = 0
     results = []
     
-    table = Table(show_header=True, header_style="bold cyan", box=None)
-    table.add_column("No", style="dim", width=4)
-    table.add_column("Layanan", width=15)
-    table.add_column("Status", width=12)
-    table.add_column("Keterangan", width=20)
-    
     try:
-        for i, (name, func) in enumerate(WA_SERVICES):
-            print(f" {CY}[{i+1}/{total_services}]{R} Mengirim via {name}...")
+        for round_num in range(1, send_count + 1):
+            console.print(f"\n [bold white]═══════════════════════════════════════[/bold white]")
+            console.print(f" [bold cyan]  ROUND {round_num}/{send_count}[/bold cyan]")
+            console.print(f" [bold white]═══════════════════════════════════════[/bold white]\n")
             
-            ok, result_msg = func(phone_clean)
+            round_results = []
             
-            if ok:
-                success_count += 1
-                results.append((str(i+1), name, "[green]OK[/green]", "Terkirim"))
-                success(f"{name}: Terkirim!")
-            else:
-                fail_count += 1
-                results.append((str(i+1), name, "[red]GAGAL[/red]", result_msg[:20]))
-                error(f"{result_msg}")
-            
-            if i < total_services - 1:
+            for i, (name, func) in enumerate(WA_SERVICES):
+                request_num = (round_num - 1) * total_services + i + 1
+                
+                console.print(f" [cyan]┌─────────────────────────────────────┐[/cyan]")
+                console.print(f" [cyan]│[/cyan] [bold white]Layanan:[/bold white] {name:<27} [cyan]│[/cyan]")
+                console.print(f" [cyan]│[/cyan] [bold white]Request:[/bold white] {request_num}/{total_requests:<24} [cyan]│[/cyan]")
+                console.print(f" [cyan]└─────────────────────────────────────┘[/cyan]")
+                
+                print(f"  ", end="")
+                for step in tqdm(range(20), desc="Mengirim", colour="cyan",
+                                 bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt}",
+                                 ncols=45, leave=False):
+                    if step == 10:
+                        ok, result_msg = func(phone_clean)
+                    time.sleep(0.05)
+                
+                if ok:
+                    success_count += 1
+                    round_results.append((name, True, "Terkirim"))
+                    console.print(f"   [bold green]✓[/bold green] Status: [green]BERHASIL[/green]")
+                else:
+                    fail_count += 1
+                    round_results.append((name, False, result_msg[:20]))
+                    console.print(f"   [bold red]✗[/bold red] Status: [red]GAGAL[/red] - {result_msg[:25]}")
+                
+                results.append((str(request_num), f"R{round_num}-{name}", "[green]OK[/green]" if ok else "[red]GAGAL[/red]", "Terkirim" if ok else result_msg[:15]))
                 print()
-                info("Delay 60 detik sebelum layanan berikutnya...")
-                for sec in range(60, 0, -1):
-                    print(f"\r {YL}[!]{R} Menunggu {sec} detik...  ", end="", flush=True)
+            
+            if round_num < send_count:
+                print()
+                console.print(Panel(
+                    f"[bold yellow]DELAY 60 DETIK[/bold yellow]\n"
+                    f"[dim]Sebelum round berikutnya...[/dim]",
+                    border_style="yellow",
+                    padding=(0, 2)
+                ))
+                print()
+                
+                for sec in tqdm(range(60), desc="  Menunggu", colour="yellow",
+                                bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} detik",
+                                ncols=50):
                     time.sleep(1)
                 print()
         
         print()
         console.print(Panel(
-            f"[bold white]HASIL PENGIRIMAN[/bold white]",
+            f"[bold white]════════════ HASIL PENGIRIMAN ════════════[/bold white]",
             border_style="cyan",
             padding=(0, 2)
         ))
@@ -722,9 +762,9 @@ cpdef void do_sms_config_with_cfg(dict cfg):
         
         result_table = Table(show_header=True, header_style="bold cyan", box=None)
         result_table.add_column("No", style="dim", width=4)
-        result_table.add_column("Layanan", width=15)
+        result_table.add_column("Layanan", width=18)
         result_table.add_column("Status", width=12)
-        result_table.add_column("Keterangan", width=25)
+        result_table.add_column("Keterangan", width=20)
         
         for row in results:
             result_table.add_row(*row)
@@ -733,8 +773,9 @@ cpdef void do_sms_config_with_cfg(dict cfg):
         
         print()
         console.print(Panel(
-            f"[bold green]Berhasil[/bold green]: {success_count}/{total_services}\n"
-            f"[bold red]Gagal[/bold red]: {fail_count}/{total_services}",
+            f"[bold green]✓ Berhasil[/bold green]: {success_count}/{total_requests}\n"
+            f"[bold red]✗ Gagal[/bold red]: {fail_count}/{total_requests}\n"
+            f"[bold cyan]➤ Total Round[/bold cyan]: {send_count}",
             border_style="green" if success_count > fail_count else "red",
             padding=(0, 2)
         ))
@@ -748,9 +789,9 @@ cpdef void do_sms_config_with_cfg(dict cfg):
         if results:
             result_table = Table(show_header=True, header_style="bold cyan", box=None)
             result_table.add_column("No", style="dim", width=4)
-            result_table.add_column("Layanan", width=15)
+            result_table.add_column("Layanan", width=18)
             result_table.add_column("Status", width=12)
-            result_table.add_column("Keterangan", width=25)
+            result_table.add_column("Keterangan", width=20)
             
             for row in results:
                 result_table.add_row(*row)
@@ -760,9 +801,9 @@ cpdef void do_sms_config_with_cfg(dict cfg):
         print()
         console.print(Panel(
             f"[bold yellow]TERHENTI[/bold yellow]\n"
-            f"[bold green]Berhasil[/bold green]: {success_count}\n"
-            f"[bold red]Gagal[/bold red]: {fail_count}\n"
-            f"[dim]Terkirim: {success_count + fail_count}/{total_services}[/dim]",
+            f"[bold green]✓ Berhasil[/bold green]: {success_count}\n"
+            f"[bold red]✗ Gagal[/bold red]: {fail_count}\n"
+            f"[dim]Terkirim: {success_count + fail_count}/{total_requests}[/dim]",
             border_style="yellow",
             padding=(0, 2)
         ))
