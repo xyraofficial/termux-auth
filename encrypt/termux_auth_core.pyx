@@ -685,10 +685,11 @@ WA_SERVICES = [
     ("Pinjam Min", send_pinjam_min),
 ]
 
-cpdef void do_sms_config_with_cfg(dict cfg):
+cpdef void do_sms_config_with_cfg(dict cfg, str user_id):
     cdef str phone_input, phone_clean, msg, send_count_input
     cdef bint valid, ok
     cdef int i, sel, success_count, fail_count, total_services, send_count, round_num, total_requests
+    cdef int current_credit, used_count, new_credit
     cdef list results
     global used_user_agents
     
@@ -697,9 +698,24 @@ cpdef void do_sms_config_with_cfg(dict cfg):
     clear()
     print()
     
+    current_credit = get_user_credit(user_id)
+    used_count = get_user_used(user_id)
+    
+    if current_credit < 1:
+        console.print(Panel(
+            f"[bold red]CREDIT HABIS![/bold red]\n\n"
+            f"[bold white]Credit Anda:[/bold white] [red]{current_credit}[/red]\n"
+            f"[bold white]Total Pemakaian:[/bold white] {used_count}x\n\n"
+            f"[dim]Hubungi admin untuk menambah credit.[/dim]",
+            border_style="red",
+            padding=(1, 2)
+        ))
+        return
+    
     console.print(Panel(
         f"[bold cyan]WHATSAPP OTP BOMBER[/bold cyan]\n"
-        f"[dim]Type: WhatsApp | Max: 4x pengiriman[/dim]",
+        f"[dim]Type: WhatsApp | Max: 4x pengiriman[/dim]\n\n"
+        f"[bold yellow]💳 Credit Tersisa:[/bold yellow] [green]{current_credit}[/green] | [dim]Pemakaian: {used_count}x[/dim]",
         border_style="cyan",
         padding=(1, 2)
     ))
@@ -770,6 +786,21 @@ cpdef void do_sms_config_with_cfg(dict cfg):
     if sel is None or sel == 1:
         info("Dibatalkan")
         return
+    
+    if not use_credit(user_id, 1):
+        print()
+        error("Gagal mengurangi credit!")
+        return
+    
+    new_credit = get_user_credit(user_id)
+    print()
+    console.print(Panel(
+        f"[bold yellow]💳 1 Credit digunakan[/bold yellow]\n"
+        f"[bold white]Credit Tersisa:[/bold white] [green]{new_credit}[/green]",
+        border_style="yellow",
+        padding=(0, 2)
+    ))
+    time.sleep(1)
     
     clear()
     print()
@@ -1120,11 +1151,18 @@ cpdef void do_login(Auth auth, dict cfg):
                 clear()
                 print()
                 section("PROFILE")
-                box_info([f"Email : {res['email']}", f"UID   : {res['uid']}"])
+                user_credit = get_user_credit(res['uid'])
+                user_used = get_user_used(res['uid'])
+                box_info([
+                    f"Email   : {res['email']}", 
+                    f"UID     : {res['uid']}",
+                    f"Credit  : {user_credit}",
+                    f"Terpakai: {user_used}x"
+                ])
                 print()
                 input(f" {D}Tekan Enter untuk kembali...{R}")
             elif sel == 1:
-                do_sms_config_with_cfg(cfg)
+                do_sms_config_with_cfg(cfg, res['uid'])
                 print()
                 input(f" {D}Tekan Enter untuk kembali...{R}")
             elif sel == 2:
