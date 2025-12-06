@@ -135,11 +135,16 @@ def show_loading_screen():
     print()
     
     if not online:
-        print(f"\n  {RD}╭─────────────────────────────────────────╮{R}")
-        print(f"  {RD}│{R}     {RD}TIDAK ADA KONEKSI INTERNET{R}        {RD}│{R}")
-        print(f"  {RD}╰─────────────────────────────────────────╯{R}")
-        print(f"\n  {RD}[✗]{R} Script tidak dapat digunakan tanpa internet")
-        print(f"  {YL}[!]{R} Pastikan koneksi internet aktif\n")
+        print()
+        print(f"  {RD}╭──────────────────────────────────────────╮{R}")
+        print(f"  {RD}│                                          │{R}")
+        print(f"  {RD}│     ⚠  TIDAK ADA KONEKSI INTERNET  ⚠     │{R}")
+        print(f"  {RD}│                                          │{R}")
+        print(f"  {RD}╰──────────────────────────────────────────╯{R}")
+        print()
+        print(f"  {RD}[✗]{R} Script tidak dapat digunakan tanpa internet")
+        print(f"  {YL}[!]{R} Pastikan koneksi internet aktif")
+        print()
         return False
     
     if not so_file:

@@ -1270,22 +1270,41 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                 if user_credit >= 3:
                     credit_color = "green"
                     credit_status = "PREMIUM"
+                    credit_icon = "◆"
                 elif user_credit >= 1:
                     credit_color = "yellow"
                     credit_status = "STANDAR"
+                    credit_icon = "◇"
                 else:
                     credit_color = "red"
                     credit_status = "HABIS"
+                    credit_icon = "○"
                 
-                console.print(f"\n [bold cyan]━━━━━━━━━ INFO ACCOUNT ━━━━━━━━━[/bold cyan]\n")
+                account_content = (
+                    f"[bold cyan]╭{'─' * 42}╮[/bold cyan]\n"
+                    f"[bold cyan]│[/bold cyan]  [bold white]I N F O   A C C O U N T[/bold white]              [bold cyan]│[/bold cyan]\n"
+                    f"[bold cyan]╰{'─' * 42}╯[/bold cyan]\n\n"
+                    f"[bold white]┌─ DATA PENGGUNA ─────────────────────────┐[/bold white]\n"
+                    f"[bold white]│[/bold white]\n"
+                    f"[bold white]│[/bold white]  [cyan]Email[/cyan]      : [bold white]{res['email']}[/bold white]\n"
+                    f"[bold white]│[/bold white]  [cyan]User ID[/cyan]    : [bold green]{res['uid']}[/bold green]\n"
+                    f"[bold white]│[/bold white]  [cyan]Status[/cyan]     : [bold green]● Terverifikasi[/bold green]\n"
+                    f"[bold white]│[/bold white]\n"
+                    f"[bold white]└──────────────────────────────────────────┘[/bold white]\n\n"
+                    f"[bold white]┌─ STATUS CREDIT ──────────────────────────┐[/bold white]\n"
+                    f"[bold white]│[/bold white]\n"
+                    f"[bold white]│[/bold white]  [cyan]Credit[/cyan]     : [bold {credit_color}]{credit_icon} {user_credit}[/bold {credit_color}] [dim]({credit_status})[/dim]\n"
+                    f"[bold white]│[/bold white]  [cyan]Terpakai[/cyan]   : [bold white]{user_used}[/bold white] [dim]kali penggunaan[/dim]\n"
+                    f"[bold white]│[/bold white]\n"
+                    f"[bold white]└──────────────────────────────────────────┘[/bold white]"
+                )
                 
-                console.print(f" [dim]Email[/dim]   : [bold white]{res['email']}[/bold white]")
-                console.print(f" [dim]UID[/dim]     : [bold green]{res['uid']}[/bold green]")
-                console.print(f" [dim]Status[/dim]  : [bold green]Verified[/bold green] [green]●[/green]")
-                console.print(f" [dim]Credit[/dim]  : [bold {credit_color}]{user_credit}[/bold {credit_color}] [dim]({credit_status})[/dim]")
-                console.print(f" [dim]Terpakai[/dim]: [bold white]{user_used}[/bold white] [dim]kali[/dim]")
-                
-                console.print(f"\n [bold cyan]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold cyan]")
+                console.print(Panel(
+                    account_content,
+                    border_style="cyan",
+                    padding=(1, 2),
+                    title="[bold magenta]★ PROFIL PENGGUNA ★[/bold magenta]"
+                ))
                 
                 print()
                 input(f" {D}Tekan Enter untuk kembali...{R}")
@@ -1294,15 +1313,28 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                 clear()
                 print()
                 
-                console.print(f"\n [bold yellow]━━━━━━━━━━ CEK UID ━━━━━━━━━━[/bold yellow]\n")
+                uid_content = (
+                    f"[bold yellow]╭{'─' * 44}╮[/bold yellow]\n"
+                    f"[bold yellow]│[/bold yellow]  [bold white]C E K   U S E R   I D[/bold white]                  [bold yellow]│[/bold yellow]\n"
+                    f"[bold yellow]╰{'─' * 44}╯[/bold yellow]\n\n"
+                    f"[bold white]┌─ YOUR USER ID ────────────────────────────┐[/bold white]\n"
+                    f"[bold white]│[/bold white]\n"
+                    f"[bold white]│[/bold white]  [bold green]{res['uid']}[/bold green]\n"
+                    f"[bold white]│[/bold white]\n"
+                    f"[bold white]└────────────────────────────────────────────┘[/bold white]\n\n"
+                    f"[dim]┌─ INFORMASI ─────────────────────────────────┐[/dim]\n"
+                    f"[dim]│[/dim]  [yellow]●[/yellow] UID adalah identitas unik akun Anda\n"
+                    f"[dim]│[/dim]  [yellow]●[/yellow] Digunakan untuk identifikasi sistem\n"
+                    f"[dim]│[/dim]  [red]●[/red] Jangan bagikan ke orang lain!\n"
+                    f"[dim]└──────────────────────────────────────────────┘[/dim]"
+                )
                 
-                console.print(f" [dim]Your User ID:[/dim]")
-                console.print(f" [bold green]{res['uid']}[/bold green]")
-                
-                console.print(f"\n [dim]• UID adalah identitas unik akun[/dim]")
-                console.print(f" [dim]• Jangan bagikan ke orang lain[/dim]")
-                
-                console.print(f"\n [bold yellow]━━━━━━━━━━━━━━━━━━━━━━━━━━━━━[/bold yellow]")
+                console.print(Panel(
+                    uid_content,
+                    border_style="yellow",
+                    padding=(1, 2),
+                    title="[bold cyan]★ USER IDENTIFIER ★[/bold cyan]"
+                ))
                 
                 print()
                 input(f" {D}Tekan Enter untuk kembali...{R}")
@@ -2147,10 +2179,16 @@ cpdef void admin_panel(Auth auth, dict cfg):
             print()
             
             admin_header = (
-                f"[bold red]ADMIN PANEL[/bold red]\n\n"
-                f"[bold white]|[/bold white] [dim]Status[/dim]   :: [bold green]Online[/bold green]\n"
-                f"[bold white]|[/bold white] [dim]Role[/dim]     :: [bold yellow]Administrator[/bold yellow]\n"
-                f"[bold white]|[/bold white] [dim]Access[/dim]   :: [bold cyan]Full Control[/bold cyan]"
+                f"[bold red]╭{'─' * 40}╮[/bold red]\n"
+                f"[bold red]│[/bold red]  [bold white]A D M I N   P A N E L[/bold white]                [bold red]│[/bold red]\n"
+                f"[bold red]╰{'─' * 40}╯[/bold red]\n\n"
+                f"[bold white]┌─ STATUS ADMINISTRATOR ──────────────────┐[/bold white]\n"
+                f"[bold white]│[/bold white]\n"
+                f"[bold white]│[/bold white]  [cyan]Status[/cyan]    : [bold green]● Online[/bold green]\n"
+                f"[bold white]│[/bold white]  [cyan]Role[/cyan]      : [bold yellow]★ Administrator[/bold yellow]\n"
+                f"[bold white]│[/bold white]  [cyan]Access[/cyan]    : [bold cyan]Full Control[/bold cyan]\n"
+                f"[bold white]│[/bold white]\n"
+                f"[bold white]└──────────────────────────────────────────┘[/bold white]"
             )
             console.print(Panel(
                 admin_header,
@@ -2195,18 +2233,24 @@ cpdef void admin_panel(Auth auth, dict cfg):
                         if u.get("email_confirmed_at"):
                             verified = verified + 1
                     
-                    stats_table = Table(show_header=False, box=None, padding=(0, 2))
-                    stats_table.add_column("Label", style="cyan")
-                    stats_table.add_column("Value", style="white")
-                    stats_table.add_row("👥 Total User", f"[bold white]{len(users)}[/bold white]")
-                    stats_table.add_row("✅ Terverifikasi", f"[bold green]{verified}[/bold green]")
-                    stats_table.add_row("⏳ Belum Verified", f"[bold yellow]{len(users) - verified}[/bold yellow]")
+                    stats_content = (
+                        f"[bold cyan]╭{'─' * 44}╮[/bold cyan]\n"
+                        f"[bold cyan]│[/bold cyan]  [bold white]D A T A B A S E   S T A T I S T I C S[/bold white]   [bold cyan]│[/bold cyan]\n"
+                        f"[bold cyan]╰{'─' * 44}╯[/bold cyan]\n\n"
+                        f"[bold white]┌─ RINGKASAN DATA USER ─────────────────────┐[/bold white]\n"
+                        f"[bold white]│[/bold white]\n"
+                        f"[bold white]│[/bold white]  [cyan]👥 Total User[/cyan]       : [bold white]{len(users)}[/bold white] [dim]pengguna[/dim]\n"
+                        f"[bold white]│[/bold white]  [green]✅ Terverifikasi[/green]    : [bold green]{verified}[/bold green] [dim]pengguna[/dim]\n"
+                        f"[bold white]│[/bold white]  [yellow]⏳ Belum Verified[/yellow]   : [bold yellow]{len(users) - verified}[/bold yellow] [dim]pengguna[/dim]\n"
+                        f"[bold white]│[/bold white]\n"
+                        f"[bold white]└────────────────────────────────────────────┘[/bold white]"
+                    )
                     
                     console.print(Panel(
-                        stats_table,
-                        title="[bold cyan]📊 DATABASE STATISTICS[/bold cyan]",
+                        stats_content,
                         border_style="cyan",
-                        padding=(1, 2)
+                        padding=(1, 2),
+                        title="[bold magenta]★ STATISTIK DATABASE ★[/bold magenta]"
                     ))
                 else:
                     error("Gagal mengambil statistik")
