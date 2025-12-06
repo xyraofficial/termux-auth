@@ -1,0 +1,21 @@
+
+╭────────────────────────────────────────────────────────────────╮
+│  MENGIRIM OTP VIA WHATSAPP                                     ││  Target: +62895325844499 | 1x Send | Tekan CTRL+C untuk stop   │
+╰────────────────────────────────────────────────────────────────╯
+
+ ═══════════════════════════════════════
+   ROUND 1/1
+ ═══════════════════════════════════════
+
+ ┌─────────────────────────────────────┐
+ │ Layanan: ACC                        │
+ │ Request: 1/2                        │
+ └─────────────────────────────────────┘
+   ✓ Status: BERHASIL
+
+ ┌─────────────────────────────────────┐
+ │ Layanan: Pinjam Min                 │
+ │ Request: 2/2                        │                           └─────────────────────────────────────┘                             ✓ Status: BERHASIL                                             Traceback (most recent call last):                                  File "/data/data/com.termux/files/home/termux-auth/run/run.py", line 193, in <module>
+    main()                                                          File "/data/data/com.termux/files/home/termux-auth/run/run.py", line 182, in main                                                     run_main()                                                      File "termux_auth_core.pyx", line 2474, in termux_auth_lib.run_main                                                                 File "termux_auth_core.pyx", line 2517, in termux_auth_lib.run_main                                                                 File "termux_auth_core.pyx", line 2383, in termux_auth_lib.do_login_menu                                                            File "termux_auth_core.pyx", line 1571, in termux_auth_lib.do_login                                                                 File "termux_auth_core.pyx", line 928, in termux_auth_lib.do_sms_config_with_cfg                                                    File "termux_auth_core.pyx", line 1231, in termux_auth_lib.save_otp_log
+TypeError: Expected dict, got str
+~/termux-auth/run $

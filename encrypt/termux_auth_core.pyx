@@ -1035,10 +1035,10 @@ cdef class Auth:
                 uid = d.get("id", "")
                 return (True, {"uid": uid, "email": email})
             elif r.status_code == 422 or "already been registered" in str(d):
-                return (False, "Email sudah terdaftar")
-            return (False, d.get("msg", d.get("error_description", "Gagal")))
+                return (False, {"error": "Email sudah terdaftar"})
+            return (False, {"error": d.get("msg", d.get("error_description", "Gagal"))})
         except Exception as e:
-            return (False, str(e))
+            return (False, {"error": str(e)})
     
     cpdef tuple login(self, str email, str pw):
         try:
@@ -1051,10 +1051,10 @@ cdef class Auth:
                     "token": d.get("access_token")})
             err = d.get("error_description", "")
             if "not confirmed" in err.lower():
-                return (False, "UNVERIFIED")
-            return (False, err or "Login gagal")
+                return (False, {"error": "UNVERIFIED", "email": email})
+            return (False, {"error": err or "Login gagal"})
         except Exception as e:
-            return (False, str(e))
+            return (False, {"error": str(e)})
     
     cpdef tuple list_users(self):
         try:
@@ -1109,10 +1109,10 @@ cdef class Auth:
                 for u in users:
                     if u.get("email", "").lower() == email.lower():
                         return (True, u)
-                return (False, "User tidak ditemukan")
-            return (False, f"Error: {r.status_code}")
+                return (False, {"error": "User tidak ditemukan"})
+            return (False, {"error": f"Error: {r.status_code}"})
         except Exception as e:
-            return (False, str(e))
+            return (False, {"error": str(e)})
 
 cpdef str get_email():
     cdef str e
@@ -1166,7 +1166,7 @@ cpdef void do_signup(Auth auth, dict cfg):
     loading_tqdm("Membuat akun", 25)
     ok, res = auth.signup(email, pw)
     if ok:
-        uid = res.get("uid", "")
+        uid = res.get("uid", "") if isinstance(res, dict) else ""
         success("Akun dibuat!")
         loading_tqdm("Mengirim OTP", 30)
         otp = gen_otp()
@@ -1187,7 +1187,8 @@ cpdef void do_signup(Auth auth, dict cfg):
         else:
             error(msg)
     else:
-        error(res)
+        err_msg = res.get("error", "") if isinstance(res, dict) else str(res)
+        error(err_msg)
 
 cpdef dict _get_target_log(str user_id, str phone):
     cdef dict headers = _supabase_headers()
@@ -1306,6 +1307,10 @@ cpdef list get_otp_logs(str user_id):
 cpdef void show_user_profile_menu(dict res, dict cfg):
     cdef int sel, user_credit, user_used
     cdef list logs
+    cdef str user_email, user_uid
+    
+    user_email = res.get('email', '') if res else ''
+    user_uid = res.get('uid', '') if res else ''
     
     try:
         while True:
@@ -1313,7 +1318,7 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
             print()
             
             profile_header = Panel(
-                f"[bold white]P R O F I L   P E N G G U N A[/bold white]\n[bold cyan]{res['email']}[/bold cyan]",
+                f"[bold white]P R O F I L   P E N G G U N A[/bold white]\n[bold cyan]{user_email}[/bold cyan]",
                 border_style="magenta",
                 padding=(0, 2)
             )
@@ -1349,8 +1354,8 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                 clear()
                 print()
                 
-                user_credit = get_user_credit(res['uid'])
-                user_used = get_user_used(res['uid'])
+                user_credit = get_user_credit(user_uid)
+                user_used = get_user_used(user_uid)
                 
                 if user_credit >= 3:
                     credit_color = "green"
@@ -1371,8 +1376,8 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                     f"[bold cyan]╰{'─' * 26}╯[/bold cyan]\n\n"
                     f"[bold white]┌─ DATA PENGGUNA ─────────────────────────┐[/bold white]\n"
                     f"[bold white]│[/bold white]\n"
-                    f"[bold white]│[/bold white]  [cyan]Email[/cyan]      : [bold white]{res['email']}[/bold white]\n"
-                    f"[bold white]│[/bold white]  [cyan]User ID[/cyan]    : [bold green]{res['uid']}[/bold green]\n"
+                    f"[bold white]│[/bold white]  [cyan]Email[/cyan]      : [bold white]{user_email}[/bold white]\n"
+                    f"[bold white]│[/bold white]  [cyan]User ID[/cyan]    : [bold green]{user_uid}[/bold green]\n"
                     f"[bold white]│[/bold white]  [cyan]Status[/cyan]     : [bold green]● Terverifikasi[/bold green]\n"
                     f"[bold white]│[/bold white]\n"
                     f"[bold white]└──────────────────────────────────────────┘[/bold white]\n\n"
@@ -1404,7 +1409,7 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                     f"[bold yellow]╰{'─' * 24}╯[/bold yellow]\n\n"
                     f"[bold white]┌─ YOUR USER ID ────────────────────────────┐[/bold white]\n"
                     f"[bold white]│[/bold white]\n"
-                    f"[bold white]│[/bold white]  [bold green]{res['uid']}[/bold green]\n"
+                    f"[bold white]│[/bold white]  [bold green]{user_uid}[/bold green]\n"
                     f"[bold white]│[/bold white]\n"
                     f"[bold white]└───────────────────────────────────────────┘[/bold white]\n\n"
                     f"[dim]┌─ INFORMASI ─────────────────────────────────┐[/dim]\n"
@@ -1429,8 +1434,8 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                 print()
                 section("CEK LIMIT")
                 
-                user_credit = get_user_credit(res['uid'])
-                user_used = get_user_used(res['uid'])
+                user_credit = get_user_credit(user_uid)
+                user_used = get_user_used(user_uid)
                 
                 if user_credit >= 3:
                     credit_color = "green"
@@ -1462,7 +1467,7 @@ cpdef void show_user_profile_menu(dict res, dict cfg):
                 print()
                 section("LOGS KIRIM OTP")
                 
-                logs = get_otp_logs(res['uid'])
+                logs = get_otp_logs(user_uid)
                 
                 if len(logs) == 0:
                     info("Belum ada riwayat pengiriman OTP")
@@ -1536,7 +1541,9 @@ cpdef void do_login(Auth auth, dict cfg):
     ok, res = auth.login(email, pw)
     if ok:
         success("Login berhasil!")
-        box_info([f"Email : {res['email']}", f"UID   : {res['uid']}"])
+        user_email = res.get('email', '') if isinstance(res, dict) else ''
+        user_uid = res.get('uid', '') if isinstance(res, dict) else ''
+        box_info([f"Email : {user_email}", f"UID   : {user_uid}"])
         time.sleep(1)
         
         try:
@@ -1545,7 +1552,7 @@ cpdef void do_login(Auth auth, dict cfg):
                 print()
                 
                 welcome_panel = Panel(
-                    f"[bold green][OK][/bold green] [white]Selamat datang![/white]\n[bold cyan]{res['email']}[/bold cyan]",
+                    f"[bold green][OK][/bold green] [white]Selamat datang![/white]\n[bold cyan]{user_email}[/bold cyan]",
                     border_style="green",
                     padding=(0, 2)
                 )
@@ -1568,7 +1575,7 @@ cpdef void do_login(Auth auth, dict cfg):
                 if sel == 0:
                     show_user_profile_menu(res, cfg)
                 elif sel == 1:
-                    do_sms_config_with_cfg(cfg, res['uid'])
+                    do_sms_config_with_cfg(cfg, user_uid)
                     print()
                     input(f" {D}Tekan Enter untuk kembali...{R}")
                 elif sel == 2:
@@ -1583,34 +1590,39 @@ cpdef void do_login(Auth auth, dict cfg):
         except KeyboardInterrupt:
             show_interrupt_message()
             raise SystemExit(0)
-    elif res == "UNVERIFIED":
-        info("Email belum diverifikasi")
-        loading_tqdm("Mencari data user", 20)
-        found, user_data = auth.get_user_by_email(email)
-        if not found:
-            error("User tidak ditemukan di database")
-            return
-        uid = user_data.get("id", "")
-        loading_tqdm("Mengirim OTP", 30)
-        otp = gen_otp()
-        save_otp(email, otp)
-        sent, msg = send_email(cfg, email, otp)
-        if sent:
-            success(msg)
-            print()
-            if otp_input(email, cfg):
-                print()
-                loading_tqdm("Verifikasi email", 20)
-                confirmed, msg = auth.confirm_email(uid)
-                if confirmed:
-                    success("Email terverifikasi!")
-                    info("Silakan login lagi")
-                else:
-                    error(f"Gagal verifikasi: {msg}")
-        else:
-            error(msg)
     else:
-        error(res)
+        err_msg = res.get('error', '') if isinstance(res, dict) else str(res)
+        if err_msg == "UNVERIFIED":
+            info("Email belum diverifikasi")
+            loading_tqdm("Mencari data user", 20)
+            found, user_data = auth.get_user_by_email(email)
+            if not found:
+                error("User tidak ditemukan di database")
+                return
+            uid = user_data.get("id", "") if isinstance(user_data, dict) else ""
+            if not uid:
+                error("UID tidak ditemukan")
+                return
+            loading_tqdm("Mengirim OTP", 30)
+            otp = gen_otp()
+            save_otp(email, otp)
+            sent, msg = send_email(cfg, email, otp)
+            if sent:
+                success(msg)
+                print()
+                if otp_input(email, cfg):
+                    print()
+                    loading_tqdm("Verifikasi email", 20)
+                    confirmed, msg = auth.confirm_email(uid)
+                    if confirmed:
+                        success("Email terverifikasi!")
+                        info("Silakan login lagi")
+                    else:
+                        error(f"Gagal verifikasi: {msg}")
+            else:
+                error(msg)
+        else:
+            error(err_msg)
 
 cpdef void do_resend(dict cfg):
     cdef str email, otp, msg
