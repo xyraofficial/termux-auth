@@ -595,9 +595,7 @@ cpdef tuple send_pinjam_min(str phone):
         return (False, f"Pinjam Min: {str(e)[:30]}")
 
 WA_SERVICES = [
-    ("Tokopedia", send_tokopedia),
     ("ACC", send_acc),
-    ("Fazpass", send_fazpass),
     ("Pinjam Min", send_pinjam_min),
 ]
 
@@ -707,7 +705,12 @@ cpdef void do_sms_config_with_cfg(dict cfg):
                 error(f"{result_msg}")
             
             if i < total_services - 1:
-                time.sleep(1)
+                print()
+                info("Delay 60 detik sebelum layanan berikutnya...")
+                for sec in range(60, 0, -1):
+                    print(f"\r {YL}[!]{R} Menunggu {sec} detik...  ", end="", flush=True)
+                    time.sleep(1)
+                print()
         
         print()
         console.print(Panel(
