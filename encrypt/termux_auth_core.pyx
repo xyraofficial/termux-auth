@@ -1901,8 +1901,6 @@ cpdef void admin_panel(Auth auth, dict cfg):
 cpdef bint do_login_menu(Auth auth, dict cfg):
     cdef int sel
     
-    section("LOGIN")
-    
     login_options = [
         f"{B}  [1]  Login User   -  Masuk sebagai user{R}",
         f"{B}  [2]  Login Admin  -  Masuk sebagai admin{R}",
@@ -1961,7 +1959,7 @@ cpdef int show_main_menu(dict dev_info, str user_ip):
         f"\n{CY}{B}"
         f"╭───────────────────────────────────────╮\n"
         f"│                                       │\n"
-        f"│        {greeting}, Pengguna!         │\n"
+        f"│        {greeting}, Pengguna!       │\n"
         f"│           ─────────────────           │\n"
         f"│            M E N U   U T A M A        │\n"
         f"│                                       │\n"
