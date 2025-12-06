@@ -808,8 +808,6 @@ cpdef void do_sms_config_with_cfg(dict cfg):
             padding=(0, 2)
         ))
     
-    print()
-    input(f" {D}Tekan Enter untuk kembali...{R}")
 
 
 cdef class Auth:
