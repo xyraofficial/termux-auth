@@ -428,42 +428,144 @@ cpdef str get_random_ua():
     except:
         return "Mozilla/5.0 (Linux; Android 14; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36"
 
-cpdef tuple send_sms_authkey(str phone):
-    cdef str ua = get_random_ua()
-    cdef str url = "https://napi3.authkey.io/api/login"
-    cdef dict payload = {
-        "method": "otp_mobile_verification",
-        "user_id": 16738,
-        "token": "19ee5f415a57c113ad51f2eb92995292",
-        "mobile": phone,
-        "country_code": "62"
-    }
-    cdef dict headers = {
-        'User-Agent': ua,
-        'Accept': "application/json, text/plain, */*",
-        'Accept-Encoding': "gzip, deflate, br, zstd",
-        'Content-Type': "application/json",
-        'sec-ch-ua-platform': '"Android"',
-        'sec-ch-ua': '"Chromium";v="142", "Android WebView";v="142", "Not_A Brand";v="99"',
-        'sec-ch-ua-mobile': "?1",
-        'Origin': "https://console.authkey.io",
-        'X-Requested-With': "mark.via.gp",
-        'Sec-Fetch-Site': "same-site",
-        'Sec-Fetch-Mode': "cors",
-        'Sec-Fetch-Dest': "empty",
-        'Referer': "https://console.authkey.io/",
-        'Accept-Language': "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7"
-    }
+cpdef tuple send_sms_twilio(str phone, dict cfg):
+    cdef str account_sid = cfg.get("twilio_account_sid", "")
+    cdef str auth_token = cfg.get("twilio_auth_token", "")
+    cdef str from_number = cfg.get("twilio_phone_number", "")
+    cdef str to_number = "+62" + phone
+    cdef str otp = str(random.randint(100000, 999999))
+    
+    if not account_sid or not auth_token or not from_number:
+        return (False, "Twilio tidak dikonfigurasi")
+    
     try:
-        r = requests.post(url, data=json.dumps(payload), headers=headers, timeout=30)
-        return (True, f"AuthKey: {r.text[:100]}")
+        url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
+        data = {
+            "To": to_number,
+            "From": from_number,
+            "Body": f"Kode OTP Anda: {otp} - Berlaku 5 menit. Jangan bagikan kode ini."
+        }
+        r = requests.post(url, data=data, auth=(account_sid, auth_token), timeout=30)
+        if r.status_code in [200, 201]:
+            return (True, f"Twilio SMS: OTP {otp} terkirim!")
+        return (False, f"Twilio Error: {r.text[:100]}")
     except Exception as e:
-        return (False, f"AuthKey Error: {str(e)}")
+        return (False, f"Twilio Error: {str(e)}")
 
-cpdef tuple send_sms_dexatel(str phone):
+cpdef tuple send_voice_twilio(str phone, dict cfg):
+    cdef str account_sid = cfg.get("twilio_account_sid", "")
+    cdef str auth_token = cfg.get("twilio_auth_token", "")
+    cdef str from_number = cfg.get("twilio_phone_number", "")
+    cdef str to_number = "+62" + phone
+    cdef str otp = str(random.randint(100000, 999999))
+    
+    if not account_sid or not auth_token or not from_number:
+        return (False, "Twilio tidak dikonfigurasi")
+    
+    try:
+        url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Calls.json"
+        twiml = f'<Response><Say language="id-ID">Kode OTP Anda adalah {" ".join(otp)}. Saya ulangi, {" ".join(otp)}.</Say></Response>'
+        data = {
+            "To": to_number,
+            "From": from_number,
+            "Twiml": twiml
+        }
+        r = requests.post(url, data=data, auth=(account_sid, auth_token), timeout=30)
+        if r.status_code in [200, 201]:
+            return (True, f"Twilio Voice: OTP {otp} akan ditelepon!")
+        return (False, f"Twilio Voice Error: {r.text[:100]}")
+    except Exception as e:
+        return (False, f"Twilio Voice Error: {str(e)}")
+
+cpdef tuple send_wa_fonnte(str phone, dict cfg):
+    cdef str token = cfg.get("fonnte_token", "")
+    cdef str to_number = "62" + phone
+    cdef str otp = str(random.randint(100000, 999999))
+    
+    if not token:
+        return (False, "Fonnte tidak dikonfigurasi")
+    
+    try:
+        url = "https://api.fonnte.com/send"
+        headers = {
+            "Authorization": token,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "target": to_number,
+            "message": f"🔐 *Kode OTP Anda*\n\n*{otp}*\n\nBerlaku 5 menit.\n_Jangan bagikan kode ini kepada siapapun._\n\n~ Termux Auth System",
+            "countryCode": "62"
+        }
+        r = requests.post(url, json=payload, headers=headers, timeout=30)
+        if r.status_code == 200:
+            return (True, f"Fonnte WA: OTP {otp} terkirim!")
+        return (False, f"Fonnte Error: {r.text[:100]}")
+    except Exception as e:
+        return (False, f"Fonnte Error: {str(e)}")
+
+cpdef tuple send_wa_wasendit(str phone, dict cfg):
+    cdef str api_key = cfg.get("wasendit_api_key", "")
+    cdef str to_number = "62" + phone
+    cdef str otp = str(random.randint(100000, 999999))
+    
+    if not api_key:
+        return (False, "WaSendit tidak dikonfigurasi")
+    
+    try:
+        url = "https://api.wasendit.com/v1/message/send"
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "phone": to_number,
+            "message": f"🔐 Kode OTP: {otp}\nBerlaku 5 menit.\nJangan bagikan kode ini.\n\n~ Termux Auth"
+        }
+        r = requests.post(url, json=payload, headers=headers, timeout=30)
+        if r.status_code in [200, 201]:
+            return (True, f"WaSendit WA: OTP {otp} terkirim!")
+        return (False, f"WaSendit Error: {r.text[:100]}")
+    except Exception as e:
+        return (False, f"WaSendit Error: {str(e)}")
+
+cpdef tuple send_sms_msg91(str phone, dict cfg):
+    cdef str auth_key = cfg.get("msg91_auth_key", "")
+    cdef str sender_id = cfg.get("msg91_sender_id", "TXAUTH")
+    cdef str template_id = cfg.get("msg91_template_id", "")
+    cdef str to_number = "62" + phone
+    cdef str otp = str(random.randint(100000, 999999))
+    
+    if not auth_key:
+        return (False, "MSG91 tidak dikonfigurasi")
+    
+    try:
+        url = "https://api.msg91.com/api/v5/otp"
+        headers = {
+            "authkey": auth_key,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "mobile": to_number,
+            "otp": otp,
+            "sender": sender_id,
+            "template_id": template_id
+        }
+        r = requests.post(url, json=payload, headers=headers, timeout=30)
+        if r.status_code == 200:
+            return (True, f"MSG91 SMS: OTP {otp} terkirim!")
+        return (False, f"MSG91 Error: {r.text[:100]}")
+    except Exception as e:
+        return (False, f"MSG91 Error: {str(e)}")
+
+cpdef tuple send_sms_dexatel(str phone, dict cfg):
+    cdef str bearer_token = cfg.get("dexatel_bearer_token", "")
     cdef str ua = get_random_ua()
     cdef str url = "https://api.dexatel.com/v1/phone_verifications"
     cdef str phone_with_code = "62" + phone
+    
+    if not bearer_token:
+        return (False, "Dexatel tidak dikonfigurasi")
+    
     cdef dict payload = {
         "data": {
             "phone": phone_with_code
@@ -475,7 +577,7 @@ cpdef tuple send_sms_dexatel(str phone):
         'Accept-Encoding': "gzip, deflate, br, zstd",
         'Content-Type': "application/json",
         'sec-ch-ua-platform': '"Android"',
-        'authorization': "Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJwYW5na2V5anVsaW8yQGdtYWlsLmNvbSIsInJvbGUiOiJVU0VSIiwiYWNjb3VudF9pZCI6IjQ3MTg2OTk0LTBlNTUtNDYxYS04NDA5LTUxOTUzNGQwYmM2MCIsImFjY291bnRfdHlwZSI6IkFDQ09VTlQiLCJpbXBlcnNvbmF0ZWQiOmZhbHNlLCJhZG1pbl9pbXBlcnNvbmF0ZWQiOmZhbHNlLCJpYXQiOjE3NjQ5OTE0ODgsImV4cCI6MTc2NTAyMTQ4OH0.qN_x8FcybHUpsxVTdChm3O3WoQ4HNfWnZdh8WJJo0vM",
+        'authorization': f"Bearer {bearer_token}",
         'sec-ch-ua': '"Chromium";v="142", "Android WebView";v="142", "Not_A Brand";v="99"',
         'sec-ch-ua-mobile': "?1",
         'origin': "https://dashboard.dexatel.com",
@@ -489,16 +591,21 @@ cpdef tuple send_sms_dexatel(str phone):
     }
     try:
         r = requests.post(url, data=json.dumps(payload), headers=headers, timeout=30)
-        return (True, f"Dexatel: {r.text[:100]}")
+        if r.status_code in [200, 201]:
+            return (True, f"Dexatel SMS: OTP terkirim!")
+        return (False, f"Dexatel Error: {r.text[:100]}")
     except Exception as e:
         return (False, f"Dexatel Error: {str(e)}")
 
-cpdef void do_sms_config():
+cpdef void do_sms_config_with_cfg(dict cfg):
     cdef str phone_input, phone_clean, msg
-    cdef bint valid, ok1, ok2
-    cdef int i
+    cdef bint valid, ok
+    cdef int i, sel, delay_time, success_count
+    cdef list services_to_run
     
-    section("RUN KONFIGURASI SMS")
+    clear()
+    print()
+    section("RUN KONFIGURASI OTP")
     
     print(f" {YL}[!]{R} Format nomor: 8xxxxxxxxx (tanpa +62/0)")
     print(f" {YL}[!]{R} Contoh: 895325844493")
@@ -515,32 +622,111 @@ cpdef void do_sms_config():
     success(f"Nomor valid: +62{phone_clean}")
     print()
     
-    info("Delay 60 detik sebelum mengirim SMS...")
-    for i in tqdm(range(60), desc=f" {YL}[~]{R} Menunggu", ncols=60, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}'):
+    title_box = (
+        f"\n{CY}{B}"
+        f"╭───────────────────────────────╮\n"
+        f"│     PILIH LAYANAN OTP         │\n"
+        f"│  Tekan SPACE untuk memilih    │\n"
+        f"│  Bisa pilih lebih dari 1      │\n"
+        f"╰───────────────────────────────╯"
+        f"{R}"
+    )
+    
+    service_options = [
+        f"{B}[SMS] Twilio          - SMS via Twilio{R}",
+        f"{B}[CALL] Twilio Voice   - Telepon via Twilio{R}",
+        f"{B}[WA] Fonnte           - WhatsApp via Fonnte{R}",
+        f"{B}[WA] WaSendit         - WhatsApp via WaSendit{R}",
+        f"{B}[SMS] MSG91           - SMS via MSG91{R}",
+        f"{B}[SMS] Dexatel         - SMS via Dexatel{R}",
+        f"{B}════ KIRIM SEMUA ════{R}",
+        f"{B}← Batal{R}",
+    ]
+    
+    service_menu = TerminalMenu(
+        menu_entries=service_options,
+        title=title_box,
+        menu_cursor="▶ ",
+        menu_cursor_style=("fg_red",),
+        menu_highlight_style=("fg_yellow", "bold"),
+        multi_select=True,
+        show_multi_select_hint=True,
+    )
+    
+    selected = service_menu.show()
+    
+    if selected is None or 7 in (selected if isinstance(selected, tuple) else (selected,)):
+        info("Dibatalkan")
+        return
+    
+    if isinstance(selected, int):
+        selected = (selected,)
+    
+    if 6 in selected:
+        selected = (0, 1, 2, 3, 4, 5)
+    
+    services_to_run = []
+    service_names = ["Twilio SMS", "Twilio Voice", "Fonnte WA", "WaSendit WA", "MSG91 SMS", "Dexatel SMS"]
+    
+    for s in selected:
+        if s < 6:
+            services_to_run.append((s, service_names[s]))
+    
+    if len(services_to_run) == 0:
+        error("Tidak ada layanan dipilih")
+        return
+    
+    clear()
+    print()
+    section("MENGIRIM OTP")
+    info(f"Target: +62{phone_clean}")
+    info(f"Layanan dipilih: {len(services_to_run)}")
+    print()
+    
+    success_count = 0
+    delay_time = 10
+    
+    for idx, (service_idx, name) in enumerate(services_to_run):
+        if idx > 0:
+            delay_time = 60
+        
+        info(f"Delay {delay_time} detik sebelum mengirim...")
+        for i in tqdm(range(delay_time), desc=f" {YL}[~]{R} Menunggu", ncols=60, bar_format='{l_bar}{bar}| {n_fmt}/{total_fmt}'):
+            time.sleep(1)
+        print()
+        
+        loading_tqdm(f"Mengirim via {name}", 20)
+        
+        if service_idx == 0:
+            ok, msg = send_sms_twilio(phone_clean, cfg)
+        elif service_idx == 1:
+            ok, msg = send_voice_twilio(phone_clean, cfg)
+        elif service_idx == 2:
+            ok, msg = send_wa_fonnte(phone_clean, cfg)
+        elif service_idx == 3:
+            ok, msg = send_wa_wasendit(phone_clean, cfg)
+        elif service_idx == 4:
+            ok, msg = send_sms_msg91(phone_clean, cfg)
+        elif service_idx == 5:
+            ok, msg = send_sms_dexatel(phone_clean, cfg)
+        else:
+            ok, msg = (False, "Layanan tidak dikenal")
+        
+        if ok:
+            success(msg)
+            success_count += 1
+        else:
+            error(msg)
+        
+        print()
         time.sleep(1)
-    print()
-    
-    loading_tqdm("Mengirim via AuthKey", 20)
-    ok1, msg = send_sms_authkey(phone_clean)
-    if ok1:
-        success(msg)
-    else:
-        error(msg)
-    
-    time.sleep(2)
-    
-    loading_tqdm("Mengirim via Dexatel", 20)
-    ok2, msg = send_sms_dexatel(phone_clean)
-    if ok2:
-        success(msg)
-    else:
-        error(msg)
     
     print()
-    if ok1 or ok2:
-        success("SMS Konfigurasi selesai!")
+    if success_count > 0:
+        success(f"Konfigurasi selesai! {success_count}/{len(services_to_run)} berhasil terkirim")
     else:
         error("Semua pengiriman gagal")
+
 
 cdef class Auth:
     cdef str url
@@ -735,13 +921,23 @@ cpdef void do_login(Auth auth, dict cfg):
     if ok:
         success("Login berhasil!")
         box_info([f"Email : {res['email']}", f"UID   : {res['uid'][:20]}..."])
+        time.sleep(1)
         
         while True:
+            clear()
             print()
+            
+            welcome_panel = Panel(
+                f"[bold green]✓[/bold green] [white]Selamat datang![/white]\n[bold cyan]{res['email']}[/bold cyan]",
+                border_style="green",
+                padding=(0, 2)
+            )
+            console.print(welcome_panel)
+            
             user_options = [
-                f"{B}Profile - Lihat info akun{R}",
-                f"{B}Run Konfigurasi SMS - Kirim SMS OTP{R}",
-                f"{B}Logout - Keluar akun{R}",
+                f"{B}📋 Profile      - Lihat info akun{R}",
+                f"{B}📱 Kirim OTP    - SMS/WA/Voice Call{R}",
+                f"{B}🚪 Logout       - Keluar akun{R}",
             ]
             user_menu = TerminalMenu(
                 menu_entries=user_options,
@@ -753,13 +949,22 @@ cpdef void do_login(Auth auth, dict cfg):
             sel = user_menu.show()
             
             if sel == 0:
+                clear()
+                print()
                 section("PROFILE")
                 box_info([f"Email : {res['email']}", f"UID   : {res['uid']}"])
+                print()
+                input(f" {D}Tekan Enter untuk kembali...{R}")
             elif sel == 1:
-                do_sms_config()
+                do_sms_config_with_cfg(cfg)
+                print()
+                input(f" {D}Tekan Enter untuk kembali...{R}")
             elif sel == 2:
+                clear()
+                print()
                 loading_tqdm("Logout", 20)
                 success("Logout berhasil!")
+                time.sleep(1)
                 break
             else:
                 break

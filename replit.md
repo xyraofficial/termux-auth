@@ -50,6 +50,16 @@ run/                        # PUBLIC - For distribution
   - `supabase_key`: Supabase anonymous key for API access
   - `smtp_email`: Gmail address for sending OTP emails
   - `smtp_app_password`: Gmail app-specific password for SMTP authentication
+  - **OTP Services** (opsional - isi sesuai kebutuhan):
+    - `twilio_account_sid`: Twilio Account SID untuk SMS/Voice
+    - `twilio_auth_token`: Twilio Auth Token
+    - `twilio_phone_number`: Nomor Twilio untuk kirim SMS/Voice
+    - `fonnte_token`: Token API Fonnte untuk WhatsApp
+    - `wasendit_api_key`: API Key WaSendit untuk WhatsApp
+    - `msg91_auth_key`: Auth Key MSG91 untuk SMS
+    - `msg91_sender_id`: Sender ID MSG91 (default: TXAUTH)
+    - `msg91_template_id`: Template ID MSG91
+    - `dexatel_bearer_token`: Bearer Token Dexatel untuk SMS
 
 ### Security Notes
 - **Obfuscation Level**: Config encryption protects against casual users viewing credentials
@@ -67,6 +77,23 @@ run/                        # PUBLIC - For distribution
   - Stores OTP data in `otp_data.json`
   - Email delivery via SMTP
 - **Validation**: Email format validation using regex patterns
+
+### Multi-Channel OTP Delivery
+Sistem mendukung pengiriman OTP melalui berbagai channel:
+
+| Layanan | Tipe | Deskripsi |
+|---------|------|-----------|
+| **Twilio SMS** | SMS | Kirim OTP via SMS menggunakan Twilio |
+| **Twilio Voice** | Voice Call | Kirim OTP via telepon suara |
+| **Fonnte** | WhatsApp | Kirim OTP via WhatsApp menggunakan Fonnte |
+| **WaSendit** | WhatsApp | Kirim OTP via WhatsApp menggunakan WaSendit |
+| **MSG91** | SMS | Kirim OTP via SMS menggunakan MSG91 |
+| **Dexatel** | SMS | Kirim OTP via SMS menggunakan Dexatel |
+
+**Fitur OTP Timing**:
+- Pengiriman pertama: delay 10 detik
+- Pengiriman ke-2 dan seterusnya: delay 60 detik
+- User dapat memilih multiple layanan sekaligus
 
 ### Admin System
 - **Admin Login**: Hardcoded credentials (username: xyraofficial, password: admin)
