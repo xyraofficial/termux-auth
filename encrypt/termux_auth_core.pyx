@@ -1192,21 +1192,21 @@ cpdef void do_login(Auth auth, dict cfg):
             print()
             
             welcome_panel = Panel(
-                f"[bold green]✓[/bold green] [white]Selamat datang![/white]\n[bold cyan]{res['email']}[/bold cyan]",
+                f"[bold green][OK][/bold green] [white]Selamat datang![/white]\n[bold cyan]{res['email']}[/bold cyan]",
                 border_style="green",
                 padding=(0, 2)
             )
             console.print(welcome_panel)
             
             user_options = [
-                f"{B}👤 Profile      │ Lihat info akun{R}",
-                f"{B}📱 Kirim OTP    │ WhatsApp Bomber{R}",
-                f"{B}🚪 Logout       │ Keluar akun{R}",
+                f"{B}  [1]  Profile     -  Lihat info akun{R}",
+                f"{B}  [2]  Kirim OTP   -  WhatsApp Bomber{R}",
+                f"{B}  [0]  Logout      -  Keluar akun{R}",
             ]
             user_menu = TerminalMenu(
                 menu_entries=user_options,
-                title=f"\n{CY}{B}╔═════════════════════════════════╗\n║     🎯 USER DASHBOARD           ║\n╚═════════════════════════════════╝{R}",
-                menu_cursor="⚡ ",
+                title=f"\n{CY}{B}╭─────────────────────────────────╮\n│                                 │\n│        U S E R   M E N U        │\n│                                 │\n╰─────────────────────────────────╯{R}",
+                menu_cursor=" > ",
                 menu_cursor_style=("fg_cyan", "bold"),
                 menu_highlight_style=("fg_green", "bold"),
             )
@@ -1220,7 +1220,7 @@ cpdef void do_login(Auth auth, dict cfg):
                 user_used = get_user_used(res['uid'])
                 
                 profile_header = Panel(
-                    "[bold magenta]👤[/bold magenta] [bold white]PROFIL PENGGUNA[/bold white]",
+                    "[bold white]P R O F I L   P E N G G U N A[/bold white]",
                     border_style="magenta",
                     padding=(0, 2)
                 )
@@ -1230,9 +1230,9 @@ cpdef void do_login(Auth auth, dict cfg):
                 profile_table = Table(show_header=False, box=None, padding=(0, 2))
                 
                 account_content = (
-                    f"[bold cyan]📧 Email[/bold cyan]\n"
+                    f"[bold cyan]Email[/bold cyan]\n"
                     f"[white]{res['email']}[/white]\n\n"
-                    f"[bold cyan]🔑 User ID[/bold cyan]\n"
+                    f"[bold cyan]User ID[/bold cyan]\n"
                     f"[dim]{res['uid']}[/dim]"
                 )
                 
@@ -1245,18 +1245,18 @@ cpdef void do_login(Auth auth, dict cfg):
                 
                 if user_credit >= 3:
                     credit_color = "green"
-                    credit_icon = "🟢"
+                    credit_icon = "[+]"
                 elif user_credit >= 1:
                     credit_color = "yellow"
-                    credit_icon = "🟡"
+                    credit_icon = "[!]"
                 else:
                     credit_color = "red"
-                    credit_icon = "🔴"
+                    credit_icon = "[-]"
                 
                 stats_content = (
                     f"[bold {credit_color}]{credit_icon} Credit[/bold {credit_color}]\n"
                     f"[bold white]{user_credit}[/bold white] [dim]tersisa[/dim]\n\n"
-                    f"[bold blue]📊 Terpakai[/bold blue]\n"
+                    f"[bold blue]Terpakai[/bold blue]\n"
                     f"[bold white]{user_used}[/bold white] [dim]kali digunakan[/dim]"
                 )
                 
@@ -1272,8 +1272,8 @@ cpdef void do_login(Auth auth, dict cfg):
                 
                 print()
                 tip_panel = Panel(
-                    "[dim]💡 Credit digunakan untuk fitur WhatsApp Bomber[/dim]\n"
-                    "[dim]   Setiap round membutuhkan 1 credit[/dim]",
+                    "[dim]Credit digunakan untuk fitur WhatsApp Bomber[/dim]\n"
+                    "[dim]Setiap round membutuhkan 1 credit[/dim]",
                     border_style="dim"
                 )
                 console.print(tip_panel)
@@ -1904,17 +1904,17 @@ cpdef bint do_login_menu(Auth auth, dict cfg):
     section("LOGIN")
     
     login_options = [
-        f"{B}👤 Login User   - Masuk sebagai user{R}",
-        f"{B}🔐 Login Admin  - Masuk sebagai admin{R}",
-        f"{B}◀️  Kembali      - Menu utama{R}",
+        f"{B}  [1]  Login User   -  Masuk sebagai user{R}",
+        f"{B}  [2]  Login Admin  -  Masuk sebagai admin{R}",
+        f"{B}  [0]  Kembali      -  Menu utama{R}",
     ]
     
     login_menu = TerminalMenu(
         menu_entries=login_options,
-        title=f"\n{CY}{B}╭─────────────────────────────────╮\n│   🔑 PILIH TIPE LOGIN            │\n╰─────────────────────────────────╯{R}",
-        menu_cursor="▶ ",
-        menu_cursor_style=("fg_cyan",),
-        menu_highlight_style=("fg_yellow", "bold"),
+        title=f"\n{CY}{B}╭─────────────────────────────────╮\n│                                 │\n│       P I L I H   L O G I N     │\n│                                 │\n╰─────────────────────────────────╯{R}",
+        menu_cursor=" > ",
+        menu_cursor_style=("fg_cyan", "bold"),
+        menu_highlight_style=("fg_green", "bold"),
     )
     
     sel = login_menu.show()
@@ -1934,17 +1934,15 @@ cpdef void intro_loading():
     clear()
     print()
     intro_panel = Panel(
-        "[bold magenta]✨ ═══════════════════════════ ✨[/bold magenta]\n\n"
         "[bold cyan]   ████████╗███████╗██████╗ ███╗   ███╗██╗   ██╗██╗  ██╗[/bold cyan]\n"
         "[bold cyan]   ╚══██╔══╝██╔════╝██╔══██╗████╗ ████║██║   ██║╚██╗██╔╝[/bold cyan]\n"
         "[bold cyan]      ██║   █████╗  ██████╔╝██╔████╔██║██║   ██║ ╚███╔╝ [/bold cyan]\n"
         "[bold cyan]      ██║   ██╔══╝  ██╔══██╗██║╚██╔╝██║██║   ██║ ██╔██╗ [/bold cyan]\n"
         "[bold cyan]      ██║   ███████╗██║  ██║██║ ╚═╝ ██║╚██████╔╝██╔╝ ██╗[/bold cyan]\n"
         "[bold cyan]      ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝[/bold cyan]\n\n"
-        "[bold yellow]       🔐 AUTH SYSTEM 🔐[/bold yellow]\n"
-        "[dim white]         by XyraOfficial[/dim white]\n\n"
-        "[bold magenta]✨ ═══════════════════════════ ✨[/bold magenta]",
-        border_style="magenta",
+        "[bold yellow]          A U T H   S Y S T E M[/bold yellow]\n"
+        "[dim white]            by XyraOfficial[/dim white]",
+        border_style="cyan",
         padding=(1, 2)
     )
     console.print(intro_panel)
@@ -1960,28 +1958,30 @@ cpdef int show_main_menu(dict dev_info, str user_ip):
     greeting = get_greeting()
     
     title_box = (
-        f"\n{MG}{B}"
-        f"╔═══════════════════════════════════════╗\n"
-        f"║  ✨ {greeting}, Pengguna!            ║\n"
-        f"║     ═══════════════════════════       ║\n"
-        f"║         🏠 MENU UTAMA                 ║\n"
-        f"╚═══════════════════════════════════════╝"
+        f"\n{CY}{B}"
+        f"╭───────────────────────────────────────╮\n"
+        f"│                                       │\n"
+        f"│        {greeting}, Pengguna!         │\n"
+        f"│           ─────────────────           │\n"
+        f"│            M E N U   U T A M A        │\n"
+        f"│                                       │\n"
+        f"╰───────────────────────────────────────╯"
         f"{R}"
     )
     
     options = [
-        f"{B}📝 Signup   │ Daftar akun baru{R}",
-        f"{B}🔐 Login    │ Masuk ke akun{R}",
-        f"{B}📨 Resend   │ Kirim ulang OTP{R}",
-        f"{B}🔄 Reset    │ Reset password{R}",
-        f"{B}👨‍💻 About    │ Info developer{R}",
-        f"{B}🚪 Keluar   │ Exit program{R}",
+        f"{B}  [1]  Signup    -  Daftar akun baru{R}",
+        f"{B}  [2]  Login     -  Masuk ke akun{R}",
+        f"{B}  [3]  Resend    -  Kirim ulang OTP{R}",
+        f"{B}  [4]  Reset     -  Reset password{R}",
+        f"{B}  [5]  About     -  Info developer{R}",
+        f"{B}  [0]  Keluar    -  Exit program{R}",
     ]
     
     terminal_menu = TerminalMenu(
         menu_entries=options,
         title=title_box,
-        menu_cursor="⚡ ",
+        menu_cursor=" > ",
         menu_cursor_style=("fg_cyan", "bold"),
         menu_highlight_style=("fg_green", "bold"),
     )
@@ -1992,15 +1992,11 @@ cpdef void show_exit_message():
     clear()
     print()
     exit_panel = Panel(
-        "[bold green]╔═══════════════════════════════╗[/bold green]\n"
-        "[bold green]║[/bold green]    [bold white]✨ Terima kasih! ✨[/bold white]      [bold green]║[/bold green]\n"
-        "[bold green]║[/bold green]                               [bold green]║[/bold green]\n"
-        "[bold green]║[/bold green]  [dim]Sampai jumpa di lain waktu[/dim]  [bold green]║[/bold green]\n"
-        "[bold green]║[/bold green]                               [bold green]║[/bold green]\n"
-        "[bold green]║[/bold green]   [bold magenta]✦ XyraOfficial ✦[/bold magenta]        [bold green]║[/bold green]\n"
-        "[bold green]╚═══════════════════════════════╝[/bold green]",
-        border_style="cyan",
-        padding=(1, 2)
+        "[bold white]T E R I M A   K A S I H ![/bold white]\n\n"
+        "[dim]Sampai jumpa di lain waktu[/dim]\n\n"
+        "[bold magenta]~ XyraOfficial ~[/bold magenta]",
+        border_style="green",
+        padding=(1, 4)
     )
     console.print(exit_panel)
     print()
@@ -2009,7 +2005,7 @@ cpdef void show_interrupt_message():
     print()
     print()
     interrupt_panel = Panel(
-        "[bold yellow]⚡[/bold yellow] [white]Program dihentikan[/white]\n[dim]Tekan Ctrl+C terdeteksi[/dim]\n[bold magenta]~ XyraOfficial ~[/bold magenta]",
+        "[bold white]Program dihentikan[/bold white]\n[dim]Ctrl+C terdeteksi[/dim]\n[bold magenta]~ XyraOfficial ~[/bold magenta]",
         border_style="yellow",
         padding=(1, 4)
     )
