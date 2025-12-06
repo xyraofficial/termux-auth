@@ -6,7 +6,7 @@ import platform
 import subprocess
 import time
 
-REQUIRED_PACKAGES = ["requests", "cryptography", "tqdm", "tabulate", "rich", "simple-term-menu"]
+REQUIRED_PACKAGES = ["requests", "cryptography", "tqdm", "tabulate", "rich", "simple-term-menu", "fake-useragent"]
 
 R = '\033[0m'
 B = '\033[1m'
@@ -17,6 +17,22 @@ YL = '\033[93m'
 BL = '\033[94m'
 MG = '\033[95m'
 CY = '\033[96m'
+
+BANNER = f"""{CY}
+╭────────────────────────────────────────────────────────────╮
+│                                                            │
+│     {GR}████████╗███████╗██████╗ ███╗   ███╗██╗   ██╗██╗  ██╗{CY}  │
+│     {GR}╚══██╔══╝██╔════╝██╔══██╗████╗ ████║██║   ██║╚██╗██╔╝{CY}  │
+│        {GR}██║   █████╗  ██████╔╝██╔████╔██║██║   ██║ ╚███╔╝{CY}   │
+│        {GR}██║   ██╔══╝  ██╔══██╗██║╚██╔╝██║██║   ██║ ██╔██╗{CY}   │
+│        {GR}██║   ███████╗██║  ██║██║ ╚═╝ ██║╚██████╔╝██╔╝ ██╗{CY}  │
+│        {GR}╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝{CY}  │
+│                                                            │
+│            {B}{MG}A U T H   S Y S T E M{R}{CY}                           │
+│              {D}by XyraOfficial{R}{CY}                               │
+│                                                            │
+╰────────────────────────────────────────────────────────────╯{R}
+"""
 
 def clear():
     os.system('clear' if os.name == 'posix' else 'cls')
@@ -33,59 +49,18 @@ def check_internet():
     except:
         return False
 
-def show_loading_bar(text, steps=20, delay=0.05):
-    bar_chars = "░▒▓█"
-    for i in range(steps + 1):
-        progress = int((i / steps) * 30)
-        bar = "█" * progress + "░" * (30 - progress)
-        percent = int((i / steps) * 100)
-        print(f"\r  {CY}[{bar}]{R} {percent}% - {text}", end="", flush=True)
-        time.sleep(delay)
-    print()
+def install_package(pkg):
+    try:
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", pkg, "-q"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        return True
+    except:
+        return False
 
-def show_system_loading():
-    clear()
-    print()
-    print(f"  {MG}{B}╭─────────────────────────────────────╮{R}")
-    print(f"  {MG}{B}│{R}     {CY}★{R} {B}TERMUX AUTH SYSTEM{R} {CY}★{R}        {MG}{B}│{R}")
-    print(f"  {MG}{B}│{R}         {D}by XyraOfficial{R}           {MG}{B}│{R}")
-    print(f"  {MG}{B}╰─────────────────────────────────────╯{R}")
-    print()
-    
-    print(f"  {YL}[•]{R} Memuat System...")
-    time.sleep(0.3)
-    
-    print(f"  {CY}[•]{R} Mengecek koneksi internet...")
-    time.sleep(0.5)
-    
-    if not check_internet():
-        print()
-        print(f"  {RD}╭─────────────────────────────────────╮{R}")
-        print(f"  {RD}│{R}  {RD}⚠  PERINGATAN: OFFLINE MODE  ⚠{R}   {RD}│{R}")
-        print(f"  {RD}╰─────────────────────────────────────╯{R}")
-        print()
-        print(f"  {YL}[!]{R} Tidak ada koneksi internet!")
-        print(f"  {YL}[!]{R} Beberapa fitur mungkin tidak berfungsi:")
-        print(f"      {D}• Login/Signup membutuhkan internet{R}")
-        print(f"      {D}• Pengiriman OTP membutuhkan internet{R}")
-        print(f"      {D}• Verifikasi akun membutuhkan internet{R}")
-        print()
-        print(f"  {CY}[?]{R} Hubungkan ke internet dan coba lagi")
-        print()
-        confirm = input(f"  {YL}[?]{R} Lanjutkan offline? (y/n): ").strip().lower()
-        if confirm != 'y':
-            print(f"\n  {GR}[✓]{R} Sampai jumpa!\n")
-            return False
-        print()
-    else:
-        print(f"  {GR}[✓]{R} Koneksi internet: {GR}Online{R}")
-    
-    print(f"  {CY}[•]{R} Memuat modul...")
-    time.sleep(0.3)
-    
-    return True
-
-def check_and_install_dependencies():
+def check_missing_packages():
     missing = []
     for pkg in REQUIRED_PACKAGES:
         pkg_import = pkg.replace("-", "_")
@@ -93,28 +68,30 @@ def check_and_install_dependencies():
             __import__(pkg_import)
         except ImportError:
             missing.append(pkg)
+    return missing
+
+def show_loading_screen():
+    clear()
+    print(BANNER)
     
-    if missing:
-        print(f"\n  {YL}[•]{R} Menginstall dependensi...")
-        in_termux = is_termux()
+    missing_packages = check_missing_packages()
+    
+    if missing_packages:
+        print(f"  {YL}[!]{R} Package yang dibutuhkan tidak lengkap")
+        print(f"  {CY}[*]{R} Menginstall: {', '.join(missing_packages)}\n")
         
-        for pkg in missing:
+        in_termux = is_termux()
+        for pkg in missing_packages:
             if pkg == "cryptography" and in_termux:
                 print(f"\n  {RD}[✗]{R} Package '{pkg}' tidak ditemukan!")
                 print(f"  {CY}[i]{R} Install dengan: {CY}pkg install python-cryptography{R}")
-                print(f"  {YL}[!]{R} Jangan gunakan pip untuk cryptography di Termux")
-                print()
+                print(f"  {YL}[!]{R} Jangan gunakan pip untuk cryptography di Termux\n")
                 return False
             
             print(f"  {CY}[+]{R} Installing {pkg}...", end=" ", flush=True)
-            try:
-                subprocess.check_call(
-                    [sys.executable, "-m", "pip", "install", pkg, "-q"],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL
-                )
+            if install_package(pkg):
                 print(f"{GR}✓{R}")
-            except subprocess.CalledProcessError:
+            else:
                 print(f"{RD}✗{R}")
                 print(f"\n  {RD}[!]{R} Gagal install {pkg}")
                 if pkg == "cryptography" and in_termux:
@@ -122,17 +99,82 @@ def check_and_install_dependencies():
                 else:
                     print(f"  {YL}[i]{R} Coba manual: {CY}pip install {pkg}{R}")
                 return False
+        print()
+    
+    try:
+        from tqdm import tqdm
+    except ImportError:
+        print(f"  {RD}[!]{R} tqdm tidak tersedia untuk loading bar")
+        return False
+    
+    online = False
+    so_exists = False
+    config_exists = False
+    
+    print()
+    for i in tqdm(range(40), desc=f"  {CY}Memuat sistem{R}", 
+                  bar_format="{desc}: {percentage:3.0f}%|{bar}| {n_fmt}/{total_fmt}",
+                  colour="green", ncols=60):
         
-        print(f"\n  {GR}[✓]{R} Semua dependensi terinstall!")
+        if i == 5:
+            pass
+        elif i == 15:
+            online = check_internet()
+        elif i == 25:
+            so_exists = find_so_file() is not None
+        elif i == 35:
+            config_exists = os.path.exists("config.enc")
+        
+        time.sleep(0.05)
+    
+    print()
+    
+    if not online:
+        print(f"  {RD}╭─────────────────────────────────────────╮{R}")
+        print(f"  {RD}│{R}   {RD}⚠  PERINGATAN: TIDAK ADA INTERNET  ⚠{R}  {RD}│{R}")
+        print(f"  {RD}╰─────────────────────────────────────────╯{R}")
+        print()
+        print(f"  {YL}[!]{R} Koneksi internet tidak tersedia!")
+        print(f"  {YL}[!]{R} Fitur yang membutuhkan internet:")
+        print(f"      {D}• Login/Signup{R}")
+        print(f"      {D}• Pengiriman OTP{R}")
+        print(f"      {D}• Verifikasi akun{R}")
+        print()
+        confirm = input(f"  {YL}[?]{R} Lanjutkan mode offline? (y/n): ").strip().lower()
+        if confirm != 'y':
+            print(f"\n  {GR}[✓]{R} Sampai jumpa!\n")
+            return False
         print()
     else:
-        print(f"  {GR}[✓]{R} Dependensi: {GR}Lengkap{R}")
+        print(f"  {GR}[✓]{R} Koneksi    : {GR}Online{R}")
     
     return True
 
 def find_so_file():
     files = glob.glob("termux_auth_lib*.so")
     return files[0] if files else None
+
+def check_so_file():
+    so_file = find_so_file()
+    
+    if not so_file:
+        print(f"  {RD}[✗]{R} Module     : {RD}Tidak ditemukan{R}")
+        print(f"\n  {YL}[i]{R} Minta file termux_auth_lib*.so dari developer\n")
+        return None
+    
+    machine = platform.machine().lower()
+    is_arm = machine in ["aarch64", "arm", "armv7l", "armv8l"]
+    is_x86_so = "x86_64" in so_file or "x86-64" in so_file
+    
+    if is_arm and is_x86_so:
+        print(f"  {RD}[✗]{R} Module     : {RD}Arsitektur tidak cocok{R}")
+        print(f"\n  {YL}[i]{R} Device kamu : {CY}{machine}{R} (ARM/Android)")
+        print(f"  {YL}[i]{R} File .so    : {CY}x86_64{R} (PC/Linux)")
+        print(f"\n  {CY}[*]{R} Solusi: Minta file .so versi ARM dari developer\n")
+        return None
+    
+    print(f"  {GR}[✓]{R} Module     : {GR}Tersedia{R}")
+    return so_file
 
 def check_config():
     if os.path.exists("config.enc"):
@@ -143,59 +185,28 @@ def check_config():
                 try:
                     import cryptography
                 except ImportError:
-                    print(f"\n  {RD}[!]{R} Config butuh library cryptography!")
+                    print(f"  {RD}[✗]{R} Config     : {RD}Butuh cryptography{R}")
                     if is_termux():
-                        print(f"  {YL}[i]{R} Di Termux jalankan: {CY}pkg install python-cryptography{R}")
+                        print(f"\n  {YL}[i]{R} Jalankan: {CY}pkg install python-cryptography{R}\n")
                     else:
-                        print(f"  {YL}[i]{R} Jalankan: {CY}pip install cryptography{R}")
-                    print()
+                        print(f"\n  {YL}[i]{R} Jalankan: {CY}pip install cryptography{R}\n")
                     return False
-            print(f"  {GR}[✓]{R} Konfigurasi: {GR}Terenkripsi{R}")
+            print(f"  {GR}[✓]{R} Config     : {GR}Terenkripsi{R}")
         except:
             pass
         return True
+    
     if os.path.exists("config.json"):
-        print(f"\n  {RD}[!]{R} config.json tidak aman!")
-        print(f"  {YL}[i]{R} Gunakan config.enc yang terenkripsi")
-        print()
+        print(f"  {RD}[✗]{R} Config     : {RD}Tidak aman (config.json){R}")
+        print(f"\n  {YL}[i]{R} Gunakan config.enc yang terenkripsi\n")
         return False
-    print(f"\n  {RD}[!]{R} File konfigurasi tidak ditemukan!")
-    print(f"  {YL}[i]{R} Butuh file config.enc")
-    print()
+    
+    print(f"  {RD}[✗]{R} Config     : {RD}Tidak ditemukan{R}")
+    print(f"\n  {YL}[i]{R} Butuh file config.enc\n")
     return False
 
-def check_so_file():
-    so_file = find_so_file()
-    
-    if not so_file:
-        print(f"\n  {RD}[!]{R} File .so tidak ditemukan!")
-        print(f"  {YL}[i]{R} Minta file termux_auth_lib*.so dari developer")
-        print()
-        return None
-    
-    machine = platform.machine().lower()
-    is_arm = machine in ["aarch64", "arm", "armv7l", "armv8l"]
-    is_x86_so = "x86_64" in so_file or "x86-64" in so_file
-    
-    if is_arm and is_x86_so:
-        print(f"\n  {RD}[!]{R} File .so tidak cocok dengan device!")
-        print(f"  {YL}[i]{R} Device kamu : {CY}{machine}{R} (ARM/Android)")
-        print(f"  {YL}[i]{R} File .so    : {CY}x86_64{R} (PC/Linux)")
-        print()
-        print(f"  {CY}[*]{R} Solusi:")
-        print(f"      Minta file .so versi ARM dari developer,")
-        print(f"      atau kompilasi sendiri dengan folder encrypt/")
-        print()
-        return None
-    
-    print(f"  {GR}[✓]{R} Module: {GR}Tersedia{R}")
-    return so_file
-
 def main():
-    if not show_system_loading():
-        return
-    
-    if not check_and_install_dependencies():
+    if not show_loading_screen():
         return
     
     so_file = check_so_file()
@@ -206,9 +217,9 @@ def main():
         return
     
     print()
-    print(f"  {GR}╭─────────────────────────────────────╮{R}")
-    print(f"  {GR}│{R}  {GR}✓{R} {B}System Ready - Starting...{R}     {GR}│{R}")
-    print(f"  {GR}╰─────────────────────────────────────╯{R}")
+    print(f"  {GR}╭─────────────────────────────────────────╮{R}")
+    print(f"  {GR}│{R}    {GR}✓{R} {B}System Ready - Memulai...{R}        {GR}│{R}")
+    print(f"  {GR}╰─────────────────────────────────────────╯{R}")
     time.sleep(1)
     
     try:
