@@ -99,26 +99,26 @@ def show_loading_screen():
     so_file = None
     config_ok = False
     
-    for _ in tqdm(range(30), desc=f"  {CY}Mengecek Koneksi Internet{R}", 
-                  bar_format="{desc}: {percentage:3.0f}%|{bar}|",
-                  colour="green", ncols=60, leave=False, file=sys.stdout):
+    for _ in tqdm(range(40), desc=f"  Cek Koneksi", 
+                  bar_format="{desc}: {percentage:3.0f}%|{bar}| {n}/{total}",
+                  ncols=50, leave=True):
         time.sleep(0.02)
     online = check_internet()
-    print(f"  {CY}Mengecek Koneksi Internet{R}  {GR}[OK]{R}" if online else f"  {CY}Mengecek Koneksi Internet{R}  {RD}[OFFLINE]{R}")
+    print(f"  {GR}[OK]{R}" if online else f"  {RD}[OFFLINE]{R}")
     
-    for _ in tqdm(range(25), desc=f"  {CY}Mengecek Module{R}", 
-                  bar_format="{desc}: {percentage:3.0f}%|{bar}|",
-                  colour="green", ncols=60, leave=False, file=sys.stdout):
+    for _ in tqdm(range(40), desc=f"  Cek Module", 
+                  bar_format="{desc}: {percentage:3.0f}%|{bar}| {n}/{total}",
+                  ncols=50, leave=True):
         time.sleep(0.02)
     so_file = find_so_file()
-    print(f"  {CY}Mengecek Module{R}            {GR}[OK]{R}" if so_file else f"  {CY}Mengecek Module{R}            {RD}[NOT FOUND]{R}")
+    print(f"  {GR}[OK]{R}" if so_file else f"  {RD}[NOT FOUND]{R}")
     
-    for _ in tqdm(range(20), desc=f"  {CY}Mengecek Config{R}", 
-                  bar_format="{desc}: {percentage:3.0f}%|{bar}|",
-                  colour="green", ncols=60, leave=False, file=sys.stdout):
+    for _ in tqdm(range(40), desc=f"  Cek Config", 
+                  bar_format="{desc}: {percentage:3.0f}%|{bar}| {n}/{total}",
+                  ncols=50, leave=True):
         time.sleep(0.02)
     config_ok = os.path.exists("config.enc")
-    print(f"  {CY}Mengecek Config{R}            {GR}[OK]{R}" if config_ok else f"  {CY}Mengecek Config{R}            {RD}[NOT FOUND]{R}")
+    print(f"  {GR}[OK]{R}" if config_ok else f"  {RD}[NOT FOUND]{R}")
     
     print()
     
