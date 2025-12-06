@@ -286,7 +286,7 @@ cpdef void show_developer_info():
                 input(f" {D}Tekan Enter...{R}")
     except KeyboardInterrupt:
         show_interrupt_message()
-        sys.exit(0)
+        raise SystemExit(0)
 
 cpdef void section(str title):
     print()
@@ -914,10 +914,12 @@ cpdef void do_sms_config_with_cfg(dict cfg, str user_id):
                     success_count += 1
                     round_results.append((name, True, "Terkirim"))
                     console.print(f"   [bold green]✓[/bold green] Status: [green]BERHASIL[/green]")
+                    save_otp_log(user_id, phone_clean, "success")
                 else:
                     fail_count += 1
                     round_results.append((name, False, result_msg[:20]))
                     console.print(f"   [bold red]✗[/bold red] Status: [red]GAGAL[/red] - {result_msg[:25]}")
+                    save_otp_log(user_id, phone_clean, "failed")
                 
                 results.append((str(request_num), f"R{round_num}-{name}", "[green]OK[/green]" if ok else "[red]GAGAL[/red]", "Terkirim" if ok else result_msg[:15]))
                 print()
@@ -1174,6 +1176,239 @@ cpdef void do_signup(Auth auth, dict cfg):
     else:
         error(res)
 
+cdef str OTP_LOG_FILE = "otp_logs.json"
+
+cpdef void save_otp_log(str user_id, str phone, str status):
+    cdef dict data = {}
+    cdef list logs = []
+    if os.path.exists(OTP_LOG_FILE):
+        try:
+            with open(OTP_LOG_FILE, 'r') as f:
+                data = json.load(f)
+        except:
+            data = {}
+    
+    logs = data.get(user_id, [])
+    logs.append({
+        "phone": phone,
+        "status": status,
+        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    })
+    if len(logs) > 50:
+        logs = logs[-50:]
+    data[user_id] = logs
+    
+    with open(OTP_LOG_FILE, 'w') as f:
+        json.dump(data, f, indent=2)
+
+cpdef list get_otp_logs(str user_id):
+    cdef dict data = {}
+    if os.path.exists(OTP_LOG_FILE):
+        try:
+            with open(OTP_LOG_FILE, 'r') as f:
+                data = json.load(f)
+        except:
+            return []
+    return data.get(user_id, [])
+
+cpdef void show_user_profile_menu(dict res, dict cfg):
+    cdef int sel, user_credit, user_used
+    cdef list logs
+    
+    try:
+        while True:
+            clear()
+            print()
+            
+            profile_header = Panel(
+                f"[bold white]P R O F I L   P E N G G U N A[/bold white]\n[bold cyan]{res['email']}[/bold cyan]",
+                border_style="magenta",
+                padding=(0, 2)
+            )
+            console.print(profile_header)
+            
+            title_box = (
+                f"\n{MG}{B}"
+                f"╭───────────────────────────────╮\n"
+                f"│      MENU PROFIL              │\n"
+                f"╰───────────────────────────────╯"
+                f"{R}"
+            )
+            
+            profile_options = [
+                f"{B}  [1]  Info Account  -  Lihat info lengkap{R}",
+                f"{B}  [2]  Cek UID       -  Lihat User ID{R}",
+                f"{B}  [3]  Cek Limit     -  Lihat credit/limit{R}",
+                f"{B}  [4]  Logs OTP      -  Riwayat kirim OTP{R}",
+                f"{B}  [0]  Kembali       -  User menu{R}",
+            ]
+            
+            profile_menu = TerminalMenu(
+                menu_entries=profile_options,
+                title=title_box,
+                menu_cursor=" > ",
+                menu_cursor_style=("fg_magenta", "bold"),
+                menu_highlight_style=("fg_cyan", "bold"),
+            )
+            
+            sel = profile_menu.show()
+            
+            if sel == 0:
+                clear()
+                print()
+                section("INFO ACCOUNT")
+                
+                user_credit = get_user_credit(res['uid'])
+                user_used = get_user_used(res['uid'])
+                
+                account_table = Table(show_header=False, box=None, padding=(0, 2))
+                
+                account_content = (
+                    f"[bold cyan]Email[/bold cyan]\n"
+                    f"[white]{res['email']}[/white]\n\n"
+                    f"[bold cyan]User ID[/bold cyan]\n"
+                    f"[dim]{res['uid']}[/dim]\n\n"
+                    f"[bold cyan]Status[/bold cyan]\n"
+                    f"[green]Terverifikasi[/green]"
+                )
+                
+                account_panel = Panel(
+                    account_content,
+                    title="[bold cyan]AKUN[/bold cyan]",
+                    border_style="cyan",
+                    padding=(1, 2)
+                )
+                
+                if user_credit >= 3:
+                    credit_color = "green"
+                    credit_icon = "[+]"
+                elif user_credit >= 1:
+                    credit_color = "yellow"
+                    credit_icon = "[!]"
+                else:
+                    credit_color = "red"
+                    credit_icon = "[-]"
+                
+                stats_content = (
+                    f"[bold {credit_color}]{credit_icon} Credit[/bold {credit_color}]\n"
+                    f"[bold white]{user_credit}[/bold white] [dim]tersisa[/dim]\n\n"
+                    f"[bold blue]Terpakai[/bold blue]\n"
+                    f"[bold white]{user_used}[/bold white] [dim]kali digunakan[/dim]"
+                )
+                
+                stats_panel = Panel(
+                    stats_content,
+                    title="[bold green]STATISTIK[/bold green]",
+                    border_style="green",
+                    padding=(1, 2)
+                )
+                
+                account_table.add_row(account_panel, stats_panel)
+                console.print(account_table)
+                
+                print()
+                tip_panel = Panel(
+                    "[dim]Credit digunakan untuk fitur WhatsApp Bomber[/dim]\n"
+                    "[dim]Setiap round membutuhkan 1 credit[/dim]",
+                    border_style="dim"
+                )
+                console.print(tip_panel)
+                
+                print()
+                input(f" {D}Tekan Enter untuk kembali...{R}")
+            
+            elif sel == 1:
+                clear()
+                print()
+                section("CEK UID")
+                
+                uid_panel = Panel(
+                    f"[bold cyan]User ID Anda:[/bold cyan]\n\n"
+                    f"[bold white]{res['uid']}[/bold white]\n\n"
+                    f"[dim]UID ini unik untuk akun Anda[/dim]",
+                    border_style="cyan",
+                    padding=(1, 2)
+                )
+                console.print(uid_panel)
+                
+                print()
+                input(f" {D}Tekan Enter untuk kembali...{R}")
+            
+            elif sel == 2:
+                clear()
+                print()
+                section("CEK LIMIT")
+                
+                user_credit = get_user_credit(res['uid'])
+                user_used = get_user_used(res['uid'])
+                
+                if user_credit >= 3:
+                    credit_color = "green"
+                    credit_status = "AMAN"
+                elif user_credit >= 1:
+                    credit_color = "yellow"
+                    credit_status = "TERBATAS"
+                else:
+                    credit_color = "red"
+                    credit_status = "HABIS"
+                
+                limit_panel = Panel(
+                    f"[bold {credit_color}]STATUS: {credit_status}[/bold {credit_color}]\n\n"
+                    f"[bold white]Credit Tersisa[/bold white]\n"
+                    f"[bold {credit_color}]{user_credit}[/bold {credit_color}] [dim]credit[/dim]\n\n"
+                    f"[bold white]Credit Terpakai[/bold white]\n"
+                    f"[bold blue]{user_used}[/bold blue] [dim]kali digunakan[/dim]\n\n"
+                    f"[dim]Hubungi admin untuk menambah credit[/dim]",
+                    border_style=credit_color,
+                    padding=(1, 2)
+                )
+                console.print(limit_panel)
+                
+                print()
+                input(f" {D}Tekan Enter untuk kembali...{R}")
+            
+            elif sel == 3:
+                clear()
+                print()
+                section("LOGS KIRIM OTP")
+                
+                logs = get_otp_logs(res['uid'])
+                
+                if len(logs) == 0:
+                    info("Belum ada riwayat pengiriman OTP")
+                else:
+                    success(f"Total: {len(logs)} log")
+                    print()
+                    
+                    log_table = Table(title="Riwayat Kirim OTP", show_header=True, header_style="bold cyan")
+                    log_table.add_column("No", style="dim", width=4)
+                    log_table.add_column("Nomor HP", style="cyan")
+                    log_table.add_column("Status", style="green")
+                    log_table.add_column("Waktu", style="yellow")
+                    
+                    for i, log in enumerate(logs[-10:], 1):
+                        status_style = "green" if log.get("status") == "success" else "red"
+                        log_table.add_row(
+                            str(i),
+                            log.get("phone", "N/A"),
+                            f"[{status_style}]{log.get('status', 'N/A')}[/{status_style}]",
+                            log.get("time", "N/A")
+                        )
+                    
+                    console.print(log_table)
+                    
+                    if len(logs) > 10:
+                        info(f"Menampilkan 10 log terbaru dari {len(logs)} total")
+                
+                print()
+                input(f" {D}Tekan Enter untuk kembali...{R}")
+            
+            elif sel == 4 or sel is None:
+                break
+    except KeyboardInterrupt:
+        show_interrupt_message()
+        raise SystemExit(0)
+
 cpdef void do_login(Auth auth, dict cfg):
     cdef str email, pw, otp, msg, uid
     cdef bint ok, sent, found, confirmed
@@ -1218,73 +1453,7 @@ cpdef void do_login(Auth auth, dict cfg):
                 sel = user_menu.show()
                 
                 if sel == 0:
-                    clear()
-                    print()
-                    
-                    user_credit = get_user_credit(res['uid'])
-                    user_used = get_user_used(res['uid'])
-                    
-                    profile_header = Panel(
-                        "[bold white]P R O F I L   P E N G G U N A[/bold white]",
-                        border_style="magenta",
-                        padding=(0, 2)
-                    )
-                    console.print(profile_header)
-                    print()
-                    
-                    profile_table = Table(show_header=False, box=None, padding=(0, 2))
-                    
-                    account_content = (
-                        f"[bold cyan]Email[/bold cyan]\n"
-                        f"[white]{res['email']}[/white]\n\n"
-                        f"[bold cyan]User ID[/bold cyan]\n"
-                        f"[dim]{res['uid']}[/dim]"
-                    )
-                    
-                    account_panel = Panel(
-                        account_content,
-                        title="[bold cyan]AKUN[/bold cyan]",
-                        border_style="cyan",
-                        padding=(1, 2)
-                    )
-                    
-                    if user_credit >= 3:
-                        credit_color = "green"
-                        credit_icon = "[+]"
-                    elif user_credit >= 1:
-                        credit_color = "yellow"
-                        credit_icon = "[!]"
-                    else:
-                        credit_color = "red"
-                        credit_icon = "[-]"
-                    
-                    stats_content = (
-                        f"[bold {credit_color}]{credit_icon} Credit[/bold {credit_color}]\n"
-                        f"[bold white]{user_credit}[/bold white] [dim]tersisa[/dim]\n\n"
-                        f"[bold blue]Terpakai[/bold blue]\n"
-                        f"[bold white]{user_used}[/bold white] [dim]kali digunakan[/dim]"
-                    )
-                    
-                    stats_panel = Panel(
-                        stats_content,
-                        title="[bold green]STATISTIK[/bold green]",
-                        border_style="green",
-                        padding=(1, 2)
-                    )
-                    
-                    profile_table.add_row(account_panel, stats_panel)
-                    console.print(profile_table)
-                    
-                    print()
-                    tip_panel = Panel(
-                        "[dim]Credit digunakan untuk fitur WhatsApp Bomber[/dim]\n"
-                        "[dim]Setiap round membutuhkan 1 credit[/dim]",
-                        border_style="dim"
-                    )
-                    console.print(tip_panel)
-                    
-                    print()
-                    input(f" {D}Tekan Enter untuk kembali...{R}")
+                    show_user_profile_menu(res, cfg)
                 elif sel == 1:
                     do_sms_config_with_cfg(cfg, res['uid'])
                     print()
@@ -1300,7 +1469,7 @@ cpdef void do_login(Auth auth, dict cfg):
                     return
         except KeyboardInterrupt:
             show_interrupt_message()
-            sys.exit(0)
+            raise SystemExit(0)
     elif res == "UNVERIFIED":
         info("Email belum diverifikasi")
         loading_tqdm("Mencari data user", 20)
@@ -1469,7 +1638,7 @@ cpdef void admin_list_users(Auth auth):
                 success(f"Total: {len(users)} user")
         except KeyboardInterrupt:
             show_interrupt_message()
-            sys.exit(0)
+            raise SystemExit(0)
     else:
         error(f"Gagal mengambil data: {users}")
 
@@ -1847,7 +2016,7 @@ cpdef void admin_credit_menu(Auth auth):
             input(f" {D}Tekan Enter...{R}")
     except KeyboardInterrupt:
         show_interrupt_message()
-        sys.exit(0)
+        raise SystemExit(0)
 
 cpdef void admin_panel(Auth auth, dict cfg):
     cdef int sel
@@ -1916,7 +2085,7 @@ cpdef void admin_panel(Auth auth, dict cfg):
                 break
     except KeyboardInterrupt:
         show_interrupt_message()
-        sys.exit(0)
+        raise SystemExit(0)
 
 cpdef bint do_login_menu(Auth auth, dict cfg):
     cdef int sel
