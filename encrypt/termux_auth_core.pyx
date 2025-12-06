@@ -1206,12 +1206,12 @@ cpdef dict _get_target_log(str user_id, str phone):
 cpdef void save_otp_log(str user_id, str phone, str status, str service_name=""):
     cdef dict headers = _supabase_headers()
     cdef dict existing = _get_target_log(user_id, phone)
-    cdef dict services, payload
+    cdef dict payload
     cdef int total_success, total_failed, total_rounds
     cdef str url
+    services = {}
     
     if existing is None:
-        services = {}
         if service_name:
             services[service_name] = {"success": 1 if status == "success" else 0, "failed": 1 if status == "failed" else 0}
         
@@ -1229,12 +1229,16 @@ cpdef void save_otp_log(str user_id, str phone, str status, str service_name="")
         except:
             pass
     else:
-        services = existing.get("services", {})
-        if isinstance(services, str):
+        services_raw = existing.get("services", {})
+        if isinstance(services_raw, str):
             try:
-                services = json.loads(services)
+                services = json.loads(services_raw)
             except:
                 services = {}
+        elif isinstance(services_raw, dict):
+            services = services_raw
+        else:
+            services = {}
         
         if service_name:
             if service_name not in services:
