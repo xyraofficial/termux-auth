@@ -27,14 +27,14 @@ from rich.panel import Panel
 from tabulate import tabulate
 from fake_useragent import UserAgent
 
-CONFIG_FILE = "config.enc"
+CONFIG_FILE = "config.json"
 CONFIG_FILE_PLAIN = "config.json"
 OTP_FILE = "otp_data.json"
 OTP_EXPIRY = 300
 DEFAULT_CREDIT = 3
 
-SUPABASE_URL = ""
-SUPABASE_SERVICE_KEY = ""
+SUPABASE_URL = "https://feesaxvfbgsgbrncbgpd.supabase.co"
+SUPABASE_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZlZXNheHZmYmdzZ2JybmNiZ3BkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NDU0NTEwMywiZXhwIjoyMDgwMTIxMTAzfQ.MtMiauTXMFhpBjWOvnKEj6KJsj2n1po2YyITL29norQ"
 
 def init_supabase_credit(url, service_key):
     global SUPABASE_URL, SUPABASE_SERVICE_KEY
