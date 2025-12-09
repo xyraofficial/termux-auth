@@ -4,7 +4,7 @@ README.md
 pyproject.toml
 src/xyra_auth/__init__.py
 src/xyra_auth/__main__.py
-src/xyra_auth/config.enc
+src/xyra_auth/config.json
 src/xyra_auth/core.py
 src/xyra_auth/termux_auth_lib.py
 src/xyra_auth.egg-info/PKG-INFO
