@@ -3,9 +3,9 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "xyra-auth"
-version = "1.0.1"
-description = "Termux Authentication System - Sistem Autentikasi dengan OTP Email"
+name = "xyra-whatsapp"
+version = "1.0.0"
+description = "Xyra WhatsApp - WhatsApp Automation System"
 authors = [{name = "XyraOfficial", email = "xyraofficialsup@gmail.com"}]
 readme = "README.md"
 requires-python = ">=3.8"
@@ -24,7 +24,7 @@ classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Security",
 ]
-keywords = ["termux", "auth", "authentication", "otp", "email", "security"]
+keywords = ["whatsapp", "automation", "messaging", "xyra", "termux"]
 dependencies = [
     "requests>=2.28.0",
     "cryptography>=3.4.0",
@@ -36,12 +36,12 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/xyraofficial/xyra-auth"
-Repository = "https://github.com/xyraofficial/xyra-auth"
-Issues = "https://github.com/xyraofficial/xyra-auth/issues"
+Homepage = "https://github.com/xyraofficial/xyra-whatsapp"
+Repository = "https://github.com/xyraofficial/xyra-whatsapp"
+Issues = "https://github.com/xyraofficial/xyra-whatsapp/issues"
 
 [project.scripts]
-xyra-auth = "xyra_auth:main"
+xyra-whatsapp = "xyra_auth:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

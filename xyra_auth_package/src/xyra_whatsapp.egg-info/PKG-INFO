@@ -1,13 +1,13 @@
 Metadata-Version: 2.4
-Name: xyra-auth
-Version: 1.0.1
-Summary: Termux Authentication System - Sistem Autentikasi dengan OTP Email
+Name: xyra-whatsapp
+Version: 1.0.0
+Summary: Xyra WhatsApp - WhatsApp Automation System
 Author-email: XyraOfficial <xyraofficialsup@gmail.com>
 License: MIT
-Project-URL: Homepage, https://github.com/xyraofficial/xyra-auth
-Project-URL: Repository, https://github.com/xyraofficial/xyra-auth
-Project-URL: Issues, https://github.com/xyraofficial/xyra-auth/issues
-Keywords: termux,auth,authentication,otp,email,security
+Project-URL: Homepage, https://github.com/xyraofficial/xyra-whatsapp
+Project-URL: Repository, https://github.com/xyraofficial/xyra-whatsapp
+Project-URL: Issues, https://github.com/xyraofficial/xyra-whatsapp/issues
+Keywords: whatsapp,automation,messaging,xyra,termux
 Classifier: Programming Language :: Python :: 3
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
