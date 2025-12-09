@@ -84,15 +84,9 @@ def is_termux():
     return os.path.exists("/data/data/com.termux") or "com.termux" in os.environ.get("PREFIX", "")
 
 def animated_progress_bar(description, duration=1.5, width=30):
-    """Display animated progress bar inside a box"""
-    box_width = width + 10
+    """Display simple animated progress bar"""
     print()
-    print(f"  {CY}╭{'─' * box_width}╮{R}")
-    
-    desc_padding = box_width - len(description) - 6
-    print(f"  {CY}│{R} {YL}⚡{R} {B}{description}{R}" + " " * desc_padding + f"{CY}│{R}")
-    
-    print(f"  {CY}├{'─' * box_width}┤{R}")
+    print(f"  {YL}⚡{R} {B}{description}{R}")
     
     steps = 50
     for i in range(steps + 1):
@@ -100,17 +94,14 @@ def animated_progress_bar(description, duration=1.5, width=30):
         filled = int(width * progress)
         empty = width - filled
         
-        bar_filled = f"{GR}{'█' * filled}{R}"
-        bar_empty = f"{D}{'░' * empty}{R}"
+        bar = f"{GR}{'█' * filled}{D}{'░' * empty}{R}"
         percent = int(progress * 100)
         
-        line = f" [{bar_filled}{bar_empty}] {GR}{percent:3d}%{R} "
-        sys.stdout.write(f"\r  {CY}│{R}{line}{CY}│{R}")
+        sys.stdout.write(f"\r  [{bar}] {GR}{percent:3d}%{R}")
         sys.stdout.flush()
         time.sleep(duration / steps)
     
     print()
-    print(f"  {CY}╰{'─' * box_width}╯{R}")
     print()
 
 def check_termux_packages():
