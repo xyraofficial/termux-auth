@@ -290,10 +290,10 @@ def show_interrupt_message():
 
 def show_developer_info():
     dev_links = [
-        ("WhatsApp", "https://wa.me/62895325844493"),
-        ("YouTube", "https://youtube.com/@Kz.tutorial"),
-        ("Email", "mailto:xyraofficialsup@gmail.com"),
-        ("GitHub", "https://github.com/XyraOfficial"),
+        ("WhatsApp", "https://wa.me/62895325844493", "💬"),
+        ("YouTube", "https://youtube.com/@Kz.tutorial", "🎬"),
+        ("Email", "mailto:xyraofficialsup@gmail.com", "📧"),
+        ("GitHub", "https://github.com/XyraOfficial", "💻"),
     ]
     
     try:
@@ -301,29 +301,35 @@ def show_developer_info():
             clear()
             print()
             
-            title_box = (
-                f"\n{GR}{B}"
-                f"╭───────────────────────────────╮\n"
-                f"│       DEVELOPER INFO          │\n"
-                f"│      by XyraOfficial          │\n"
-                f"╰───────────────────────────────╯"
-                f"{R}"
-            )
+            console.print(Panel(
+                f"[bold cyan]╔══════════════════════════════════════╗[/bold cyan]\n"
+                f"[bold cyan]║[/bold cyan]    [bold green]✦ XYRA OFFICIAL DEVELOPER ✦[/bold green]    [bold cyan]║[/bold cyan]\n"
+                f"[bold cyan]╠══════════════════════════════════════╣[/bold cyan]\n"
+                f"[bold cyan]║[/bold cyan]                                      [bold cyan]║[/bold cyan]\n"
+                f"[bold cyan]║[/bold cyan]   [bold white]Name[/bold white]  : [yellow]XyraOfficial[/yellow]            [bold cyan]║[/bold cyan]\n"
+                f"[bold cyan]║[/bold cyan]   [bold white]Role[/bold white]  : [green]Developer & Creator[/green]     [bold cyan]║[/bold cyan]\n"
+                f"[bold cyan]║[/bold cyan]   [bold white]Focus[/bold white] : [blue]Automation & Security[/blue]   [bold cyan]║[/bold cyan]\n"
+                f"[bold cyan]║[/bold cyan]                                      [bold cyan]║[/bold cyan]\n"
+                f"[bold cyan]╚══════════════════════════════════════╝[/bold cyan]",
+                border_style="cyan",
+                padding=(0, 1)
+            ))
+            print()
             
             options = [
-                f"{B}WhatsApp  - Hubungi via WA{R}",
-                f"{B}YouTube   - Channel Tutorial{R}",
-                f"{B}Email     - Kirim Email{R}",
-                f"{B}GitHub    - Source Code{R}",
-                f"{B}Kembali   - Menu Utama{R}",
+                f"{GR}💬  WhatsApp  {R}{D}-  Chat langsung{R}",
+                f"{RD}🎬  YouTube   {R}{D}-  Tutorial & Tips{R}",
+                f"{YL}📧  Email     {R}{D}-  Kirim pesan{R}",
+                f"{CY}💻  GitHub    {R}{D}-  Source code{R}",
+                f"{D}◀   Kembali   -  Menu Utama{R}",
             ]
             
             dev_menu = TerminalMenu(
                 menu_entries=options,
-                title=title_box,
-                menu_cursor="▶ ",
-                menu_cursor_style=("fg_red",),
-                menu_highlight_style=("fg_yellow", "bold"),
+                title=f"\n{CY}{B}  Pilih untuk menghubungi:{R}",
+                menu_cursor=" ★ ",
+                menu_cursor_style=("fg_cyan", "bold"),
+                menu_highlight_style=("fg_green", "bold"),
             )
             
             sel = dev_menu.show()
@@ -331,10 +337,10 @@ def show_developer_info():
             if sel is None or sel == 4:
                 break
             elif sel >= 0 and sel < 4:
-                name, url = dev_links[sel]
+                name, url, icon = dev_links[sel]
                 loading_tqdm(f"Membuka {name}", 20)
                 open_url(url)
-                success(f"{name} dibuka!")
+                success(f"{icon} {name} dibuka!")
                 print()
                 input(f" {D}Tekan Enter...{R}")
     except KeyboardInterrupt:
@@ -1153,7 +1159,7 @@ def admin_panel(auth):
                 menu_entries=options,
                 title=f"\n{CY}{B}  Admin Menu:{R}",
                 menu_cursor=" ▶ ",
-                menu_cursor_style=("fg_magenta", "bold"),
+                menu_cursor_style=("fg_red", "bold"),
                 menu_highlight_style=("fg_yellow", "bold"),
             )
             

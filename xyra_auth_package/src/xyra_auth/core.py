@@ -64,15 +64,15 @@ CY = '\033[96m'
 BANNER = f"""
 {CY}╭──────────────────────────────────────────╮
 │                                          │
-│  {GR}████████╗███████╗██████╗ ███╗   ███╗{CY}   │
-│  {GR}╚══██╔══╝██╔════╝██╔══██╗████╗ ████║{CY}   │
-│     {GR}██║   █████╗  ██████╔╝██╔████╔██║{CY}   │
-│     {GR}██║   ██╔══╝  ██╔══██╗██║╚██╔╝██║{CY}   │
-│     {GR}██║   ███████╗██║  ██║██║ ╚═╝ ██║{CY}   │
+│  {GR}████████╗███████╗██████╗ ███╗   ███╗{CY}    │
+│  {GR}╚══██╔══╝██╔════╝██╔══██╗████╗ ████║{CY}    │
+│     {GR}██║   █████╗  ██████╔╝██╔████╔██║{CY}    │
+│     {GR}██║   ██╔══╝  ██╔══██╗██║╚██╔╝██║{CY}    │
+│     {GR}██║   ███████╗██║  ██║██║ ╚═╝ ██║{CY}    │
 │     {GR}╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝     ╚═╝{CY}   │
-│                                          │
-│        {B}{MG}A U T H   S Y S T E M{R}{CY}          │
-│          {D}by XyraOfficial{R}{CY}              │
+│                                         │
+│        {B}{MG}A U T H   S Y S T E M{R}{CY}            │
+│          {D}by XyraOfficial{R}{CY}                │
 │                                          │
 ╰──────────────────────────────────────────╯{R}
 """
@@ -82,6 +82,31 @@ def clear():
 
 def is_termux():
     return os.path.exists("/data/data/com.termux") or "com.termux" in os.environ.get("PREFIX", "")
+
+def check_termux_packages():
+    """Check and install required Termux packages"""
+    if not is_termux():
+        return True
+    
+    required_pkgs = ["ncurses-utils"]
+    
+    for pkg in required_pkgs:
+        try:
+            result = subprocess.run(
+                ["dpkg", "-s", pkg],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+            if result.returncode != 0:
+                print(f"  {YL}[!]{R} Installing {pkg}...")
+                subprocess.run(
+                    ["pkg", "install", "-y", pkg],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
+        except:
+            pass
+    return True
 
 def check_internet():
     try:
@@ -124,6 +149,8 @@ def show_loading_screen():
     clear()
     play_startup_sound()
     print(BANNER)
+    
+    check_termux_packages()
     
     if not install_missing_packages():
         print(f"\n  {RD}[!]{R} Gagal install dependensi!")
