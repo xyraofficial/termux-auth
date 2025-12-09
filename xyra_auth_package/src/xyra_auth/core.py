@@ -83,12 +83,37 @@ def clear():
 def is_termux():
     return os.path.exists("/data/data/com.termux") or "com.termux" in os.environ.get("PREFIX", "")
 
+def animated_progress_bar(description, duration=1.5, width=30):
+    """Display animated progress bar"""
+    print()
+    print(f"  {CY}╭{'─' * (width + 20)}╮{R}")
+    print(f"  {CY}│{R}  {YL}⚡{R} {B}{description}{R}" + " " * (width + 15 - len(description)) + f"{CY}│{R}")
+    print(f"  {CY}├{'─' * (width + 20)}┤{R}")
+    
+    steps = 50
+    for i in range(steps + 1):
+        progress = i / steps
+        filled = int(width * progress)
+        empty = width - filled
+        
+        bar = f"{GR}{'█' * filled}{D}{'░' * empty}{R}"
+        percent = int(progress * 100)
+        
+        sys.stdout.write(f"\r  {CY}│{R}  [{bar}] {GR}{percent:3d}%{R}" + " " * 5 + f"{CY}│{R}")
+        sys.stdout.flush()
+        time.sleep(duration / steps)
+    
+    print()
+    print(f"  {CY}╰{'─' * (width + 20)}╯{R}")
+    print()
+
 def check_termux_packages():
     """Check and install required Termux packages"""
     if not is_termux():
         return True
     
     required_pkgs = ["ncurses-utils"]
+    packages_to_install = []
     
     for pkg in required_pkgs:
         try:
@@ -98,14 +123,24 @@ def check_termux_packages():
                 stderr=subprocess.DEVNULL
             )
             if result.returncode != 0:
-                print(f"  {YL}[!]{R} Installing {pkg}...")
+                packages_to_install.append(pkg)
+        except:
+            pass
+    
+    if packages_to_install:
+        for pkg in packages_to_install:
+            animated_progress_bar(f"Installing {pkg}", duration=2.0)
+            try:
                 subprocess.run(
                     ["pkg", "install", "-y", pkg],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL
                 )
-        except:
-            pass
+                print(f"  {GR}[✓]{R} {pkg} berhasil diinstall!")
+            except:
+                print(f"  {RD}[✗]{R} Gagal install {pkg}")
+        print()
+    
     return True
 
 def check_internet():
