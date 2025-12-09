@@ -85,14 +85,12 @@ def is_termux():
 
 def animated_progress_bar(description, duration=1.5, width=30):
     """Display animated progress bar inside a box"""
-    box_width = width + 12
+    box_width = width + 10
     print()
     print(f"  {CY}╭{'─' * box_width}╮{R}")
     
-    desc_text = f"{YL}⚡{R} {B}{description}{R}"
-    desc_len = len(description) + 2
-    padding = box_width - desc_len - 2
-    print(f"  {CY}│{R} {desc_text}" + " " * padding + f"{CY}│{R}")
+    desc_padding = box_width - len(description) - 4
+    print(f"  {CY}│{R} {YL}⚡{R} {B}{description}{R}" + " " * desc_padding + f"{CY}│{R}")
     
     print(f"  {CY}├{'─' * box_width}┤{R}")
     
@@ -102,11 +100,12 @@ def animated_progress_bar(description, duration=1.5, width=30):
         filled = int(width * progress)
         empty = width - filled
         
-        bar = f"{GR}{'█' * filled}{D}{'░' * empty}{R}"
+        bar_filled = f"{GR}{'█' * filled}{R}"
+        bar_empty = f"{D}{'░' * empty}{R}"
         percent = int(progress * 100)
         
-        bar_text = f"[{bar}] {GR}{percent:3d}%{R}"
-        sys.stdout.write(f"\r  {CY}│{R} {bar_text}  {CY}│{R}")
+        line = f" [{bar_filled}{bar_empty}] {GR}{percent:3d}%{R} "
+        sys.stdout.write(f"\r  {CY}│{R}{line}{CY}│{R}")
         sys.stdout.flush()
         time.sleep(duration / steps)
     
