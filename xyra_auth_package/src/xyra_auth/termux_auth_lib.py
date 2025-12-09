@@ -1127,6 +1127,204 @@ def admin_login():
     error("Terlalu banyak percobaan gagal!")
     return False
 
+def admin_panel(auth):
+    try:
+        while True:
+            clear()
+            print()
+            console.print(Panel(
+                f"[bold magenta]ADMIN PANEL[/bold magenta]\n"
+                f"[dim]Kelola user dan credit[/dim]",
+                border_style="magenta",
+                padding=(1, 2)
+            ))
+            print()
+            
+            options = [
+                f"{B}  [1]  Lihat Users    -  Daftar semua user{R}",
+                f"{B}  [2]  Lihat Credits  -  Daftar semua credit{R}",
+                f"{B}  [3]  Tambah Credit  -  Tambah credit user{R}",
+                f"{B}  [4]  Kurangi Credit -  Kurangi credit user{R}",
+                f"{B}  [5]  Set Credit     -  Set credit user{R}",
+                f"{B}  [6]  Reset Credit   -  Reset credit user{R}",
+                f"{B}  [7]  Hapus User     -  Hapus akun user{R}",
+                f"{B}  [0]  Kembali        -  Ke menu utama{R}",
+            ]
+            
+            menu = TerminalMenu(
+                menu_entries=options,
+                title=f"\n{CY}{B}  Admin Menu:{R}",
+                menu_cursor=" ▶ ",
+                menu_cursor_style=("fg_magenta", "bold"),
+                menu_highlight_style=("fg_yellow", "bold"),
+            )
+            
+            sel = menu.show()
+            
+            if sel == 0:
+                admin_list_users(auth)
+            elif sel == 1:
+                admin_list_credits()
+            elif sel == 2:
+                admin_add_credit()
+            elif sel == 3:
+                admin_remove_credit()
+            elif sel == 4:
+                admin_set_credit()
+            elif sel == 5:
+                admin_reset_credit()
+            elif sel == 6:
+                admin_delete_user(auth)
+            elif sel == 7 or sel is None:
+                break
+            
+            print()
+            input(f" {D}Tekan Enter...{R}")
+    except KeyboardInterrupt:
+        pass
+
+def admin_list_users(auth):
+    clear()
+    section("DAFTAR USER")
+    loading_tqdm("Mengambil data", 20)
+    ok, users = auth.list_users()
+    if ok:
+        if not users:
+            info("Tidak ada user terdaftar")
+            return
+        table = Table(title="Users", show_header=True, header_style="bold cyan")
+        table.add_column("No", style="cyan", width=4)
+        table.add_column("Email", style="green")
+        table.add_column("UID", style="dim", width=20)
+        table.add_column("Verified", style="yellow", width=10)
+        for i, u in enumerate(users, 1):
+            verified = "Yes" if u.get("email_confirmed_at") else "No"
+            table.add_row(str(i), u.get("email", ""), u.get("id", "")[:20], verified)
+        console.print(table)
+    else:
+        error(f"Gagal: {users}")
+
+def admin_list_credits():
+    clear()
+    section("DAFTAR CREDITS")
+    loading_tqdm("Mengambil data", 20)
+    credits = get_all_credits()
+    if not credits:
+        info("Tidak ada data credit")
+        return
+    table = Table(title="User Credits", show_header=True, header_style="bold cyan")
+    table.add_column("No", style="cyan", width=4)
+    table.add_column("User ID", style="green", width=25)
+    table.add_column("Credit", style="yellow", width=10)
+    table.add_column("Used", style="magenta", width=10)
+    for i, (uid, data) in enumerate(credits.items(), 1):
+        table.add_row(str(i), uid[:25], str(data.get("credit", 0)), str(data.get("used", 0)))
+    console.print(table)
+
+def admin_add_credit():
+    clear()
+    section("TAMBAH CREDIT")
+    user_id = input(f" {GR}[?]{R} User ID : {CY}").strip()
+    print(R, end="")
+    if not user_id:
+        error("User ID tidak boleh kosong")
+        return
+    try:
+        amount = int(input(f" {GR}[?]{R} Jumlah  : {CY}").strip())
+        print(R, end="")
+        if amount <= 0:
+            error("Jumlah harus positif")
+            return
+    except:
+        error("Input tidak valid")
+        return
+    print()
+    loading_tqdm("Menambah credit", 20)
+    add_credit(user_id, amount)
+    new_credit = get_user_credit(user_id)
+    success(f"Credit ditambahkan! Total: {new_credit}")
+
+def admin_remove_credit():
+    clear()
+    section("KURANGI CREDIT")
+    user_id = input(f" {GR}[?]{R} User ID : {CY}").strip()
+    print(R, end="")
+    if not user_id:
+        error("User ID tidak boleh kosong")
+        return
+    try:
+        amount = int(input(f" {GR}[?]{R} Jumlah  : {CY}").strip())
+        print(R, end="")
+        if amount <= 0:
+            error("Jumlah harus positif")
+            return
+    except:
+        error("Input tidak valid")
+        return
+    print()
+    loading_tqdm("Mengurangi credit", 20)
+    remove_credit(user_id, amount)
+    new_credit = get_user_credit(user_id)
+    success(f"Credit dikurangi! Total: {new_credit}")
+
+def admin_set_credit():
+    clear()
+    section("SET CREDIT")
+    user_id = input(f" {GR}[?]{R} User ID : {CY}").strip()
+    print(R, end="")
+    if not user_id:
+        error("User ID tidak boleh kosong")
+        return
+    try:
+        amount = int(input(f" {GR}[?]{R} Jumlah  : {CY}").strip())
+        print(R, end="")
+        if amount < 0:
+            error("Jumlah tidak boleh negatif")
+            return
+    except:
+        error("Input tidak valid")
+        return
+    print()
+    loading_tqdm("Mengatur credit", 20)
+    set_credit(user_id, amount)
+    success(f"Credit diatur ke {amount}!")
+
+def admin_reset_credit():
+    clear()
+    section("RESET CREDIT")
+    user_id = input(f" {GR}[?]{R} User ID : {CY}").strip()
+    print(R, end="")
+    if not user_id:
+        error("User ID tidak boleh kosong")
+        return
+    print()
+    loading_tqdm("Reset credit", 20)
+    reset_user_credit(user_id)
+    success(f"Credit direset ke {DEFAULT_CREDIT}!")
+
+def admin_delete_user(auth):
+    clear()
+    section("HAPUS USER")
+    warning("PERINGATAN: Ini akan menghapus user secara permanen!")
+    print()
+    uid = input(f" {GR}[?]{R} User UID : {CY}").strip()
+    print(R, end="")
+    if not uid:
+        error("UID tidak boleh kosong")
+        return
+    confirm = input(f" {YL}[?]{R} Konfirmasi (ketik 'HAPUS') : {CY}").strip()
+    print(R, end="")
+    if confirm != "HAPUS":
+        info("Dibatalkan")
+        return
+    print()
+    loading_tqdm("Menghapus user", 20)
+    ok, msg = auth.delete_user(uid)
+    if ok:
+        success(msg)
+    else:
+        error(msg)
+
 def do_sms_config_with_cfg(cfg, user_id):
     global used_user_agents
     
@@ -1498,7 +1696,7 @@ def main_menu(auth, cfg):
                 do_reset(cfg)
             elif sel == 3:
                 if admin_login():
-                    info("Admin panel - fitur lengkap di versi .so")
+                    admin_panel(auth)
             elif sel == 4:
                 show_developer_info()
             elif sel == 5 or sel is None:
