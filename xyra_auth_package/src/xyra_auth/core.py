@@ -89,7 +89,7 @@ def animated_progress_bar(description, duration=1.5, width=30):
     print()
     print(f"  {CY}╭{'─' * box_width}╮{R}")
     
-    desc_padding = box_width - len(description) - 4
+    desc_padding = box_width - len(description) - 6
     print(f"  {CY}│{R} {YL}⚡{R} {B}{description}{R}" + " " * desc_padding + f"{CY}│{R}")
     
     print(f"  {CY}├{'─' * box_width}┤{R}")
