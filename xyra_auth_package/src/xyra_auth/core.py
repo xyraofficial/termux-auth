@@ -133,8 +133,8 @@ def show_loading_screen():
             print(f"  {YL}[i]{R} Jalankan: {CY}pkg install python-cryptography{R}\n")
         return False
     
-    spinner = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"]
-    title = "SEDANG MEMUAT SISTEM"
+    spinner = ["◐","◓","◑","◒"]
+    title = "⚡ INITIALIZING XYRA CORE ⚡"
     
     print("\n")
     
@@ -158,7 +158,7 @@ def show_loading_screen():
     sys.stdout.write("\033[K")
     
     online = check_internet()
-    config_ok = os.path.exists(os.path.join(os.getcwd(), "config.enc")) or os.path.exists(os.path.join(PACKAGE_DIR, "config.enc"))
+    config_ok = os.path.exists(os.path.join(os.getcwd(), "config.json")) or os.path.exists(os.path.join(PACKAGE_DIR, "config.json"))
     
     if not online:
         print()
@@ -176,7 +176,7 @@ def show_loading_screen():
     
     if not config_ok:
         print(f"  {RD}[x]{R} Config tidak ditemukan!")
-        print(f"  {YL}[i]{R} Butuh file config.enc\n")
+        print(f"  {YL}[i]{R} Butuh file config.json\n")
         play_error_sound()
         return False
     
