@@ -32,6 +32,7 @@ dependencies = [
     "rich>=13.0.0",
     "simple-term-menu>=1.6.0",
     "fake-useragent>=1.1.0",
+    "tqdm>=4.64.0",
 ]
 
 [project.urls]

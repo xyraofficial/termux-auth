@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
+"""
+XYRA Auth - Core Module
+Pure Python version - supports all devices
+"""
 import sys
 import os
-import glob
 import platform
 import subprocess
 import time
 import math
 import threading
 
-REQUIRED_PACKAGES = ["requests", "cryptography", "tabulate", "rich", "simple-term-menu", "fake-useragent"]
+REQUIRED_PACKAGES = ["requests", "cryptography", "tabulate", "rich", "simple-term-menu", "fake-useragent", "tqdm"]
 
 PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
 SOUNDS_DIR = os.path.join(PACKAGE_DIR, "sounds")
@@ -70,6 +73,7 @@ BANNER = f"""{CY}
 │                                                            │
 │            {B}{MG}A U T H   S Y S T E M{R}{CY}                           │
 │              {D}by XyraOfficial{R}{CY}                               │
+│              {D}Pure Python Edition{R}{CY}                            │
 │                                                            │
 ╰────────────────────────────────────────────────────────────╯{R}
 """
@@ -115,11 +119,6 @@ def install_missing_packages():
             return False
     return True
 
-def find_so_file():
-    current_dir = os.getcwd()
-    files = glob.glob(os.path.join(current_dir, "termux_auth_lib*.so"))
-    return files[0] if files else None
-
 def fg_gradient(i, idx):
     bright = int(150 + 80 * math.sin(i/10 + idx/2))
     return f"\033[38;2;0;{bright};0m"
@@ -160,7 +159,6 @@ def show_loading_screen():
     sys.stdout.write("\033[K")
     
     online = check_internet()
-    so_file = find_so_file()
     config_ok = os.path.exists(os.path.join(os.getcwd(), "config.enc")) or os.path.exists(os.path.join(PACKAGE_DIR, "config.enc"))
     
     if not online:
@@ -177,29 +175,13 @@ def show_loading_screen():
         play_error_sound()
         return False
     
-    if not so_file:
-        print(f"  {RD}[x]{R} Module tidak ditemukan!")
-        print(f"  {YL}[i]{R} Minta file termux_auth_lib*.so dari developer\n")
-        play_error_sound()
-        return False
-    
-    machine = platform.machine().lower()
-    is_arm = machine in ["aarch64", "arm", "armv7l", "armv8l"]
-    is_x86_so = "x86_64" in so_file or "x86-64" in so_file
-    
-    if is_arm and is_x86_so:
-        print(f"  {RD}[x]{R} Arsitektur tidak cocok!")
-        print(f"  {YL}[i]{R} Device: {CY}{machine}{R} | File: {CY}x86_64{R}\n")
-        play_error_sound()
-        return False
-    
     if not config_ok:
         print(f"  {RD}[x]{R} Config tidak ditemukan!")
         print(f"  {YL}[i]{R} Butuh file config.enc\n")
         play_error_sound()
         return False
     
-    print(f"  {B}{GR}✔ Sistem siap!{R}")
+    print(f"  {B}{GR}✔ Sistem siap! (Pure Python){R}")
     play_success_sound()
     print()
     
@@ -210,17 +192,15 @@ def main():
         return
     
     try:
-        sys.path.insert(0, os.getcwd())
-        from termux_auth_lib import run_main
+        from .termux_auth_lib import run_main
         run_main()
     except ImportError as e:
-        err = str(e).lower()
-        if "elf" in err or "architecture" in err or "exec format" in err:
-            print(f"\n  {RD}[!]{R} Arsitektur tidak cocok!")
-            print(f"  {YL}[i]{R} Device: {CY}{platform.machine()}{R}")
-        else:
-            print(f"\n  {RD}[!]{R} Error: {e}")
-        print()
+        try:
+            from termux_auth_lib import run_main
+            run_main()
+        except ImportError as e2:
+            print(f"\n  {RD}[!]{R} Error: {e2}")
+            print()
 
 def run():
     """Alias for main() function"""
