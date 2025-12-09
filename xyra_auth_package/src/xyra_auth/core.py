@@ -11,7 +11,7 @@ import time
 import math
 import threading
 
-REQUIRED_PACKAGES = ["requests", "cryptography", "tabulate", "rich", "simple-term-menu", "fake-useragent", "tqdm"]
+REQUIRED_PACKAGES = ["requests", "tabulate", "rich", "simple-term-menu", "fake-useragent", "tqdm"]
 
 PACKAGE_DIR = os.path.dirname(os.path.abspath(__file__))
 SOUNDS_DIR = os.path.join(PACKAGE_DIR, "sounds")
@@ -106,8 +106,6 @@ def install_missing_packages():
     
     in_termux = is_termux()
     for pkg in missing:
-        if pkg == "cryptography" and in_termux:
-            return False
         try:
             subprocess.check_call(
                 [sys.executable, "-m", "pip", "install", pkg, "-q"],
@@ -129,8 +127,6 @@ def show_loading_screen():
     
     if not install_missing_packages():
         print(f"\n  {RD}[!]{R} Gagal install dependensi!")
-        if is_termux():
-            print(f"  {YL}[i]{R} Jalankan: {CY}pkg install python-cryptography{R}\n")
         return False
     
     spinner = ["◐","◓","◑","◒"]
