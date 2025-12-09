@@ -914,8 +914,9 @@ class Auth:
     
     def login(self, email, pw):
         try:
+            login_h = {"apikey": self.service_key, "Content-Type": "application/json"}
             r = requests.post(f"{self.url}/auth/v1/token?grant_type=password",
-                json={"email": email, "password": pw}, headers=self.h)
+                json={"email": email, "password": pw}, headers=login_h)
             d = r.json()
             if r.status_code == 200:
                 return (True, {"uid": d.get("user", {}).get("id"), 
