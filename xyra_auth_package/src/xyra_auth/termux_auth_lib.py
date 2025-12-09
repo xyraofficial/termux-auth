@@ -370,6 +370,17 @@ def box_info(lines):
 def load_config():
     package_dir = os.path.dirname(os.path.abspath(__file__))
     
+    plain_paths = [
+        CONFIG_FILE_PLAIN,
+        os.path.join(os.getcwd(), CONFIG_FILE_PLAIN),
+        os.path.join(package_dir, CONFIG_FILE_PLAIN),
+    ]
+    
+    for plain_path in plain_paths:
+        if os.path.exists(plain_path):
+            with open(plain_path, 'r') as f:
+                return json.load(f)
+    
     config_paths = [
         CONFIG_FILE,
         os.path.join(os.getcwd(), CONFIG_FILE),
@@ -384,21 +395,7 @@ def load_config():
             if cfg is not None:
                 return cfg
     
-    plain_paths = [
-        CONFIG_FILE_PLAIN,
-        os.path.join(os.getcwd(), CONFIG_FILE_PLAIN),
-        os.path.join(package_dir, CONFIG_FILE_PLAIN),
-    ]
-    
-    for plain_path in plain_paths:
-        if os.path.exists(plain_path):
-            info("Menggunakan config.json (tidak aman)")
-            info("Gunakan encrypt_config.py untuk enkripsi")
-            with open(plain_path, 'r') as f:
-                return json.load(f)
-    
     error("File config tidak ditemukan!")
-    error("Butuh config.enc atau config.json")
     return None
 
 def valid_email(e):

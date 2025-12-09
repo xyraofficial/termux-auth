@@ -73,7 +73,6 @@ BANNER = f"""
 │                                          │
 │        {B}{MG}A U T H   S Y S T E M{R}{CY}          │
 │          {D}by XyraOfficial{R}{CY}              │
-│          {D}Pure Python Edition{R}{CY}          │
 │                                          │
 ╰──────────────────────────────────────────╯{R}
 """

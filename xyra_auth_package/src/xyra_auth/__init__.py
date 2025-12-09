@@ -4,7 +4,7 @@ Sistem Autentikasi dengan OTP Email untuk Termux
 Pure Python Edition - Supports all devices
 """
 
-__version__ = "1.1.3"
+__version__ = "1.1.4"
 __author__ = "XyraOfficial"
 __email__ = "xyraofficialsup@gmail.com"
 
