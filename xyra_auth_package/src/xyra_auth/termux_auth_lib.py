@@ -307,7 +307,7 @@ def show_developer_info():
                 ("Role", "Developer & Creator"),
                 ("Focus", "Automation & Security"),
             ]
-            dev_table = tabulate(dev_rows, tablefmt="grid")
+            dev_table = tabulate(dev_rows, tablefmt="plain")
 
             console.print(Panel(
                 f"{dev_table}",
